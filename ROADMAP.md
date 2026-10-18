@@ -101,7 +101,7 @@ Screenshots in the README were retaken on the demo files (`scripts/demo-fixture.
 Done along the way, but with measurements.
 
 - [ ] Benchmark: a folder with 100,000 files opens without stutter
-- [ ] Cold start under 300 ms, Native AOT
+- [x] Cold start under 300 ms, Native AOT: the window shows in ~295 ms instead of ~1.25 s, 106 MB instead of 190 MB
 - [ ] Lazy icons and sizes, never blocking the UI
 - [ ] Network shares and slow drives don't freeze the window
 - [x] Faster copies with `CopyFile2` and its progress callback (2 GB: 0.8 s → 0.45 s with a warm cache)

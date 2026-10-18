@@ -56,8 +56,10 @@
 
 ## Скачать
 
-Свежая сборка — в артефактах последнего [прогона CI](https://github.com/keyldev/rift/actions/workflows/build.yml)
-(`rift-win-x64`: один `Rift.exe`, .NET ставить не нужно).
+Скачай `rift-<версия>-win-x64.zip` из [Releases](https://github.com/keyldev/rift/releases), распакуй куда угодно и запусти `Rift.exe`
+(.NET ставить не нужно). Сборки каждого коммита лежат в артефактах [прогонов CI](https://github.com/keyldev/rift/actions/workflows/build.yml).
+
+Exe пока не подписан, поэтому SmartScreen может предупредить при первом запуске: «Подробнее» → «Выполнить в любом случае».
 
 ## Клавиатура
 

@@ -56,8 +56,10 @@
 
 ## Download
 
-Grab the latest build from the artifacts of the latest [CI run](https://github.com/keyldev/rift/actions/workflows/build.yml)
-(`rift-win-x64`: a single `Rift.exe`, no .NET install needed).
+Grab `rift-<version>-win-x64.zip` from [Releases](https://github.com/keyldev/rift/releases), unzip it anywhere and run `Rift.exe`
+(no .NET install needed). Builds of every commit are in the artifacts of the [CI runs](https://github.com/keyldev/rift/actions/workflows/build.yml).
+
+The exe isn't signed yet, so SmartScreen may warn on the first start: "More info" → "Run anyway".
 
 ## Keyboard
 
