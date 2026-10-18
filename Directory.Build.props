@@ -5,5 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Authors>Vasiliy Zalatov</Authors>
     <Product>Rift</Product>
+    <!-- Keep only satellite assemblies for languages Rift is translated to. -->
+    <SatelliteResourceLanguages>ru</SatelliteResourceLanguages>
   </PropertyGroup>
 </Project>

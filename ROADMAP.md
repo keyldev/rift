@@ -1,88 +1,94 @@
-# План Rift
+# Rift roadmap
 
-Что уже есть и что впереди. Порядок этапов — это приоритет: сначала то, без чего Rift нельзя использовать вместо Проводника каждый день.
+What's done and what's next. Stages are in priority order: first everything Rift needs to replace Explorer day to day.
 
-## Сделано (0.1)
+## Done — 0.1
 
-- [x] Две панели рядом, у каждой свои вкладки и история
-- [x] Навигация: «крошки» пути, назад / вперёд / вверх, открытие файлов программой по умолчанию
-- [x] Быстрый доступ и диски в сайдбаре
-- [x] Тёмная и светлая темы, свой титлбар, иконка
-- [x] Аргументы запуска `--left` / `--right`
-- [x] «Открыть в Rift» в контекстном меню Проводника (папки, фон папки, диски)
-- [x] CI: сборка, тесты, single-file `Rift.exe` в артефактах
+- [x] Two panes side by side, each with its own tabs and history
+- [x] Navigation: breadcrumbs, back / forward / up, open files with the default app
+- [x] Quick access and drives in the sidebar
+- [x] Dark and light themes, custom title bar, app icon
+- [x] Startup arguments `--left` / `--right`
+- [x] "Open in Rift" in Explorer's context menu (folders, folder background, drives)
+- [x] CI: build, tests, single-file `Rift.exe` artifact
 
-## 0.2 — Файловые операции
+## Done — 0.2: file operations
 
-Главная фишка: перекинуть файлы из панели в панель.
+The main feature: throw files from one pane to the other.
 
-- [ ] Копировать / переместить в другую панель (F5 / F6 как в Total Commander; обновление переезжает на Ctrl+R)
-- [ ] Drag-n-drop между панелями: зона сброса, Ctrl — копировать, Shift — переместить
-- [ ] Drag-n-drop с Проводником и другими приложениями в обе стороны
-- [ ] Буфер обмена Ctrl+C / Ctrl+X / Ctrl+V, совместимый с Проводником (CF_HDROP)
-- [ ] Удаление в корзину (Del) и насовсем (Shift+Del) с подтверждением
-- [ ] Переименование (F2) прямо в списке, новая папка (Ctrl+Shift+N)
-- [ ] Очередь операций с прогрессом, паузой и отменой
-- [ ] Диалог конфликтов: заменить, пропустить, переименовать, «для всех»
-- [ ] Отмена последней операции (Ctrl+Z)
-- [ ] Операции через `IFileOperation`, чтобы вести себя как Проводник
+- [x] Copy / move to the other pane: F5 / F6, like Total Commander (refresh moved to Ctrl+R)
+- [x] Drag-n-drop between panes: drop zone, onto a folder row, Ctrl copies, Shift moves
+- [x] Drag-n-drop with Explorer and other apps, both ways
+- [x] Clipboard Ctrl+C / Ctrl+X / Ctrl+V, compatible with Explorer (CF_HDROP + Preferred DropEffect)
+- [x] Delete to Recycle Bin (Del) and permanently (Shift+Del, with confirmation)
+- [x] Inline rename (F2), new folder (Ctrl+Shift+N)
+- [x] Operations panel with progress, pause and cancel
+- [x] Conflict dialog: replace, skip, keep both, "do this for all"
+- [x] Undo (Ctrl+Z) for copy, move, rename and new folder
+- [x] UI in English and Russian (follows the Windows language, `--lang en|ru` overrides)
 
-## 0.3 — Интеграция с Windows
+Decided against `IFileOperation`: Rift has its own copy engine so it can show its own progress,
+pause, conflicts and undo. The Recycle Bin still goes through the shell.
 
-- [ ] Контекстное меню по ПКМ: свои быстрые действия + «Ещё…» с нативным меню (`IContextMenu`: 7-Zip, Git и т.п.)
-- [ ] Системные иконки и превью файлов (`IShellItemImageFactory`) с асинхронной загрузкой и кэшем
-- [ ] Окно свойств файла (`SHObjectProperties`), «Открыть с помощью»
-- [ ] Спецпапки: «Этот компьютер», Корзина, Сеть, библиотеки
-- [ ] Автообновление списка при изменениях на диске (`FileSystemWatcher`)
-- [ ] Показ скрытых и системных файлов по переключателю
-- [ ] Один экземпляр: «Открыть в Rift» открывает новую вкладку в уже запущенном окне
-- [ ] «Открыть в Rift» в верхнем уровне меню Windows 11 (`IExplorerCommand` + sparse package)
-- [ ] Jump list в панели задач: недавние папки
+## 0.3 — Windows integration
 
-## 0.4 — Вид и поиск
+- [ ] Right-click context menu: Rift's quick actions + "More…" with the native menu (`IContextMenu`: 7-Zip, Git, …)
+- [ ] System file icons and thumbnails (`IShellItemImageFactory`), loaded async and cached
+- [ ] File properties dialog (`SHObjectProperties`), "Open with"
+- [ ] Special folders: This PC, Recycle Bin, Network, libraries
+- [ ] Auto-refresh when files change on disk (`FileSystemWatcher`)
+- [ ] Show hidden and system files toggle
+- [ ] Single instance: "Open in Rift" opens a new tab in the running window
+- [ ] Top-level "Open in Rift" in the Windows 11 menu (`IExplorerCommand` + sparse package)
+- [ ] Taskbar jump list with recent folders
+- [ ] Restore from the Recycle Bin with Ctrl+Z
 
-- [ ] Сортировка по колонкам, изменение ширины, выбор колонок
-- [ ] Режимы вида: таблица, плитка, превью
-- [ ] Панель предпросмотра: картинки, текст, видео, PDF
-- [ ] Фильтр по вводу в текущей папке
-- [ ] Командная палитра Ctrl+K: команды, папки, недавнее
-- [ ] Поиск по подпапкам с результатами в отдельной вкладке
-- [ ] Редактируемая адресная строка (клик по пути → ввод), автодополнение
-- [ ] Избранное и теги в сайдбаре
+## 0.4 — Views and search
 
-## 0.5 — Раскладки и вкладки
+- [ ] Sort by column, resize and pick columns
+- [ ] View modes: details, tiles, thumbnails
+- [ ] Preview pane: images, text, video, PDF
+- [ ] Type-to-filter in the current folder
+- [ ] Command palette (Ctrl+K): commands, folders, recent places
+- [ ] Recursive search with results in their own tab
+- [ ] Editable address bar (click the path → type), autocomplete
+- [ ] Favorites and tags in the sidebar
 
-- [ ] Больше двух панелей, сплиты по вертикали и горизонтали (как группы редакторов в VS Code)
-- [ ] Перетаскивание вкладок между панелями и к краю для нового сплита
-- [ ] Рабочие пространства: сохранённые наборы вкладок и раскладок
-- [ ] Восстановление сессии после перезапуска
-- [ ] Закреплённые вкладки, дублирование, «закрыть остальные»
+## 0.5 — Layouts and tabs
 
-## 0.6 — Настройки
+- [ ] More than two panes, vertical and horizontal splits (like editor groups in VS Code)
+- [ ] Drag tabs between panes and to an edge to create a split
+- [ ] Workspaces: saved sets of tabs and layouts
+- [ ] Restore the session after restart
+- [ ] Pinned tabs, duplicate tab, "close others"
 
-- [ ] Экран настроек; хранение в `%AppData%\Rift\settings.json`
-- [ ] Выбор акцентного цвета (лазурь, янтарь, мята, ирис, роза), тема «как в системе»
-- [ ] Настраиваемые горячие клавиши
-- [ ] Mica / Acrylic фон на Windows 11
+## 0.6 — Settings
 
-## Скорость
+- [ ] Settings screen; stored in `%AppData%\Rift\settings.json`
+- [ ] Accent color (azure, amber, mint, iris, rose), "follow system" theme
+- [ ] Language picker
+- [ ] Custom hotkeys
+- [ ] Mica / Acrylic background on Windows 11
 
-Делается по ходу всех этапов, но с измерениями.
+## Speed
 
-- [ ] Бенчмарк: папка на 100 000 файлов открывается без подвисаний
-- [ ] Время холодного старта < 300 мс, Native AOT
-- [ ] Ленивая подгрузка иконок и размеров, без блокировки UI
-- [ ] Сетевые папки и медленные диски не замораживают окно
+Done along the way, but with measurements.
 
-## Распространение
+- [ ] Benchmark: a folder with 100,000 files opens without stutter
+- [ ] Cold start under 300 ms, Native AOT
+- [ ] Lazy icons and sizes, never blocking the UI
+- [ ] Network shares and slow drives don't freeze the window
+- [ ] Faster large-file copies with `CopyFile2` and its progress callback
 
-- [ ] Релизы из CI по тегу: zip + установщик
-- [ ] Установщик с автообновлением (Velopack или MSIX)
-- [ ] winget-пакет
-- [ ] Подпись бинарников
+## Distribution
 
-## Качество
+- [ ] Releases from CI on tag: zip + installer
+- [ ] Installer with auto-update (Velopack or MSIX)
+- [ ] winget package
+- [ ] Signed binaries
 
-- [ ] UI-тесты на Avalonia.Headless
-- [ ] Логи и отчёт о падении
-- [ ] Доступность: навигация с клавиатуры везде, экранные дикторы
+## Quality
+
+- [ ] UI tests with Avalonia.Headless
+- [ ] Logs and crash reports
+- [ ] Accessibility: full keyboard navigation, screen readers

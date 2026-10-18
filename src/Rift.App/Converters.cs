@@ -2,13 +2,14 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
+using Rift.App.ViewModels;
 using Rift.Core;
 
 namespace Rift.App;
 
 public static class Converters
 {
-    // Цвета иконок по типу файла — одинаковые для обеих тем, как в макете.
+    // Icon colors per file kind; the same in both themes, as in the mockup.
     private static readonly Dictionary<FileKind, IBrush> KindBrushes = new()
     {
         [FileKind.Folder] = Brush("#E8B04A"),
@@ -42,6 +43,18 @@ public static class Converters
 
     public static readonly IValueConverter ThemeIcon =
         new FuncValueConverter<bool, Geometry?>(dark => Resource(dark ? "Icon.Sun" : "Icon.Moon"));
+
+    public static readonly IValueConverter OperationIcon =
+        new FuncValueConverter<OperationState, Geometry?>(s => Resource(s switch
+        {
+            OperationState.Done => "Icon.Check",
+            OperationState.Failed => "Icon.Alert",
+            OperationState.Canceled => "Icon.Close",
+            _ => "Icon.Copy",
+        }));
+
+    public static readonly IValueConverter DropIcon =
+        new FuncValueConverter<bool, Geometry?>(copy => Resource(copy ? "Icon.Copy" : "Icon.Move"));
 
     public static readonly IValueConverter FractionToPercent =
         new FuncValueConverter<double?, double>(f => (f ?? 0) * 100);

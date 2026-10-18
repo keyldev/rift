@@ -1,8 +1,9 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Rift.Core;
+using Rift.Core.Localization;
 using Rift.Shell;
 
 namespace Rift.App.ViewModels;
@@ -42,7 +43,7 @@ public partial class MainWindowViewModel : ViewModelBase
         if (!OperatingSystem.IsWindows())
             return;
         if (value)
-            ExplorerIntegration.Register(Environment.ProcessPath!);
+            ExplorerIntegration.Register(Environment.ProcessPath!, Strings.ExplorerMenuText);
         else
             ExplorerIntegration.Unregister();
     }

@@ -4,7 +4,7 @@ using Microsoft.Win32;
 namespace Rift.Shell;
 
 /// <summary>
-/// "Открыть в Rift" in Explorer's context menu for folders, empty space inside a folder and drives.
+/// "Open in Rift" in Explorer's context menu for folders, empty space inside a folder and drives.
 /// Written per user (HKCU\Software\Classes), so no admin rights are needed.
 /// On Windows 11 classic verbs live under "Show more options"; a top-level entry needs
 /// IExplorerCommand + a sparse package (see ROADMAP.md).
@@ -13,7 +13,6 @@ namespace Rift.Shell;
 public static class ExplorerIntegration
 {
     public const string VerbName = "Rift";
-    public const string MenuText = "Открыть в Rift";
 
     private const string ClassesRoot = @"Software\Classes";
 
@@ -33,12 +32,13 @@ public static class ExplorerIntegration
         return key?.GetValue(null) is string;
     }
 
-    public static void Register(string exePath)
+    /// <param name="menuText">Localized caption, e.g. "Open in Rift".</param>
+    public static void Register(string exePath, string menuText)
     {
         foreach (var (shellKey, placeholder) in Targets)
         {
             using var verb = Registry.CurrentUser.CreateSubKey(VerbKey(shellKey));
-            verb.SetValue(null, MenuText);
+            verb.SetValue(null, menuText);
             verb.SetValue("Icon", $"\"{exePath}\",0");
             using var command = verb.CreateSubKey("command");
             command.SetValue(null, Command(exePath, placeholder));

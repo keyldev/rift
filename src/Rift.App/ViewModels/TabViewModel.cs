@@ -3,6 +3,7 @@ using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Rift.Core;
+using Rift.Core.Localization;
 
 namespace Rift.App.ViewModels;
 
@@ -29,8 +30,16 @@ public partial class TabViewModel : ViewModelBase
     public string Title => PathCrumbs.Title(Path);
     public IReadOnlyList<CrumbItem> Crumbs =>
         PathCrumbs.Split(Path).Select((c, i) => new CrumbItem(c.Label, c.Path, i > 0)).ToList();
-    public ObservableCollection<FileItem> Items { get; } = [];
+    /// <summary>Replaced as a whole on every load: one change notification instead of one per file.</summary>
+    [ObservableProperty] private IReadOnlyList<FileItem> _items = [];
     public ObservableCollection<FileItem> Selected { get; } = [];
+
+    public IReadOnlyList<string> SelectedPaths => Selected.Select(i => i.FullPath).ToList();
+
+    /// <summary>Raised after a reload when the view should select these rows (e.g. pasted files).</summary>
+    public event Action<IReadOnlyList<FileItem>>? SelectRequested;
+
+    public FileItem? RenamingItem { get; private set; }
 
     public bool CanGoBack => _history.CanGoBack;
     public bool CanGoForward => _history.CanGoForward;
@@ -52,7 +61,28 @@ public partial class TabViewModel : ViewModelBase
     private Task Up() => PathCrumbs.Parent(Path) is { } p ? NavigateTo(p) : Task.CompletedTask;
 
     [RelayCommand]
-    private Task Refresh() => LoadAsync(Path);
+    private Task Refresh() => RefreshAsync();
+
+    /// <summary>Reloads the folder; keeps the current selection unless <paramref name="select"/> names other items.</summary>
+    public Task RefreshAsync(IEnumerable<string>? select = null) =>
+        LoadAsync(Path, (select ?? Selected.Select(i => i.FullPath)).ToList());
+
+    public void BeginRename()
+    {
+        CancelRename();
+        if (Selected.FirstOrDefault() is not { } item)
+            return;
+        item.EditName = item.Name;
+        item.IsRenaming = true;
+        RenamingItem = item;
+    }
+
+    public void CancelRename()
+    {
+        if (RenamingItem is { } item)
+            item.IsRenaming = false;
+        RenamingItem = null;
+    }
 
     [RelayCommand]
     public async Task Open(FileItem? item)
@@ -75,8 +105,9 @@ public partial class TabViewModel : ViewModelBase
         }
     }
 
-    private async Task LoadAsync(string path)
+    private async Task LoadAsync(string path, IReadOnlyCollection<string>? select = null)
     {
+        RenamingItem = null;
         _loading?.Cancel();
         var cts = _loading = new CancellationTokenSource();
 
@@ -90,10 +121,17 @@ public partial class TabViewModel : ViewModelBase
             if (cts.IsCancellationRequested)
                 return;
 
-            Items.Clear();
-            foreach (var e in entries)
-                Items.Add(new FileItem(e));
+            var items = entries.Select(e => new FileItem(e)).ToList();
+            Items = items;
             Error = null;
+
+            if (select is { Count: > 0 })
+            {
+                var wanted = new HashSet<string>(select, StringComparer.OrdinalIgnoreCase);
+                var found = items.Where(i => wanted.Contains(i.FullPath)).ToList();
+                if (found.Count > 0)
+                    SelectRequested?.Invoke(found);
+            }
         }
         catch (OperationCanceledException)
         {
@@ -101,8 +139,13 @@ public partial class TabViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            Items.Clear();
-            Error = ex is UnauthorizedAccessException ? "Нет доступа к этой папке" : ex.Message;
+            Items = [];
+            Error = ex switch
+            {
+                UnauthorizedAccessException => Strings.ErrorAccessDenied,
+                DirectoryNotFoundException => Strings.ErrorFolderNotFound,
+                _ => ex.Message,
+            };
         }
 
         UpdateStatus();
@@ -110,11 +153,11 @@ public partial class TabViewModel : ViewModelBase
 
     public void UpdateStatus()
     {
-        var text = $"{Items.Count} элем.";
+        var text = Strings.ItemsCount(Items.Count);
         if (Selected.Count > 0)
         {
             var bytes = Selected.Sum(i => i.Entry.Size ?? 0);
-            text += $"  ·  выбрано {Selected.Count}";
+            text += "  ·  " + Strings.SelectedCount(Selected.Count);
             if (bytes > 0)
                 text += $" · {SizeFormatter.Format(bytes)}";
         }

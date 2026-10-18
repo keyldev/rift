@@ -1,17 +1,19 @@
 namespace Rift.Core;
 
 /// <summary>
-/// Command line: <c>Rift [path...] [--left path]... [--right path]...</c>.
+/// Command line: <c>Rift [path...] [--left path]... [--right path]... [--lang en|ru]</c>.
 /// Every path becomes a tab; bare paths go to the left pane.
 /// </summary>
-public sealed record StartupArgs(IReadOnlyList<string> Left, IReadOnlyList<string> Right)
+public sealed record StartupArgs(IReadOnlyList<string> Left, IReadOnlyList<string> Right, string? Language = null)
 {
     public static StartupArgs Parse(IEnumerable<string> args)
     {
         var left = new List<string>();
         var right = new List<string>();
+        string? language = null;
         var target = left;
         var pendingSide = false;
+        var pendingLanguage = false;
 
         foreach (var arg in args)
         {
@@ -25,6 +27,16 @@ public sealed record StartupArgs(IReadOnlyList<string> Left, IReadOnlyList<strin
                     target = right;
                     pendingSide = true;
                     continue;
+                case "--lang":
+                    pendingLanguage = true;
+                    continue;
+            }
+
+            if (pendingLanguage)
+            {
+                language = arg.Trim().ToLowerInvariant();
+                pendingLanguage = false;
+                continue;
             }
 
             // Explorer passes drive roots as "C:\" — the trailing \" turns into a stray quote.
@@ -39,6 +51,6 @@ public sealed record StartupArgs(IReadOnlyList<string> Left, IReadOnlyList<strin
             pendingSide = false;
         }
 
-        return new StartupArgs(left, right);
+        return new StartupArgs(left, right, language);
     }
 }

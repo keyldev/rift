@@ -1,4 +1,5 @@
 using Rift.Core;
+using Rift.Core.Localization;
 
 namespace Rift.App.ViewModels;
 
@@ -11,10 +12,10 @@ public sealed record SidebarItem(string Label, string Path, string Icon, double?
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         return
         [
-            new("Рабочий стол", Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Icon.Desktop"),
-            new("Загрузки", System.IO.Path.Combine(home, "Downloads"), "Icon.Download"),
-            new("Документы", Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Icon.Document"),
-            new("Домашняя папка", home, "Icon.Home"),
+            new(Strings.PlaceDesktop, Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Icon.Desktop"),
+            new(Strings.PlaceDownloads, System.IO.Path.Combine(home, "Downloads"), "Icon.Download"),
+            new(Strings.PlaceDocuments, Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Icon.Document"),
+            new(Strings.PlaceHome, home, "Icon.Home"),
         ];
     }
 
@@ -28,11 +29,11 @@ public sealed record SidebarItem(string Label, string Path, string Icon, double?
                 if (!d.IsReady)
                     continue;
                 var letter = d.Name.TrimEnd('\\');
-                var label = string.IsNullOrWhiteSpace(d.VolumeLabel) ? "Локальный диск" : d.VolumeLabel;
+                var label = string.IsNullOrWhiteSpace(d.VolumeLabel) ? Strings.DriveLocal : d.VolumeLabel;
                 var used = d.TotalSize > 0 ? 1 - (double)d.AvailableFreeSpace / d.TotalSize : 0;
                 var icon = d.DriveType == DriveType.Network ? "Icon.Server" : "Icon.Drive";
                 list.Add(new($"{label} ({letter})", d.Name, icon, used,
-                    $"{SizeFormatter.Format(d.AvailableFreeSpace)} своб. из {SizeFormatter.Format(d.TotalSize)}"));
+                    Strings.DriveFree(SizeFormatter.Format(d.AvailableFreeSpace), SizeFormatter.Format(d.TotalSize))));
             }
             catch (IOException)
             {

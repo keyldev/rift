@@ -5,6 +5,7 @@
         xmlns:c="using:Rift.App.Controls"
         xmlns:app="using:Rift.App"
         xmlns:chrome="using:Avalonia.Controls.Chrome"
+        xmlns:l="using:Rift.Core.Localization"
         x:Class="Rift.App.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="Rift"
@@ -18,7 +19,17 @@
   <Window.KeyBindings>
     <KeyBinding Gesture="Ctrl+T" Command="{Binding ActivePane.NewTabCommand}" />
     <KeyBinding Gesture="Ctrl+W" Command="{Binding ActivePane.CloseTabCommand}" CommandParameter="{Binding ActivePane.SelectedTab}" />
-    <KeyBinding Gesture="F5" Command="{Binding ActivePane.SelectedTab.RefreshCommand}" />
+    <KeyBinding Gesture="Ctrl+R" Command="{Binding ActivePane.SelectedTab.RefreshCommand}" />
+    <KeyBinding Gesture="F5" Command="{Binding CopyToOtherCommand}" />
+    <KeyBinding Gesture="F6" Command="{Binding MoveToOtherCommand}" />
+    <KeyBinding Gesture="F2" Command="{Binding RenameCommand}" />
+    <KeyBinding Gesture="Delete" Command="{Binding DeleteCommand}" />
+    <KeyBinding Gesture="Shift+Delete" Command="{Binding DeletePermanentlyCommand}" />
+    <KeyBinding Gesture="Ctrl+Shift+N" Command="{Binding NewFolderCommand}" />
+    <KeyBinding Gesture="Ctrl+Z" Command="{Binding UndoCommand}" />
+    <KeyBinding Gesture="Ctrl+C" Command="{Binding CopyToClipboardCommand}" />
+    <KeyBinding Gesture="Ctrl+X" Command="{Binding CutToClipboardCommand}" />
+    <KeyBinding Gesture="Ctrl+V" Command="{Binding PasteCommand}" />
     <KeyBinding Gesture="Alt+Left" Command="{Binding ActivePane.SelectedTab.BackCommand}" />
     <KeyBinding Gesture="Alt+Right" Command="{Binding ActivePane.SelectedTab.ForwardCommand}" />
     <KeyBinding Gesture="Alt+Up" Command="{Binding ActivePane.SelectedTab.UpCommand}" />
@@ -26,7 +37,7 @@
 
   <Grid RowDefinitions="44,*,28">
 
-    <!-- Титлбар целиком свой: перетаскивание через роль TitleBar, интерактивные элементы помечены User. -->
+    <!-- Fully custom title bar: dragging via the TitleBar role, interactive elements are marked User. -->
     <Border x:Name="TitleBar" Background="{DynamicResource Rift.Panel}"
             BorderBrush="{DynamicResource Rift.Line}" BorderThickness="0,0,0,1"
             chrome:WindowDecorationProperties.ElementRole="TitleBar">
@@ -62,13 +73,13 @@
               <Setter Property="Foreground" Value="White" />
             </Style>
           </StackPanel.Styles>
-          <Button Classes="flat caption" Click="OnMinimize" ToolTip.Tip="Свернуть">
+          <Button Classes="flat caption" Click="OnMinimize" ToolTip.Tip="{x:Static l:Strings.TipMinimize}">
             <c:Icon Data="{StaticResource Icon.Minimize}" />
           </Button>
-          <Button Classes="flat caption" Click="OnMaximize" ToolTip.Tip="Развернуть">
+          <Button Classes="flat caption" Click="OnMaximize" ToolTip.Tip="{x:Static l:Strings.TipMaximize}">
             <c:Icon Data="{StaticResource Icon.Single}" />
           </Button>
-          <Button Classes="flat caption close" Click="OnClose" ToolTip.Tip="Закрыть">
+          <Button Classes="flat caption close" Click="OnClose" ToolTip.Tip="{x:Static l:Strings.TipClose}">
             <c:Icon Data="{StaticResource Icon.Close}" />
           </Button>
         </StackPanel>
@@ -79,14 +90,14 @@
               <Setter Property="chrome:WindowDecorationProperties.ElementRole" Value="User" />
             </Style>
           </StackPanel.Styles>
-          <Button Classes="flat" Classes.on="{Binding !IsSplit}" Command="{Binding ShowSingleCommand}" ToolTip.Tip="Одна панель">
+          <Button Classes="flat" Classes.on="{Binding !IsSplit}" Command="{Binding ShowSingleCommand}" ToolTip.Tip="{x:Static l:Strings.TipSinglePane}">
             <c:Icon Data="{StaticResource Icon.Single}" />
           </Button>
-          <Button Classes="flat" Classes.on="{Binding IsSplit}" Command="{Binding ShowSplitCommand}" ToolTip.Tip="Две панели">
+          <Button Classes="flat" Classes.on="{Binding IsSplit}" Command="{Binding ShowSplitCommand}" ToolTip.Tip="{x:Static l:Strings.TipSplitPane}">
             <c:Icon Data="{StaticResource Icon.Split}" />
           </Button>
           <Border Width="1" Height="18" Margin="6,0" Background="{DynamicResource Rift.Line}" />
-          <Button Classes="flat" Command="{Binding ToggleThemeCommand}" ToolTip.Tip="Сменить тему">
+          <Button Classes="flat" Command="{Binding ToggleThemeCommand}" ToolTip.Tip="{x:Static l:Strings.TipTheme}">
             <c:Icon Data="{Binding IsDark, Converter={x:Static app:Converters.ThemeIcon}}" />
           </Button>
         </StackPanel>
@@ -97,19 +108,19 @@
 
     <Grid Grid.Row="1" ColumnDefinitions="220,*">
 
-      <!-- Сайдбар -->
+      <!-- Sidebar -->
       <Border Background="{DynamicResource Rift.Panel}" BorderBrush="{DynamicResource Rift.Line}" BorderThickness="0,0,1,0">
         <DockPanel>
           <StackPanel DockPanel.Dock="Bottom" Margin="8,0,8,12" Spacing="6"
                       IsVisible="{Binding IsExplorerMenuSupported}">
-            <TextBlock Classes="section" Text="ПРОВОДНИК" />
+            <TextBlock Classes="section" Text="{x:Static l:Strings.SectionExplorer}" />
             <CheckBox Margin="8,0,0,0" FontSize="12" IsChecked="{Binding IsExplorerMenuEnabled}"
-                      Content="«Открыть в Rift» в меню"
-                      ToolTip.Tip="Пункт в контекстном меню папок и дисков. В Windows 11 — в «Показать дополнительные параметры»." />
+                      Content="{x:Static l:Strings.ExplorerMenuToggle}"
+                      ToolTip.Tip="{x:Static l:Strings.ExplorerMenuToggleTip}" />
           </StackPanel>
         <ScrollViewer>
           <StackPanel Margin="8,12" Spacing="2">
-            <TextBlock Classes="section" Text="БЫСТРЫЙ ДОСТУП" />
+            <TextBlock Classes="section" Text="{x:Static l:Strings.SectionQuickAccess}" />
             <ItemsControl ItemsSource="{Binding QuickAccess}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:SidebarItem">
@@ -125,7 +136,7 @@
               </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <TextBlock Classes="section" Text="ДИСКИ" Margin="8,16,0,6" />
+            <TextBlock Classes="section" Text="{x:Static l:Strings.SectionDrives}" Margin="8,16,0,6" />
             <ItemsControl ItemsSource="{Binding Drives}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:SidebarItem">
@@ -151,7 +162,7 @@
         </DockPanel>
       </Border>
 
-      <!-- Панели -->
+      <!-- Panes -->
       <Grid Grid.Column="1" Margin="8" ColumnDefinitions="*,8,*">
         <v:PaneView x:Name="LeftPane" DataContext="{Binding Left}"
                     Grid.ColumnSpan="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsSplit, Converter={x:Static app:Converters.SplitToSpan}}" />
@@ -159,9 +170,59 @@
         <v:PaneView x:Name="RightPane" Grid.Column="2" DataContext="{Binding Right}"
                     IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsSplit}" />
       </Grid>
+
+      <!-- Running operations, bottom right -->
+      <ItemsControl Grid.Column="1" ItemsSource="{Binding Operations.Items}" Width="320"
+                    HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,18,18">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Spacing="8" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:OperationViewModel">
+            <Border Classes="card" Padding="12,10">
+              <DockPanel>
+                <c:Icon DockPanel.Dock="Left" Width="18" Height="18" Margin="0,1,10,0" VerticalAlignment="Top"
+                        Foreground="{DynamicResource Rift.Accent}"
+                        Data="{Binding State, Converter={x:Static app:Converters.OperationIcon}}" />
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top" Margin="6,-4,-6,0">
+                  <Button Classes="flat" Command="{Binding TogglePauseCommand}" IsVisible="{Binding ShowPause}"
+                          ToolTip.Tip="{x:Static l:Strings.TipPause}">
+                    <Panel>
+                      <c:Icon Data="{StaticResource Icon.Pause}" IsVisible="{Binding !IsPaused}" />
+                      <c:Icon Data="{StaticResource Icon.Play}" IsVisible="{Binding IsPaused}" />
+                    </Panel>
+                  </Button>
+                  <Button Classes="flat" Command="{Binding CancelCommand}" IsVisible="{Binding IsActive}"
+                          ToolTip.Tip="{x:Static l:Strings.TipCancel}">
+                    <c:Icon Data="{StaticResource Icon.Close}" />
+                  </Button>
+                  <Button Classes="flat" Command="{Binding DismissCommand}" IsVisible="{Binding IsFinished}"
+                          ToolTip.Tip="{x:Static l:Strings.TipDismiss}">
+                    <c:Icon Data="{StaticResource Icon.Close}" />
+                  </Button>
+                </StackPanel>
+                <StackPanel Spacing="6">
+                  <TextBlock Text="{Binding Title}" FontWeight="Medium" TextTrimming="CharacterEllipsis" />
+                  <ProgressBar Classes="usage" Minimum="0" Maximum="100" Value="{Binding Percent}"
+                               IsIndeterminate="{Binding IsIndeterminate}" IsVisible="{Binding IsActive}" />
+                  <DockPanel>
+                    <TextBlock DockPanel.Dock="Right" Classes="dim" FontSize="11" Text="{Binding StateText}" />
+                    <TextBlock Classes="dim" FontSize="11" Text="{Binding Detail}" />
+                  </DockPanel>
+                  <TextBlock FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource Rift.Danger}"
+                             Text="{Binding ErrorText}"
+                             IsVisible="{Binding ErrorText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                </StackPanel>
+              </DockPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
     </Grid>
 
-    <!-- Статусбар -->
+    <!-- Status bar -->
     <Border Grid.Row="2" Background="{DynamicResource Rift.Panel}" BorderBrush="{DynamicResource Rift.Line}" BorderThickness="0,1,0,0">
       <StackPanel Orientation="Horizontal" Spacing="18" Margin="12,0" VerticalAlignment="Center">
         <StackPanel.Styles>
@@ -170,12 +231,54 @@
             <Setter Property="Foreground" Value="{DynamicResource Rift.Muted}" />
           </Style>
         </StackPanel.Styles>
-        <TextBlock Text="Tab — другая панель" />
-        <TextBlock Text="Ctrl+T — вкладка" />
-        <TextBlock Text="Ctrl+W — закрыть" />
-        <TextBlock Text="Enter — открыть" />
-        <TextBlock Text="Backspace — вверх" />
+        <StackPanel Orientation="Horizontal"><Border Classes="kbd"><TextBlock Text="Tab" /></Border><TextBlock Text="{x:Static l:Strings.HintOtherPane}" /></StackPanel>
+        <StackPanel Orientation="Horizontal"><Border Classes="kbd"><TextBlock Text="F5" /></Border><TextBlock Text="{x:Static l:Strings.HintCopy}" /></StackPanel>
+        <StackPanel Orientation="Horizontal"><Border Classes="kbd"><TextBlock Text="F6" /></Border><TextBlock Text="{x:Static l:Strings.HintMove}" /></StackPanel>
+        <StackPanel Orientation="Horizontal"><Border Classes="kbd"><TextBlock Text="F2" /></Border><TextBlock Text="{x:Static l:Strings.HintRename}" /></StackPanel>
+        <StackPanel Orientation="Horizontal"><Border Classes="kbd"><TextBlock Text="Del" /></Border><TextBlock Text="{x:Static l:Strings.HintDelete}" /></StackPanel>
+        <StackPanel Orientation="Horizontal"><Border Classes="kbd"><TextBlock Text="Ctrl+Shift+N" /></Border><TextBlock Text="{x:Static l:Strings.HintNewFolder}" /></StackPanel>
+        <StackPanel Orientation="Horizontal"><Border Classes="kbd"><TextBlock Text="Ctrl+Z" /></Border><TextBlock Text="{x:Static l:Strings.HintUndo}" /></StackPanel>
       </StackPanel>
+    </Border>
+
+    <!-- Modal dialog: conflicts, delete confirmation, errors -->
+    <Border Grid.RowSpan="3" Background="{DynamicResource Rift.Scrim}"
+            IsVisible="{Binding Dialog, Converter={x:Static ObjectConverters.IsNotNull}}">
+      <ContentControl Content="{Binding Dialog}" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <ContentControl.ContentTemplate>
+          <DataTemplate x:DataType="vm:DialogViewModel">
+            <Border Classes="card" Width="500" Padding="20,18" Background="{DynamicResource Rift.Panel}" CornerRadius="12">
+              <StackPanel Spacing="10">
+                <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding Message}" TextWrapping="Wrap" IsVisible="{Binding HasMessage}" />
+                <ItemsControl ItemsSource="{Binding Details}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="x:String">
+                      <TextBlock Classes="muted" FontSize="12" Text="{Binding}" TextWrapping="Wrap" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <CheckBox Content="{Binding CheckBoxText}" IsChecked="{Binding IsChecked}" IsVisible="{Binding HasCheckBox}" />
+                <ItemsControl ItemsSource="{Binding Buttons}" HorizontalAlignment="Right" Margin="0,8,0,0">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <StackPanel Orientation="Horizontal" Spacing="8" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:DialogButton">
+                      <Button Classes="dialog" Classes.primary="{Binding IsPrimary}" Classes.danger="{Binding IsDanger}"
+                              Content="{Binding Label}"
+                              Command="{Binding $parent[ItemsControl].((vm:DialogViewModel)DataContext).ChooseCommand}"
+                              CommandParameter="{Binding}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ContentControl.ContentTemplate>
+      </ContentControl>
     </Border>
   </Grid>
 </Window>

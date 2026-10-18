@@ -5,111 +5,139 @@
 <h1 align="center">Rift</h1>
 
 <p align="center">
-  Быстрый файловый менеджер для Windows с вкладками и панелями бок о бок.
+  A fast file manager for Windows with tabs and side-by-side panes.
 </p>
 
 <p align="center">
   <a href="https://github.com/keyldev/rift/actions/workflows/build.yml"><img src="https://github.com/keyldev/rift/actions/workflows/build.yml/badge.svg" alt="Build"></a>
+  &nbsp;·&nbsp; English &nbsp;·&nbsp; <a href="README.ru.md">Русский</a>
 </p>
 
-![Rift, тёмная тема](docs/screenshot-dark.png)
+![Rift, dark theme](docs/screenshot-dark.png)
 
 <details>
-<summary>Светлая тема</summary>
+<summary>Light theme</summary>
 
-![Rift, светлая тема](docs/screenshot-light.png)
+![Rift, light theme](docs/screenshot-light.png)
 
 </details>
 
-> Ранняя стадия. Сейчас есть навигация, вкладки, две панели, тёмная и светлая темы.
-> Что дальше — в [ROADMAP.md](ROADMAP.md): файловые операции, drag-n-drop между панелями, контекстное меню, поиск.
+> Early stage. Rift already browses, copies and moves; next up are the right-click menu, system icons and search.
+> See [ROADMAP.md](ROADMAP.md).
 
-## Возможности
+## Features
 
-- Две панели рядом, у каждой свои вкладки и история
-- Навигация по «крошкам» пути, назад / вперёд / вверх
-- Быстрый доступ и диски с заполненностью в сайдбаре
-- Тёмная и светлая темы
-- Свой титлбар, без системной рамки
-- «Открыть в Rift» в контекстном меню Проводника
+- Two panes side by side, each with its own tabs and history
+- Copy and move between panes: F5 / F6, drag-n-drop, or Ctrl+C / Ctrl+V
+- Drag files to and from Explorer, clipboard compatible with Explorer (including Cut)
+- Operations panel with progress, pause and cancel; conflict dialog with "do this for all"
+- Undo (Ctrl+Z) for copy, move, rename and new folder
+- Delete to the Recycle Bin or permanently
+- Inline rename, new folder
+- Breadcrumbs, back / forward / up, quick access and drives in the sidebar
+- Dark and light themes, custom title bar
+- "Open in Rift" in Explorer's context menu
+- English and Russian UI
 
-## Стек
+## Download
 
-- .NET 10, C#
-- [Avalonia 12](https://avaloniaui.net/) + Fluent theme
-- CommunityToolkit.Mvvm
+Grab the latest build from the artifacts of the latest [CI run](https://github.com/keyldev/rift/actions/workflows/build.yml)
+(`rift-win-x64`: a single `Rift.exe`, no .NET install needed).
 
-## Структура
+## Keyboard
 
-```
-src/Rift.App     UI: окна, вьюхи, темы, ViewModel'и
-src/Rift.Core    логика без UI: чтение папок, пути, история навигации, аргументы запуска
-src/Rift.Shell   интеграция с Windows Shell (иконки, контекстное меню, IFileOperation) — в планах
-tests/           тесты Rift.Core
-design/          интерактивный макет дизайна (React), открыть design/preview.html
-scripts/         иконка и демо-файлы для скриншотов
-docs/            логотип и скриншоты
-```
+| Key | Action |
+| --- | --- |
+| Tab | Switch to the other pane |
+| F5 / F6 | Copy / move selection to the other pane |
+| Ctrl+C / Ctrl+X / Ctrl+V | Copy / cut / paste files (works with Explorer) |
+| Del / Shift+Del | Move to Recycle Bin / delete permanently |
+| F2 | Rename |
+| Ctrl+Shift+N | New folder |
+| Ctrl+Z | Undo |
+| Ctrl+T / Ctrl+W | New tab / close tab |
+| Enter, double click | Open |
+| Backspace, Alt+↑ | Up |
+| Alt+← / Alt+→ | Back / forward |
+| Ctrl+R | Refresh |
 
-## Запуск
+Dragging: same drive moves, another drive copies; hold Ctrl to copy, Shift to move. Drop on a folder row to put files inside it.
+
+## Command line
 
 ```bash
-dotnet run --project src/Rift.App
+Rift.exe C:\Projects --right D:\Backup
 ```
 
-Открыть конкретные папки (каждая — отдельная вкладка):
+- Every path opens as a tab; bare paths and `--left` go to the left pane, `--right` to the right one.
+- `--lang en` or `--lang ru` overrides the UI language (by default Rift follows Windows).
+- `--register-shell` / `--unregister-shell` add or remove "Open in Rift" in Explorer.
 
-```bash
-dotnet run --project src/Rift.App -- --left C:\Projects --left D:\Downloads --right E:\Backup
-```
+## "Open in Rift" in Explorer
 
-Тесты:
-
-```bash
-dotnet test
-```
-
-## Скачать
-
-Свежая сборка — в артефактах последнего [прогона CI](https://github.com/keyldev/rift/actions/workflows/build.yml) (`rift-win-x64`, один `Rift.exe`, .NET ставить не нужно).
-
-## «Открыть в Rift» в Проводнике
-
-Включается галочкой внизу сайдбара или из командной строки:
+Turn it on with the checkbox at the bottom of the sidebar, or run:
 
 ```bash
 Rift.exe --register-shell
 ```
 
+The item shows up for folders, empty space inside a folder and drives. It's written to `HKCU`, so no admin rights are needed.
+On Windows 11 it's under "Show more options". The menu points to the `Rift.exe` it was enabled from, so re-enable it after moving the exe.
+
+## Building
+
+Needs the .NET 10 SDK.
+
 ```bash
-Rift.exe --unregister-shell
+dotnet run --project src/Rift.App
 ```
 
-Пункт появляется в меню папок, пустого места внутри папки и дисков. Пишется в `HKCU`, права администратора не нужны. В Windows 11 он находится в «Показать дополнительные параметры». В меню попадает путь к тому `Rift.exe`, из которого включали, так что после переноса exe включи заново.
+```bash
+dotnet test
+```
 
-## Горячие клавиши
+### Stack
 
-| Клавиша | Действие |
-| --- | --- |
-| Tab | Переключиться на другую панель |
-| Ctrl+T / Ctrl+W | Новая вкладка / закрыть вкладку |
-| Enter, двойной клик | Открыть |
-| Backspace, Alt+↑ | Вверх |
-| Alt+← / Alt+→ | Назад / вперёд |
-| F5 | Обновить |
+- .NET 10, C#
+- [Avalonia 12](https://avaloniaui.net/) + Fluent theme
+- CommunityToolkit.Mvvm
 
-## Скриншоты и иконка
+### Layout
 
-Скриншоты снимаются на мок-файлах, без личных папок:
+```
+src/Rift.App     UI: windows, views, themes, view models
+src/Rift.Core    logic without UI: folders, paths, history, file operations, undo, localization
+src/Rift.Shell   Windows integration: Recycle Bin, clipboard, Explorer menu
+tests/           Rift.Core tests
+design/          interactive design mockup (React), open design/preview.html
+scripts/         icon and demo files for screenshots
+docs/            logo and screenshots
+```
+
+### Translations
+
+UI strings live in `src/Rift.Core/Localization`: `Strings.resx` (English) and `Strings.ru.resx`.
+To add a language, add `Strings.<culture>.resx` with the same keys and list the culture in `Strings.Supported`;
+a test checks that every translation has every key.
+
+### Screenshots and icon
+
+Screenshots are taken on mock files, never on real folders:
 
 ```bash
 powershell -File scripts/demo-fixture.ps1
+```
+
+```bash
 dotnet run --project src/Rift.App -- --left C:\RiftDemo\Downloads --left C:\RiftDemo\Projects\rift --right C:\RiftDemo\Backup --right C:\RiftDemo\Media
+```
+
+```bash
 powershell -File scripts/demo-fixture.ps1 -Remove
 ```
 
-Иконка приложения генерируется скриптом `python scripts/make-icon.py` (нужен Pillow).
+The app icon is generated by `python scripts/make-icon.py` (needs Pillow).
 
-## Лицензия
+## License
 
 [MIT](LICENSE)

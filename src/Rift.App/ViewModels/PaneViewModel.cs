@@ -19,6 +19,12 @@ public partial class PaneViewModel : ViewModelBase
     [ObservableProperty] private TabViewModel _selectedTab;
     [ObservableProperty] private bool _isActive;
 
+    // Drop zone shown while files are dragged over the pane.
+    [ObservableProperty] private bool _isDropTarget;
+    [ObservableProperty] private bool _dropIsCopy;
+    [ObservableProperty] private string _dropTitle = "";
+    [ObservableProperty] private string _dropHint = "";
+
     [RelayCommand]
     private void NewTab()
     {

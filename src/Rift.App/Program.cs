@@ -1,4 +1,5 @@
-﻿using Avalonia;
+using Avalonia;
+using Rift.Core.Localization;
 using Rift.Shell;
 
 namespace Rift.App;
@@ -11,13 +12,13 @@ sealed class Program
     [STAThread]
     public static int Main(string[] args)
     {
-        // Для установщика и ручной настройки: Rift.exe --register-shell / --unregister-shell
+        // For installers and manual setup: Rift.exe --register-shell / --unregister-shell
         if (OperatingSystem.IsWindows() && args is [var flag] && flag.StartsWith("--", StringComparison.Ordinal))
         {
             switch (flag)
             {
                 case "--register-shell":
-                    ExplorerIntegration.Register(Environment.ProcessPath!);
+                    ExplorerIntegration.Register(Environment.ProcessPath!, Strings.ExplorerMenuText);
                     return 0;
                 case "--unregister-shell":
                     ExplorerIntegration.Unregister();

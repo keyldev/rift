@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="SizeB" xml:space="preserve"><value>Б</value></data>
+  <data name="SizeKB" xml:space="preserve"><value>КБ</value></data>
+  <data name="SizeMB" xml:space="preserve"><value>МБ</value></data>
+  <data name="SizeGB" xml:space="preserve"><value>ГБ</value></data>
+  <data name="SizeTB" xml:space="preserve"><value>ТБ</value></data>
+  <data name="KindFolder" xml:space="preserve"><value>Папка</value></data>
+  <data name="KindImage" xml:space="preserve"><value>Изображение</value></data>
+  <data name="KindVideo" xml:space="preserve"><value>Видео</value></data>
+  <data name="KindAudio" xml:space="preserve"><value>Аудио</value></data>
+  <data name="KindArchive" xml:space="preserve"><value>Архив</value></data>
+  <data name="KindCode" xml:space="preserve"><value>Исходник</value></data>
+  <data name="KindDocument" xml:space="preserve"><value>Документ</value></data>
+  <data name="KindPdf" xml:space="preserve"><value>PDF</value></data>
+  <data name="KindExecutable" xml:space="preserve"><value>Приложение</value></data>
+  <data name="KindFile" xml:space="preserve"><value>Файл</value></data>
+  <data name="ItemsCount" xml:space="preserve"><value>{0} элем.</value></data>
+  <data name="SelectedCount" xml:space="preserve"><value>выбрано {0}</value></data>
+  <data name="ErrorAccessDenied" xml:space="preserve"><value>Нет доступа к этой папке</value></data>
+  <data name="ErrorFolderNotFound" xml:space="preserve"><value>Папка не найдена</value></data>
+  <data name="ErrorIntoItself" xml:space="preserve"><value>Нельзя поместить папку внутрь самой себя</value></data>
+  <data name="SectionQuickAccess" xml:space="preserve"><value>БЫСТРЫЙ ДОСТУП</value></data>
+  <data name="SectionDrives" xml:space="preserve"><value>ДИСКИ</value></data>
+  <data name="SectionExplorer" xml:space="preserve"><value>ПРОВОДНИК</value></data>
+  <data name="PlaceDesktop" xml:space="preserve"><value>Рабочий стол</value></data>
+  <data name="PlaceDownloads" xml:space="preserve"><value>Загрузки</value></data>
+  <data name="PlaceDocuments" xml:space="preserve"><value>Документы</value></data>
+  <data name="PlaceHome" xml:space="preserve"><value>Домашняя папка</value></data>
+  <data name="DriveLocal" xml:space="preserve"><value>Локальный диск</value></data>
+  <data name="DriveFree" xml:space="preserve"><value>{0} своб. из {1}</value></data>
+  <data name="ExplorerMenuText" xml:space="preserve"><value>Открыть в Rift</value></data>
+  <data name="ExplorerMenuToggle" xml:space="preserve"><value>«Открыть в Rift» в меню</value></data>
+  <data name="ExplorerMenuToggleTip" xml:space="preserve"><value>Пункт в контекстном меню папок и дисков. В Windows 11 — в «Показать дополнительные параметры».</value></data>
+  <data name="TipSinglePane" xml:space="preserve"><value>Одна панель</value></data>
+  <data name="TipSplitPane" xml:space="preserve"><value>Две панели</value></data>
+  <data name="TipTheme" xml:space="preserve"><value>Сменить тему</value></data>
+  <data name="TipMinimize" xml:space="preserve"><value>Свернуть</value></data>
+  <data name="TipMaximize" xml:space="preserve"><value>Развернуть</value></data>
+  <data name="TipClose" xml:space="preserve"><value>Закрыть</value></data>
+  <data name="TipNewTab" xml:space="preserve"><value>Новая вкладка (Ctrl+T)</value></data>
+  <data name="TipBack" xml:space="preserve"><value>Назад (Alt+←)</value></data>
+  <data name="TipForward" xml:space="preserve"><value>Вперёд (Alt+→)</value></data>
+  <data name="TipUp" xml:space="preserve"><value>Вверх (Alt+↑)</value></data>
+  <data name="TipRefresh" xml:space="preserve"><value>Обновить (Ctrl+R)</value></data>
+  <data name="TipPause" xml:space="preserve"><value>Пауза</value></data>
+  <data name="TipResume" xml:space="preserve"><value>Продолжить</value></data>
+  <data name="TipCancel" xml:space="preserve"><value>Отменить</value></data>
+  <data name="TipDismiss" xml:space="preserve"><value>Скрыть</value></data>
+  <data name="ColumnName" xml:space="preserve"><value>Имя</value></data>
+  <data name="ColumnModified" xml:space="preserve"><value>Изменён</value></data>
+  <data name="ColumnType" xml:space="preserve"><value>Тип</value></data>
+  <data name="ColumnSize" xml:space="preserve"><value>Размер</value></data>
+  <data name="HintOtherPane" xml:space="preserve"><value>другая панель</value></data>
+  <data name="HintCopy" xml:space="preserve"><value>копировать</value></data>
+  <data name="HintMove" xml:space="preserve"><value>переместить</value></data>
+  <data name="HintRename" xml:space="preserve"><value>переименовать</value></data>
+  <data name="HintDelete" xml:space="preserve"><value>удалить</value></data>
+  <data name="HintNewFolder" xml:space="preserve"><value>новая папка</value></data>
+  <data name="HintUndo" xml:space="preserve"><value>отменить</value></data>
+  <data name="OpCopy" xml:space="preserve"><value>Копирование</value></data>
+  <data name="OpMove" xml:space="preserve"><value>Перемещение</value></data>
+  <data name="OpDelete" xml:space="preserve"><value>Удаление</value></data>
+  <data name="OpUndo" xml:space="preserve"><value>Отмена</value></data>
+  <data name="OpDone" xml:space="preserve"><value>Готово</value></data>
+  <data name="OpCanceled" xml:space="preserve"><value>Отменено</value></data>
+  <data name="OpPaused" xml:space="preserve"><value>Пауза</value></data>
+  <data name="OpFailed" xml:space="preserve"><value>Завершено с ошибками</value></data>
+  <data name="OpTitle" xml:space="preserve"><value>{0} · {1} → {2}</value></data>
+  <data name="OpBytes" xml:space="preserve"><value>{0} из {1}</value></data>
+  <data name="OpErrors" xml:space="preserve"><value>Ошибок: {0}</value></data>
+  <data name="OpUndoTitle" xml:space="preserve"><value>Отмена: {0}</value></data>
+  <data name="ConflictTitle" xml:space="preserve"><value>Такой файл уже есть</value></data>
+  <data name="ConflictMessage" xml:space="preserve"><value>«{0}» уже есть в «{1}».</value></data>
+  <data name="ConflictIncoming" xml:space="preserve"><value>Новый: {0}, {1}</value></data>
+  <data name="ConflictExisting" xml:space="preserve"><value>Текущий: {0}, {1}</value></data>
+  <data name="ConflictReplace" xml:space="preserve"><value>Заменить</value></data>
+  <data name="ConflictSkip" xml:space="preserve"><value>Пропустить</value></data>
+  <data name="ConflictKeepBoth" xml:space="preserve"><value>Оставить оба</value></data>
+  <data name="ConflictApplyToAll" xml:space="preserve"><value>Для всех конфликтов</value></data>
+  <data name="CommonCancel" xml:space="preserve"><value>Отмена</value></data>
+  <data name="DeleteTitle" xml:space="preserve"><value>Переместить в корзину?</value></data>
+  <data name="DeletePermanentTitle" xml:space="preserve"><value>Удалить навсегда?</value></data>
+  <data name="DeleteOne" xml:space="preserve"><value>«{0}»</value></data>
+  <data name="DeleteMany" xml:space="preserve"><value>Объектов: {0}</value></data>
+  <data name="DeletePermanentWarning" xml:space="preserve"><value>Это действие нельзя отменить.</value></data>
+  <data name="DeleteToBin" xml:space="preserve"><value>В корзину</value></data>
+  <data name="DeletePermanent" xml:space="preserve"><value>Удалить</value></data>
+  <data name="RenameInvalidChars" xml:space="preserve"><value>Имя не может содержать \ / : * ? " &lt; &gt; |</value></data>
+  <data name="RenameEmpty" xml:space="preserve"><value>Имя не может быть пустым</value></data>
+  <data name="RenameExists" xml:space="preserve"><value>«{0}» уже существует</value></data>
+  <data name="NewFolderName" xml:space="preserve"><value>Новая папка</value></data>
+  <data name="CommonOk" xml:space="preserve"><value>ОК</value></data>
+  <data name="ErrorTitle" xml:space="preserve"><value>Что-то пошло не так</value></data>
+  <data name="RenameFailedTitle" xml:space="preserve"><value>Не удалось переименовать</value></data>
+  <data name="NewFolderFailedTitle" xml:space="preserve"><value>Не удалось создать папку</value></data>
+  <data name="OpRecycle" xml:space="preserve"><value>Перемещение в корзину</value></data>
+  <data name="OpUndoFailed" xml:space="preserve"><value>Не всё удалось отменить</value></data>
+  <data name="OpErrorsMore" xml:space="preserve"><value>…и ещё {0}</value></data>
+  <data name="HintPaste" xml:space="preserve"><value>вставить</value></data>
+  <data name="DropMove" xml:space="preserve"><value>Переместить в {0}</value></data>
+  <data name="DropCopy" xml:space="preserve"><value>Копировать в {0}</value></data>
+  <data name="DropHintMove" xml:space="preserve"><value>Ctrl — копировать</value></data>
+  <data name="DropHintCopy" xml:space="preserve"><value>Shift — переместить</value></data>
+</root>

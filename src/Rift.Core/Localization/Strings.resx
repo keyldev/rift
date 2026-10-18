@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="SizeB" xml:space="preserve"><value>B</value></data>
+  <data name="SizeKB" xml:space="preserve"><value>KB</value></data>
+  <data name="SizeMB" xml:space="preserve"><value>MB</value></data>
+  <data name="SizeGB" xml:space="preserve"><value>GB</value></data>
+  <data name="SizeTB" xml:space="preserve"><value>TB</value></data>
+  <data name="KindFolder" xml:space="preserve"><value>Folder</value></data>
+  <data name="KindImage" xml:space="preserve"><value>Image</value></data>
+  <data name="KindVideo" xml:space="preserve"><value>Video</value></data>
+  <data name="KindAudio" xml:space="preserve"><value>Audio</value></data>
+  <data name="KindArchive" xml:space="preserve"><value>Archive</value></data>
+  <data name="KindCode" xml:space="preserve"><value>Source code</value></data>
+  <data name="KindDocument" xml:space="preserve"><value>Document</value></data>
+  <data name="KindPdf" xml:space="preserve"><value>PDF</value></data>
+  <data name="KindExecutable" xml:space="preserve"><value>Application</value></data>
+  <data name="KindFile" xml:space="preserve"><value>File</value></data>
+  <data name="ItemsCount" xml:space="preserve"><value>{0} items</value></data>
+  <data name="SelectedCount" xml:space="preserve"><value>{0} selected</value></data>
+  <data name="ErrorAccessDenied" xml:space="preserve"><value>Access to this folder is denied</value></data>
+  <data name="ErrorFolderNotFound" xml:space="preserve"><value>Folder not found</value></data>
+  <data name="ErrorIntoItself" xml:space="preserve"><value>Can't put a folder inside itself</value></data>
+  <data name="SectionQuickAccess" xml:space="preserve"><value>QUICK ACCESS</value></data>
+  <data name="SectionDrives" xml:space="preserve"><value>DRIVES</value></data>
+  <data name="SectionExplorer" xml:space="preserve"><value>EXPLORER</value></data>
+  <data name="PlaceDesktop" xml:space="preserve"><value>Desktop</value></data>
+  <data name="PlaceDownloads" xml:space="preserve"><value>Downloads</value></data>
+  <data name="PlaceDocuments" xml:space="preserve"><value>Documents</value></data>
+  <data name="PlaceHome" xml:space="preserve"><value>Home</value></data>
+  <data name="DriveLocal" xml:space="preserve"><value>Local Disk</value></data>
+  <data name="DriveFree" xml:space="preserve"><value>{0} free of {1}</value></data>
+  <data name="ExplorerMenuText" xml:space="preserve"><value>Open in Rift</value></data>
+  <data name="ExplorerMenuToggle" xml:space="preserve"><value>“Open in Rift” in menu</value></data>
+  <data name="ExplorerMenuToggleTip" xml:space="preserve"><value>Adds an item to the context menu of folders and drives. On Windows 11 it's under “Show more options”.</value></data>
+  <data name="TipSinglePane" xml:space="preserve"><value>Single pane</value></data>
+  <data name="TipSplitPane" xml:space="preserve"><value>Two panes</value></data>
+  <data name="TipTheme" xml:space="preserve"><value>Switch theme</value></data>
+  <data name="TipMinimize" xml:space="preserve"><value>Minimize</value></data>
+  <data name="TipMaximize" xml:space="preserve"><value>Maximize</value></data>
+  <data name="TipClose" xml:space="preserve"><value>Close</value></data>
+  <data name="TipNewTab" xml:space="preserve"><value>New tab (Ctrl+T)</value></data>
+  <data name="TipBack" xml:space="preserve"><value>Back (Alt+←)</value></data>
+  <data name="TipForward" xml:space="preserve"><value>Forward (Alt+→)</value></data>
+  <data name="TipUp" xml:space="preserve"><value>Up (Alt+↑)</value></data>
+  <data name="TipRefresh" xml:space="preserve"><value>Refresh (Ctrl+R)</value></data>
+  <data name="TipPause" xml:space="preserve"><value>Pause</value></data>
+  <data name="TipResume" xml:space="preserve"><value>Resume</value></data>
+  <data name="TipCancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="TipDismiss" xml:space="preserve"><value>Dismiss</value></data>
+  <data name="ColumnName" xml:space="preserve"><value>Name</value></data>
+  <data name="ColumnModified" xml:space="preserve"><value>Modified</value></data>
+  <data name="ColumnType" xml:space="preserve"><value>Type</value></data>
+  <data name="ColumnSize" xml:space="preserve"><value>Size</value></data>
+  <data name="HintOtherPane" xml:space="preserve"><value>other pane</value></data>
+  <data name="HintCopy" xml:space="preserve"><value>copy</value></data>
+  <data name="HintMove" xml:space="preserve"><value>move</value></data>
+  <data name="HintRename" xml:space="preserve"><value>rename</value></data>
+  <data name="HintDelete" xml:space="preserve"><value>delete</value></data>
+  <data name="HintNewFolder" xml:space="preserve"><value>new folder</value></data>
+  <data name="HintUndo" xml:space="preserve"><value>undo</value></data>
+  <data name="OpCopy" xml:space="preserve"><value>Copying</value></data>
+  <data name="OpMove" xml:space="preserve"><value>Moving</value></data>
+  <data name="OpDelete" xml:space="preserve"><value>Deleting</value></data>
+  <data name="OpUndo" xml:space="preserve"><value>Undoing</value></data>
+  <data name="OpDone" xml:space="preserve"><value>Done</value></data>
+  <data name="OpCanceled" xml:space="preserve"><value>Canceled</value></data>
+  <data name="OpPaused" xml:space="preserve"><value>Paused</value></data>
+  <data name="OpFailed" xml:space="preserve"><value>Finished with errors</value></data>
+  <data name="OpTitle" xml:space="preserve"><value>{0} · {1} → {2}</value></data>
+  <data name="OpBytes" xml:space="preserve"><value>{0} of {1}</value></data>
+  <data name="OpErrors" xml:space="preserve"><value>{0} errors</value></data>
+  <data name="OpUndoTitle" xml:space="preserve"><value>Undo: {0}</value></data>
+  <data name="ConflictTitle" xml:space="preserve"><value>This file already exists</value></data>
+  <data name="ConflictMessage" xml:space="preserve"><value>“{0}” already exists in “{1}”.</value></data>
+  <data name="ConflictIncoming" xml:space="preserve"><value>New: {0}, {1}</value></data>
+  <data name="ConflictExisting" xml:space="preserve"><value>Existing: {0}, {1}</value></data>
+  <data name="ConflictReplace" xml:space="preserve"><value>Replace</value></data>
+  <data name="ConflictSkip" xml:space="preserve"><value>Skip</value></data>
+  <data name="ConflictKeepBoth" xml:space="preserve"><value>Keep both</value></data>
+  <data name="ConflictApplyToAll" xml:space="preserve"><value>Do this for all conflicts</value></data>
+  <data name="CommonCancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="DeleteTitle" xml:space="preserve"><value>Move to Recycle Bin?</value></data>
+  <data name="DeletePermanentTitle" xml:space="preserve"><value>Delete permanently?</value></data>
+  <data name="DeleteOne" xml:space="preserve"><value>“{0}”</value></data>
+  <data name="DeleteMany" xml:space="preserve"><value>{0} items</value></data>
+  <data name="DeletePermanentWarning" xml:space="preserve"><value>This can't be undone.</value></data>
+  <data name="DeleteToBin" xml:space="preserve"><value>Move to Recycle Bin</value></data>
+  <data name="DeletePermanent" xml:space="preserve"><value>Delete</value></data>
+  <data name="RenameInvalidChars" xml:space="preserve"><value>A name can't contain \ / : * ? " &lt; &gt; |</value></data>
+  <data name="RenameEmpty" xml:space="preserve"><value>A name can't be empty</value></data>
+  <data name="RenameExists" xml:space="preserve"><value>“{0}” already exists</value></data>
+  <data name="NewFolderName" xml:space="preserve"><value>New folder</value></data>
+  <data name="CommonOk" xml:space="preserve"><value>OK</value></data>
+  <data name="ErrorTitle" xml:space="preserve"><value>Something went wrong</value></data>
+  <data name="RenameFailedTitle" xml:space="preserve"><value>Couldn't rename</value></data>
+  <data name="NewFolderFailedTitle" xml:space="preserve"><value>Couldn't create a folder</value></data>
+  <data name="OpRecycle" xml:space="preserve"><value>Moving to Recycle Bin</value></data>
+  <data name="OpUndoFailed" xml:space="preserve"><value>Couldn't undo everything</value></data>
+  <data name="OpErrorsMore" xml:space="preserve"><value>…and {0} more</value></data>
+  <data name="HintPaste" xml:space="preserve"><value>paste</value></data>
+  <data name="DropMove" xml:space="preserve"><value>Move to {0}</value></data>
+  <data name="DropCopy" xml:space="preserve"><value>Copy to {0}</value></data>
+  <data name="DropHintMove" xml:space="preserve"><value>Hold Ctrl to copy</value></data>
+  <data name="DropHintCopy" xml:space="preserve"><value>Hold Shift to move</value></data>
+</root>

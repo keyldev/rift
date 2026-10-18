@@ -1,12 +1,11 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Data.Core;
-using Avalonia.Data.Core.Plugins;
-using System.Linq;
+using System.Globalization;
 using Avalonia.Markup.Xaml;
 using Rift.App.ViewModels;
 using Rift.App.Views;
 using Rift.Core;
+using Rift.Core.Localization;
 
 namespace Rift.App;
 
@@ -21,9 +20,14 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            var args = StartupArgs.Parse(desktop.Args ?? []);
+            // Must be set before any view is built: XAML reads strings once, at load.
+            if (args.Language is { } lang && Strings.Supported.Contains(lang))
+                Strings.Culture = new CultureInfo(lang);
+
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainWindowViewModel(StartupArgs.Parse(desktop.Args ?? [])),
+                DataContext = new MainWindowViewModel(args),
             };
         }
 
