@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using Rift.App.ViewModels;
 
 namespace Rift.App.Views;
@@ -14,6 +15,8 @@ public partial class MainWindow : Window
 
         // Catch Tab before regular focus navigation swallows it.
         AddHandler(KeyDownEvent, OnPreviewKeyDown, RoutingStrategies.Tunnel);
+        PaletteScrim.PointerPressed += OnPaletteScrimPressed;
+        PaletteList.Tapped += OnPaletteItemTapped;
         Opened += (_, _) =>
         {
             if (Vm is { } vm)
@@ -22,6 +25,16 @@ public partial class MainWindow : Window
                 vm.SetClipboardText = text => Clipboard?.SetTextAsync(text) ?? Task.CompletedTask;
                 vm.FocusFilesRequested += FocusActivePane;
                 vm.ActivateRequested += BringToFront;
+                vm.Palette.PropertyChanged += (_, e) =>
+                {
+                    if (e.PropertyName != nameof(CommandPaletteViewModel.IsOpen))
+                        return;
+                    if (vm.Palette.IsOpen)
+                        Dispatcher.UIThread.Post(() => PaletteBox.Focus(), DispatcherPriority.Loaded);
+                    else
+                        FocusActivePane();
+                };
+                vm.FocusSearchRequested += () => (vm.ActivePane == vm.Right && vm.IsSplit ? RightPane : LeftPane).FocusSearch();
             }
             LeftPane.FocusFiles();
         };
@@ -35,6 +48,19 @@ public partial class MainWindow : Window
         WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
 
     private void OnClose(object? sender, RoutedEventArgs e) => Close();
+
+    private void OnPaletteScrimPressed(object? sender, PointerPressedEventArgs e)
+    {
+        // A click outside the palette card closes it.
+        if (e.Source == PaletteScrim)
+            Vm?.Palette.Close();
+    }
+
+    private void OnPaletteItemTapped(object? sender, TappedEventArgs e)
+    {
+        if (Vm?.Palette is { } palette)
+            _ = palette.RunSelectedAsync();
+    }
 
     private void BringToFront()
     {
@@ -52,6 +78,28 @@ public partial class MainWindow : Window
 
     private void OnPreviewKeyDown(object? sender, KeyEventArgs e)
     {
+        // The palette keeps typing in its box; arrows move through results, Enter runs one, Esc closes.
+        if (Vm?.Palette is { IsOpen: true } palette)
+        {
+            switch (e.Key)
+            {
+                case Key.Escape:
+                    palette.Close();
+                    e.Handled = true;
+                    break;
+                case Key.Down or Key.Up:
+                    palette.Move(e.Key == Key.Down ? 1 : -1);
+                    PaletteList.ScrollIntoView(palette.SelectedIndex);
+                    e.Handled = true;
+                    break;
+                case Key.Enter:
+                    _ = palette.RunSelectedAsync();
+                    e.Handled = true;
+                    break;
+            }
+            return;
+        }
+
         // While a dialog is open it owns the keyboard: Enter = primary button, Esc = cancel, nothing leaks to hotkeys.
         if (Vm?.Dialog is { } dialog)
         {

@@ -4,8 +4,119 @@
              xmlns:c="using:Rift.App.Controls"
              xmlns:app="using:Rift.App"
              xmlns:l="using:Rift.Core.Localization"
+             xmlns:core="using:Rift.Core"
              x:Class="Rift.App.Views.PaneView"
              x:DataType="vm:PaneViewModel">
+
+  <UserControl.Styles>
+    <!-- Details: one row per file with the columns from the header -->
+    <Style Selector="ListBox.files">
+      <Setter Property="ItemTemplate">
+            <DataTemplate x:DataType="vm:FileItem">
+              <DockPanel Background="Transparent" Classes.hidden="{Binding IsHidden}">
+                <TextBlock DockPanel.Dock="Right" Classes="muted cell" Text="{Binding SizeText}" TextAlignment="Right" Padding="0,0,7,0"
+                           Width="{Binding Source={x:Static vm:ViewOptions.Current}, Path=Columns.SizeWidth}" IsVisible="{Binding $parent[ListBox].((vm:PaneViewModel)DataContext).Columns.Size}" />
+                <TextBlock DockPanel.Dock="Right" Classes="muted cell" Text="{Binding KindText}" Padding="6,0,10,0"
+                           Width="{Binding Source={x:Static vm:ViewOptions.Current}, Path=Columns.TypeWidth}" IsVisible="{Binding $parent[ListBox].((vm:PaneViewModel)DataContext).Columns.Type}" />
+                <TextBlock DockPanel.Dock="Right" Classes="muted cell" Text="{Binding CreatedText}" Padding="6,0,10,0"
+                           Width="{Binding Source={x:Static vm:ViewOptions.Current}, Path=Columns.CreatedWidth}" IsVisible="{Binding $parent[ListBox].((vm:PaneViewModel)DataContext).Columns.Created}" />
+                <TextBlock DockPanel.Dock="Right" Classes="muted cell" Text="{Binding DateText}" Padding="6,0,10,0"
+                           Width="{Binding Source={x:Static vm:ViewOptions.Current}, Path=Columns.ModifiedWidth}" IsVisible="{Binding $parent[ListBox].((vm:PaneViewModel)DataContext).Columns.Modified}" />
+                <DockPanel>
+                  <Panel DockPanel.Dock="Left" Width="17" Height="17" Margin="0,0,9,0">
+                    <c:Icon IsVisible="{Binding !HasIcon}"
+                            Data="{Binding Kind, Converter={x:Static app:Converters.KindToIcon}}"
+                            Foreground="{Binding Kind, Converter={x:Static app:Converters.KindToBrush}}"
+                            Fill="{Binding Kind, Converter={x:Static app:Converters.KindToFill}}" />
+                    <Image Source="{Binding Icon}" IsVisible="{Binding HasIcon}" Width="16" Height="16"
+                           RenderOptions.BitmapInterpolationMode="HighQuality" />
+                  </Panel>
+                  <Panel>
+                    <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
+                               IsVisible="{Binding !IsRenaming}" Margin="0,0,10,0" />
+                    <c:RenameBox Text="{Binding EditName, Mode=TwoWay}" IsVisible="{Binding IsRenaming}"
+                                 MinHeight="24" Padding="5,2" Margin="-6,0,8,0" VerticalAlignment="Center"
+                                 VerticalContentAlignment="Center" />
+                  </Panel>
+                </DockPanel>
+              </DockPanel>
+            </DataTemplate>
+      </Setter>
+    </Style>
+
+    <!-- Tiles: icon or small thumbnail with name, type and size -->
+    <Style Selector="ListBox.files.tiles">
+      <Setter Property="ItemsPanel">
+        <ItemsPanelTemplate>
+          <c:VirtualizingWrapPanel ItemWidth="250" ItemHeight="64" />
+        </ItemsPanelTemplate>
+      </Setter>
+      <Setter Property="ItemTemplate">
+        <DataTemplate x:DataType="vm:FileItem">
+          <DockPanel Background="Transparent" Classes.hidden="{Binding IsHidden}">
+            <Panel DockPanel.Dock="Left" Margin="0,0,10,0" VerticalAlignment="Center">
+              <Panel Width="48" Height="48">
+                    <Image Source="{Binding Thumbnail}" IsVisible="{Binding HasThumbnail}" Stretch="Uniform"
+                           RenderOptions.BitmapInterpolationMode="HighQuality" />
+                    <c:Icon IsVisible="{Binding !HasThumbnail}" Width="36" Height="36" StrokeThickness="1.4"
+                            Data="{Binding Kind, Converter={x:Static app:Converters.KindToIcon}}"
+                            Foreground="{Binding Kind, Converter={x:Static app:Converters.KindToBrush}}"
+                            Fill="{Binding Kind, Converter={x:Static app:Converters.KindToFill}}" />
+                  </Panel>
+            </Panel>
+            <StackPanel VerticalAlignment="Center" Spacing="1">
+              <Panel>
+                <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" IsVisible="{Binding !IsRenaming}" />
+                <c:RenameBox Text="{Binding EditName, Mode=TwoWay}" IsVisible="{Binding IsRenaming}" MinHeight="24" Padding="5,2" />
+              </Panel>
+              <TextBlock Classes="muted" FontSize="11" Text="{Binding KindText}" TextTrimming="CharacterEllipsis" />
+              <TextBlock Classes="dim" FontSize="11" Text="{Binding SizeText}" />
+            </StackPanel>
+          </DockPanel>
+        </DataTemplate>
+      </Setter>
+    </Style>
+
+    <!-- Thumbnails: big pictures, name underneath -->
+    <Style Selector="ListBox.files.thumbs">
+      <Setter Property="ItemsPanel">
+        <ItemsPanelTemplate>
+          <c:VirtualizingWrapPanel ItemWidth="136" ItemHeight="164" />
+        </ItemsPanelTemplate>
+      </Setter>
+      <Setter Property="ItemTemplate">
+        <DataTemplate x:DataType="vm:FileItem">
+          <DockPanel Background="Transparent" Classes.hidden="{Binding IsHidden}">
+            <Panel DockPanel.Dock="Bottom" Height="36" Margin="0,4,0,0">
+              <TextBlock Text="{Binding Name}" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"
+                         TextAlignment="Center" FontSize="12" IsVisible="{Binding !IsRenaming}" />
+              <c:RenameBox Text="{Binding EditName, Mode=TwoWay}" IsVisible="{Binding IsRenaming}" MinHeight="24" Padding="5,2"
+                           VerticalAlignment="Top" />
+            </Panel>
+            <Panel HorizontalAlignment="Center" VerticalAlignment="Center">
+              <Panel Width="112" Height="112">
+                    <Image Source="{Binding Thumbnail}" IsVisible="{Binding HasThumbnail}" Stretch="Uniform"
+                           RenderOptions.BitmapInterpolationMode="HighQuality" />
+                    <c:Icon IsVisible="{Binding !HasThumbnail}" Width="64" Height="64" StrokeThickness="1.4"
+                            Data="{Binding Kind, Converter={x:Static app:Converters.KindToIcon}}"
+                            Foreground="{Binding Kind, Converter={x:Static app:Converters.KindToBrush}}"
+                            Fill="{Binding Kind, Converter={x:Static app:Converters.KindToFill}}" />
+                  </Panel>
+            </Panel>
+          </DockPanel>
+        </DataTemplate>
+      </Setter>
+    </Style>
+
+    <Style Selector="ListBox.files.tiles ListBoxItem, ListBox.files.thumbs ListBoxItem">
+      <Setter Property="Height" Value="NaN" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Margin" Value="2" />
+      <Setter Property="Padding" Value="8,6" />
+      <Setter Property="VerticalContentAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    </Style>
+  </UserControl.Styles>
 
   <Border Classes="pane" Classes.active="{Binding IsActive}">
     <DockPanel>
@@ -59,11 +170,42 @@
           <Button Classes="flat" DockPanel.Dock="Right" Command="{Binding SelectedTab.RefreshCommand}" ToolTip.Tip="{x:Static l:Strings.TipRefresh}">
             <c:Icon Data="{StaticResource Icon.Refresh}" />
           </Button>
-          <Border Background="{DynamicResource Rift.Bg}" CornerRadius="6" Margin="4,0" Padding="4,0" Height="28" ClipToBounds="True">
-            <ItemsControl ItemsSource="{Binding SelectedTab.Crumbs}" VerticalAlignment="Center">
+          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="1" Margin="4,0,0,0">
+            <Button Classes="flat" Classes.on="{Binding SelectedTab.IsDetails}" Command="{Binding SelectedTab.SetViewCommand}"
+                    CommandParameter="{x:Static vm:ViewMode.Details}" ToolTip.Tip="{x:Static l:Strings.TipViewDetails}">
+              <c:Icon Data="{StaticResource Icon.ViewDetails}" />
+            </Button>
+            <Button Classes="flat" Classes.on="{Binding SelectedTab.IsTiles}" Command="{Binding SelectedTab.SetViewCommand}"
+                    CommandParameter="{x:Static vm:ViewMode.Tiles}" ToolTip.Tip="{x:Static l:Strings.TipViewTiles}">
+              <c:Icon Data="{StaticResource Icon.ViewTiles}" />
+            </Button>
+            <Button Classes="flat" Classes.on="{Binding SelectedTab.IsThumbnails}" Command="{Binding SelectedTab.SetViewCommand}"
+                    CommandParameter="{x:Static vm:ViewMode.Thumbnails}" ToolTip.Tip="{x:Static l:Strings.TipViewThumbnails}">
+              <c:Icon Data="{StaticResource Icon.ViewGrid}" />
+            </Button>
+            <Button Classes="flat" Classes.on="{Binding IsPreviewOpen}" Command="{Binding TogglePreviewCommand}"
+                    ToolTip.Tip="{x:Static l:Strings.TipPreview}">
+              <c:Icon Data="{StaticResource Icon.Preview}" />
+            </Button>
+          </StackPanel>
+          <TextBox x:Name="SearchBox" DockPanel.Dock="Right" Classes="search" Margin="4,0,2,0"
+                   PlaceholderText="{x:Static l:Strings.SearchPlaceholder}" ToolTip.Tip="{x:Static l:Strings.TipSearch}"
+                   IsEnabled="{Binding SelectedTab.SearchRoot, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <TextBox.InnerLeftContent>
+              <c:Icon Width="14" Height="14" Margin="8,0,0,0" Foreground="{DynamicResource Rift.Dim}" Data="{StaticResource Icon.Search}" />
+            </TextBox.InnerLeftContent>
+          </TextBox>
+          <Border x:Name="AddressBar" Background="{DynamicResource Rift.Bg}" CornerRadius="6" Margin="4,0" Padding="4,0" Height="28" ClipToBounds="True"
+                  Cursor="Ibeam">
+            <Panel>
+            <AutoCompleteBox x:Name="AddressBox" Classes="address" IsVisible="{Binding SelectedTab.IsEditingAddress}"
+                             Text="{Binding SelectedTab.AddressText, Mode=TwoWay}" FilterMode="None" MinimumPrefixLength="1"
+                             MinimumPopulateDelay="0:0:0.08" MaxDropDownHeight="320" />
+            <ItemsControl ItemsSource="{Binding SelectedTab.Crumbs}" VerticalAlignment="Center" Cursor="Arrow"
+                          IsVisible="{Binding !SelectedTab.IsEditingAddress}">
               <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                  <StackPanel Orientation="Horizontal" />
+                  <c:CrumbPanel />
                 </ItemsPanelTemplate>
               </ItemsControl.ItemsPanel>
               <ItemsControl.ItemTemplate>
@@ -78,6 +220,7 @@
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
             </ItemsControl>
+            </Panel>
           </Border>
         </DockPanel>
       </Border>
@@ -91,55 +234,110 @@
         </DockPanel>
       </Border>
 
-      <!-- Column headers -->
-      <Grid DockPanel.Dock="Top" ColumnDefinitions="*,130,110,80" Margin="14,6,20,2">
-        <Grid.Styles>
-          <Style Selector="TextBlock">
-            <Setter Property="FontSize" Value="11" />
-            <Setter Property="Foreground" Value="{DynamicResource Rift.Dim}" />
-          </Style>
-        </Grid.Styles>
-        <TextBlock Text="{x:Static l:Strings.ColumnName}" />
-        <TextBlock Grid.Column="1" Text="{Binding SelectedTab.DateColumn}" />
-        <TextBlock Grid.Column="2" Text="{Binding SelectedTab.TypeColumn}" />
-        <TextBlock Grid.Column="3" Text="{x:Static l:Strings.ColumnSize}" HorizontalAlignment="Right" />
-      </Grid>
+      <!-- A search is running -->
+      <ProgressBar DockPanel.Dock="Top" Classes="busy" IsIndeterminate="True" IsVisible="{Binding SelectedTab.IsBusy}" />
+
+      <!-- Column headers: click sorts, dragging a column's left edge resizes it, right-click picks columns -->
+      <DockPanel x:Name="Header" DockPanel.Dock="Top" Margin="8,4,14,0" Height="24" Background="Transparent"
+                 IsVisible="{Binding SelectedTab.IsDetails}">
+        <Panel DockPanel.Dock="Right" Width="{Binding Source={x:Static vm:ViewOptions.Current}, Path=Columns.SizeWidth}" IsVisible="{Binding Columns.Size}">
+          <Button Classes="flat header" Tag="{x:Static core:SortColumn.Size}" Click="OnHeaderClick">
+            <StackPanel Orientation="Horizontal" Spacing="2" HorizontalAlignment="Right">
+              <c:Icon Classes="sort" Data="{Binding SelectedTab.SizeSort, Converter={x:Static app:Converters.SortIcon}}" />
+              <TextBlock Text="{x:Static l:Strings.ColumnSize}" />
+            </StackPanel>
+          </Button>
+          <Thumb Classes="resize" Tag="{x:Static core:SortColumn.Size}" DragDelta="OnColumnResize" />
+        </Panel>
+        <Panel DockPanel.Dock="Right" Width="{Binding Source={x:Static vm:ViewOptions.Current}, Path=Columns.TypeWidth}" IsVisible="{Binding Columns.Type}">
+          <Button Classes="flat header" Tag="{x:Static core:SortColumn.Type}" Click="OnHeaderClick">
+            <StackPanel Orientation="Horizontal" Spacing="2" HorizontalAlignment="Left">
+              <TextBlock Text="{Binding SelectedTab.TypeColumn}" />
+              <c:Icon Classes="sort" Data="{Binding SelectedTab.TypeSort, Converter={x:Static app:Converters.SortIcon}}" />
+            </StackPanel>
+          </Button>
+          <Thumb Classes="resize" Tag="{x:Static core:SortColumn.Type}" DragDelta="OnColumnResize" />
+        </Panel>
+        <Panel DockPanel.Dock="Right" Width="{Binding Source={x:Static vm:ViewOptions.Current}, Path=Columns.CreatedWidth}" IsVisible="{Binding Columns.Created}">
+          <Button Classes="flat header" Tag="{x:Static core:SortColumn.Created}" Click="OnHeaderClick">
+            <StackPanel Orientation="Horizontal" Spacing="2" HorizontalAlignment="Left">
+              <TextBlock Text="{x:Static l:Strings.ColumnCreated}" />
+              <c:Icon Classes="sort" Data="{Binding SelectedTab.CreatedSort, Converter={x:Static app:Converters.SortIcon}}" />
+            </StackPanel>
+          </Button>
+          <Thumb Classes="resize" Tag="{x:Static core:SortColumn.Created}" DragDelta="OnColumnResize" />
+        </Panel>
+        <Panel DockPanel.Dock="Right" Width="{Binding Source={x:Static vm:ViewOptions.Current}, Path=Columns.ModifiedWidth}" IsVisible="{Binding Columns.Modified}">
+          <Button Classes="flat header" Tag="{x:Static core:SortColumn.Modified}" Click="OnHeaderClick">
+            <StackPanel Orientation="Horizontal" Spacing="2" HorizontalAlignment="Left">
+              <TextBlock Text="{Binding SelectedTab.DateColumn}" />
+              <c:Icon Classes="sort" Data="{Binding SelectedTab.ModifiedSort, Converter={x:Static app:Converters.SortIcon}}" />
+            </StackPanel>
+          </Button>
+          <Thumb Classes="resize" Tag="{x:Static core:SortColumn.Modified}" DragDelta="OnColumnResize" />
+        </Panel>
+        <Button Classes="flat header" Tag="{x:Static core:SortColumn.Name}" Click="OnHeaderClick">
+          <StackPanel Orientation="Horizontal" Spacing="2">
+            <TextBlock Text="{x:Static l:Strings.ColumnName}" />
+            <c:Icon Classes="sort" Data="{Binding SelectedTab.NameSort, Converter={x:Static app:Converters.SortIcon}}" />
+          </StackPanel>
+        </Button>
+      </DockPanel>
+
+      <!-- Type-to-filter: shown while a filter is active -->
+      <Border DockPanel.Dock="Bottom" Classes="filterbar" IsVisible="{Binding SelectedTab.IsFiltered}">
+        <DockPanel>
+          <c:Icon DockPanel.Dock="Left" Width="14" Height="14" Margin="0,0,8,0" Data="{StaticResource Icon.Filter}"
+                  Foreground="{DynamicResource Rift.Accent}" />
+          <Button DockPanel.Dock="Right" Classes="flat" Padding="3" Click="OnClearFilter" ToolTip.Tip="{x:Static l:Strings.TipClearFilter}">
+            <c:Icon Width="12" Height="12" Data="{StaticResource Icon.Close}" />
+          </Button>
+          <TextBlock VerticalAlignment="Center" FontSize="12">
+            <Run Text="{x:Static l:Strings.FilterLabel}" Foreground="{DynamicResource Rift.Dim}" /><Run Text=": " Foreground="{DynamicResource Rift.Dim}" /><Run Text="{Binding SelectedTab.Filter}" FontWeight="SemiBold" />
+          </TextBlock>
+        </DockPanel>
+      </Border>
+
+      <!-- Preview pane (Alt+P), on the right of the files -->
+      <Border DockPanel.Dock="Right" Classes="preview" Width="{Binding PreviewWidth}" IsVisible="{Binding IsPreviewOpen}">
+        <Panel>
+          <DockPanel Margin="16,14" IsVisible="{Binding !Preview.IsEmpty}">
+            <TextBlock DockPanel.Dock="Top" Text="{Binding Preview.Title}" FontWeight="SemiBold" FontSize="14"
+                       TextWrapping="Wrap" MaxLines="3" TextTrimming="CharacterEllipsis" Margin="0,0,0,12" />
+            <ItemsControl DockPanel.Dock="Bottom" ItemsSource="{Binding Preview.Lines}" Margin="0,12,0,0">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:PreviewLine">
+                  <DockPanel Margin="0,2">
+                    <TextBlock DockPanel.Dock="Left" Classes="dim" FontSize="12" Width="96" Text="{Binding Label}" />
+                    <SelectableTextBlock FontSize="12" Text="{Binding Value}" TextWrapping="Wrap" />
+                  </DockPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Panel>
+              <Image Source="{Binding Preview.Image}" IsVisible="{Binding Preview.HasImage}" Stretch="Uniform"
+                     StretchDirection="DownOnly" VerticalAlignment="Top" RenderOptions.BitmapInterpolationMode="HighQuality" />
+              <Border Classes="previewtext" IsVisible="{Binding Preview.HasText}">
+                <ScrollViewer HorizontalScrollBarVisibility="Auto">
+                  <SelectableTextBlock Classes="mono" Text="{Binding Preview.Text}" />
+                </ScrollViewer>
+              </Border>
+            </Panel>
+          </DockPanel>
+          <TextBlock Classes="muted" Text="{x:Static l:Strings.PreviewNothing}" IsVisible="{Binding Preview.IsEmpty}"
+                     HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" Margin="20" />
+          <Thumb Classes="resize" Margin="-4,0,0,0" DragDelta="OnPreviewResize" />
+        </Panel>
+      </Border>
 
       <!-- Files -->
       <Panel>
         <ListBox x:Name="Files" Classes="files" SelectionMode="Multiple"
+                 Classes.tiles="{Binding SelectedTab.IsTiles}" Classes.thumbs="{Binding SelectedTab.IsThumbnails}"
                  ItemsSource="{Binding SelectedTab.Items}">
-          <ListBox.ItemTemplate>
-            <DataTemplate x:DataType="vm:FileItem">
-              <Grid ColumnDefinitions="*,130,110,80" Background="Transparent" Classes.hidden="{Binding IsHidden}">
-                <DockPanel>
-                  <Panel DockPanel.Dock="Left" Width="17" Height="17" Margin="0,0,9,0">
-                    <c:Icon IsVisible="{Binding !HasIcon}"
-                            Data="{Binding Kind, Converter={x:Static app:Converters.KindToIcon}}"
-                            Foreground="{Binding Kind, Converter={x:Static app:Converters.KindToBrush}}"
-                            Fill="{Binding Kind, Converter={x:Static app:Converters.KindToFill}}" />
-                    <Image Source="{Binding Icon}" IsVisible="{Binding HasIcon}" Width="16" Height="16"
-                           RenderOptions.BitmapInterpolationMode="HighQuality" />
-                  </Panel>
-                  <Panel>
-                    <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
-                               IsVisible="{Binding !IsRenaming}" />
-                    <c:RenameBox Text="{Binding EditName, Mode=TwoWay}" IsVisible="{Binding IsRenaming}"
-                                 MinHeight="24" Padding="5,2" Margin="-6,0,8,0" VerticalAlignment="Center"
-                                 VerticalContentAlignment="Center" />
-                  </Panel>
-                </DockPanel>
-                <TextBlock Grid.Column="1" Classes="muted" Text="{Binding DateText}" VerticalAlignment="Center" />
-                <TextBlock Grid.Column="2" Classes="muted" Text="{Binding KindText}" VerticalAlignment="Center"
-                           TextTrimming="CharacterEllipsis" />
-                <TextBlock Grid.Column="3" Classes="muted" Text="{Binding SizeText}" VerticalAlignment="Center"
-                           HorizontalAlignment="Right" />
-              </Grid>
-            </DataTemplate>
-          </ListBox.ItemTemplate>
         </ListBox>
-        <TextBlock Classes="muted" HorizontalAlignment="Center" VerticalAlignment="Center"
-                   Text="{Binding SelectedTab.Notice}"
+        <TextBlock Classes="muted" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap"
+                   TextAlignment="Center" Margin="24" MaxWidth="420" Text="{Binding SelectedTab.Notice}"
                    IsVisible="{Binding SelectedTab.Notice, Converter={x:Static ObjectConverters.IsNotNull}}" />
 
         <!-- Drop zone while files are dragged over this pane -->

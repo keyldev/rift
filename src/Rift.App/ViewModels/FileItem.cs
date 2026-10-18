@@ -16,7 +16,7 @@ public sealed partial class FileItem : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Name), nameof(FullPath), nameof(Kind), nameof(IsDirectory), nameof(IsHidden),
-        nameof(SizeText), nameof(DateText), nameof(KindText))]
+        nameof(SizeText), nameof(DateText), nameof(KindText), nameof(CreatedText))]
     private FileEntry _entry;
 
     public string Name => Entry.Name;
@@ -26,7 +26,8 @@ public sealed partial class FileItem : ObservableObject
     public bool IsHidden => Entry.IsHidden;
     public string SizeText => SizeFormatter.Format(Entry.Size);
     public string DateText => Entry.DateNote ?? Entry.Modified.ToString("dd.MM.yyyy HH:mm", CultureInfo.CurrentCulture);
-    public string KindText => Entry.TypeNote ?? KindLabel(Entry);
+    public string KindText => FileKinds.Label(Entry);
+    public string CreatedText => Entry.Created == default ? "" : Entry.Created.ToString("dd.MM.yyyy HH:mm", CultureInfo.CurrentCulture);
 
     /// <summary>The system icon, once loaded (see Services.FileIcons); until then the row shows a line icon.</summary>
     [ObservableProperty]
@@ -34,6 +35,13 @@ public sealed partial class FileItem : ObservableObject
     private IImage? _icon;
 
     public bool HasIcon => Icon is not null;
+
+    /// <summary>The big picture for the tiles and thumbnail views (see Services.FileThumbnails).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasThumbnail))]
+    private IImage? _thumbnail;
+
+    public bool HasThumbnail => Thumbnail is not null;
 
     /// <summary>F2: the name turns into a text box.</summary>
     [ObservableProperty] private bool _isRenaming;
@@ -45,18 +53,4 @@ public sealed partial class FileItem : ObservableObject
         if (entry != Entry)
             Entry = entry;
     }
-
-    private static string KindLabel(FileEntry e) => e.Kind switch
-    {
-        FileKind.Folder => Strings.KindFolder,
-        FileKind.Image => Strings.KindImage,
-        FileKind.Video => Strings.KindVideo,
-        FileKind.Audio => Strings.KindAudio,
-        FileKind.Archive => Strings.KindArchive,
-        FileKind.Code => Strings.KindCode,
-        FileKind.Document => Strings.KindDocument,
-        FileKind.Pdf => Strings.KindPdf,
-        FileKind.Executable => Strings.KindExecutable,
-        _ => Path.GetExtension(e.Name) is { Length: > 1 } ext ? ext[1..].ToUpperInvariant() : Strings.KindFile,
-    };
 }

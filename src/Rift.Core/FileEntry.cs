@@ -27,7 +27,8 @@ public sealed record FileEntry(
     bool IsHidden,
     FileAttributes Attributes = 0,
     string? DateNote = null,
-    string? TypeNote = null)
+    string? TypeNote = null,
+    DateTime Created = default)
 {
     public static FileEntry From(FileSystemInfo info)
     {
@@ -40,6 +41,7 @@ public sealed record FileEntry(
             info.LastWriteTime,
             isDir ? FileKind.Folder : FileKinds.FromExtension(info.Extension),
             (info.Attributes & (FileAttributes.Hidden | FileAttributes.System)) != 0,
-            info.Attributes);
+            info.Attributes,
+            Created: info.CreationTime);
     }
 }

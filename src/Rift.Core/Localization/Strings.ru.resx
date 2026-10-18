@@ -143,4 +143,57 @@
   <data name="EmptyBinMessage" xml:space="preserve"><value>{0} будут удалены навсегда.</value></data>
   <data name="OpRestore" xml:space="preserve"><value>Восстановление</value></data>
   <data name="BinEmpty" xml:space="preserve"><value>Корзина пуста</value></data>
+  <data name="FilteredCount" xml:space="preserve"><value>{0} из {1} элем.</value></data>
+  <data name="ColumnCreated" xml:space="preserve"><value>Создан</value></data>
+  <data name="FilterLabel" xml:space="preserve"><value>Фильтр</value></data>
+  <data name="TipClearFilter" xml:space="preserve"><value>Сбросить фильтр (Esc)</value></data>
+  <data name="MenuColumns" xml:space="preserve"><value>Колонки</value></data>
+  <data name="SearchTitle" xml:space="preserve"><value>Поиск: {0}</value></data>
+  <data name="SearchPlaceholder" xml:space="preserve"><value>Поиск</value></data>
+  <data name="TipSearch" xml:space="preserve"><value>Искать в этой папке и вложенных (Ctrl+F)</value></data>
+  <data name="ColumnLocation" xml:space="preserve"><value>Расположение</value></data>
+  <data name="SearchRunning" xml:space="preserve"><value>Поиск… найдено {0}</value></data>
+  <data name="SearchDone" xml:space="preserve"><value>Найдено: {0}</value></data>
+  <data name="SearchCapped" xml:space="preserve"><value>Найдено {0}, поиск остановлен на лимите: уточните запрос</value></data>
+  <data name="SearchNothing" xml:space="preserve"><value>Ничего не найдено</value></data>
+  <data name="MenuOpenLocation" xml:space="preserve"><value>Открыть расположение файла</value></data>
+  <data name="PalettePlaceholder" xml:space="preserve"><value>Команда, папка или путь…</value></data>
+  <data name="PaletteGoTo" xml:space="preserve"><value>Перейти: {0}</value></data>
+  <data name="PaletteKindCommand" xml:space="preserve"><value>Команда</value></data>
+  <data name="PaletteKindPlace" xml:space="preserve"><value>Место</value></data>
+  <data name="PaletteKindRecent" xml:space="preserve"><value>Недавнее</value></data>
+  <data name="PaletteKindTab" xml:space="preserve"><value>Открытая вкладка</value></data>
+  <data name="CmdNewTab" xml:space="preserve"><value>Новая вкладка</value></data>
+  <data name="CmdCloseTab" xml:space="preserve"><value>Закрыть вкладку</value></data>
+  <data name="CmdUndo" xml:space="preserve"><value>Отменить</value></data>
+  <data name="CmdSearch" xml:space="preserve"><value>Поиск в папке</value></data>
+  <data name="CmdEditAddress" xml:space="preserve"><value>Изменить путь</value></data>
+  <data name="CmdGoUp" xml:space="preserve"><value>На уровень вверх</value></data>
+  <data name="CmdBack" xml:space="preserve"><value>Назад</value></data>
+  <data name="CmdForward" xml:space="preserve"><value>Вперёд</value></data>
+  <data name="CmdSwitchPane" xml:space="preserve"><value>Перейти в другую панель</value></data>
+  <data name="HintPalette" xml:space="preserve"><value>команды</value></data>
+  <data name="TipViewDetails" xml:space="preserve"><value>Таблица (Ctrl+Shift+1)</value></data>
+  <data name="TipViewTiles" xml:space="preserve"><value>Плитки (Ctrl+Shift+2)</value></data>
+  <data name="TipViewThumbnails" xml:space="preserve"><value>Эскизы (Ctrl+Shift+3)</value></data>
+  <data name="TipPreview" xml:space="preserve"><value>Область просмотра (Alt+P)</value></data>
+  <data name="PreviewNothing" xml:space="preserve"><value>Выберите файл, чтобы посмотреть его</value></data>
+  <data name="PreviewDimensions" xml:space="preserve"><value>Размеры</value></data>
+  <data name="PreviewContains" xml:space="preserve"><value>Содержит</value></data>
+  <data name="CmdPreview" xml:space="preserve"><value>Область просмотра</value></data>
+  <data name="CmdViewDetails" xml:space="preserve"><value>Вид: таблица</value></data>
+  <data name="CmdViewTiles" xml:space="preserve"><value>Вид: плитки</value></data>
+  <data name="CmdViewThumbnails" xml:space="preserve"><value>Вид: эскизы</value></data>
+  <data name="PlaceNetwork" xml:space="preserve"><value>Сеть</value></data>
+  <data name="PlaceLibraries" xml:space="preserve"><value>Библиотеки</value></data>
+  <data name="SectionPinned" xml:space="preserve"><value>ЗАКРЕПЛЁННЫЕ</value></data>
+  <data name="MenuPin" xml:space="preserve"><value>Закрепить в сайдбаре</value></data>
+  <data name="MenuUnpin" xml:space="preserve"><value>Открепить</value></data>
+  <data name="CmdPinFolder" xml:space="preserve"><value>Закрепить текущую папку</value></data>
+  <data name="NetworkEmpty" xml:space="preserve"><value>Компьютеры не найдены. Возможно, сетевое обнаружение выключено; можно ввести \\сервер в адресной строке.</value></data>
+  <data name="ServerEmpty" xml:space="preserve"><value>Этот компьютер не открывает общих папок</value></data>
+  <data name="KindComputer" xml:space="preserve"><value>Компьютер</value></data>
+  <data name="KindShare" xml:space="preserve"><value>Общая папка</value></data>
+  <data name="KindLibrary" xml:space="preserve"><value>Библиотека</value></data>
+  <data name="LibraryFolders" xml:space="preserve"><value>Папок: {0}</value></data>
 </root>

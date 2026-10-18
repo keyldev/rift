@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using Avalonia;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -21,6 +22,7 @@ public partial class MainWindowViewModel : ViewModelBase
         Right = new PaneViewModel(args.Right.Count > 0 ? [.. args.Right] : [Path.GetPathRoot(home) ?? @"C:\"]);
         _activePane = Left;
         Left.IsActive = true;
+        LoadPinned();
     }
 
     public PaneViewModel Left { get; }
@@ -28,6 +30,38 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public IReadOnlyList<SidebarItem> QuickAccess { get; } = SidebarItem.QuickAccess();
     public IReadOnlyList<SidebarItem> Drives { get; } = SidebarItem.Drives();
+
+    private readonly PinnedFolders _pinnedFolders = new(PinnedFolders.DefaultFile);
+
+    /// <summary>Folders pinned to the top of the sidebar.</summary>
+    public ObservableCollection<SidebarItem> Pinned { get; } = [];
+
+    public bool HasPinned => Pinned.Count > 0;
+
+    private void LoadPinned()
+    {
+        Pinned.Clear();
+        foreach (var path in _pinnedFolders.Items)
+            Pinned.Add(new SidebarItem(Locations.Title(path), path, "Icon.Folder"));
+        OnPropertyChanged(nameof(HasPinned));
+    }
+
+    public bool CanPin(string path) => !_pinnedFolders.Contains(path) && Locations.KindOf(path) is LocationKind.Folder or LocationKind.Library;
+
+    [RelayCommand]
+    private void Pin(string? path)
+    {
+        path ??= ActivePane.SelectedTab.Path;
+        if (CanPin(path) && _pinnedFolders.Pin(path))
+            LoadPinned();
+    }
+
+    [RelayCommand]
+    private void Unpin(SidebarItem item)
+    {
+        if (_pinnedFolders.Unpin(item.Path))
+            LoadPinned();
+    }
 
     [ObservableProperty] private PaneViewModel _activePane;
     [ObservableProperty] private bool _isSplit = true;
@@ -68,6 +102,12 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     public PaneViewModel OtherPane => ActivePane == Left ? Right : Left;
+
+    /// <summary>Ctrl+F: the active pane's search box takes focus.</summary>
+    public event Action? FocusSearchRequested;
+
+    [RelayCommand]
+    private void FocusSearch() => FocusSearchRequested?.Invoke();
 
     /// <summary>The window comes to the front (another Rift.exe handed over its paths).</summary>
     public event Action? ActivateRequested;

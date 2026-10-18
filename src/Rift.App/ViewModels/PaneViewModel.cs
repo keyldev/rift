@@ -19,6 +19,20 @@ public partial class PaneViewModel : ViewModelBase
     [ObservableProperty] private TabViewModel _selectedTab;
     [ObservableProperty] private bool _isActive;
 
+    /// <summary>Alt+P: the preview pane on the right of the file list.</summary>
+    [ObservableProperty] private bool _isPreviewOpen;
+    [ObservableProperty] private double _previewWidth = 320;
+
+    public PreviewViewModel Preview { get; } = new();
+
+    /// <summary>The detail columns this pane has room for.</summary>
+    public PaneColumns Columns { get; } = new();
+
+    [RelayCommand]
+    private void TogglePreview() => IsPreviewOpen = !IsPreviewOpen;
+
+    public void ResizePreview(double delta) => PreviewWidth = Math.Clamp(PreviewWidth + delta, 200, 900);
+
     // Drop zone shown while files are dragged over the pane.
     [ObservableProperty] private bool _isDropTarget;
     [ObservableProperty] private bool _dropIsCopy;

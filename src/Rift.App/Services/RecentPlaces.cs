@@ -24,6 +24,9 @@ public static class RecentPlaces
         FlushTimer.Change(Delay, Timeout.InfiniteTimeSpan);
     }
 
+    /// <summary>Newest first.</summary>
+    public static IReadOnlyList<string> Items => Folders.Items;
+
     public static void Visit(string path)
     {
         if (Folders.Add(path))

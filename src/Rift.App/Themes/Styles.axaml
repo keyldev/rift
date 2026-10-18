@@ -156,8 +156,140 @@
   </Style>
 
   <!-- Hidden and system files are drawn faded, like in Explorer. -->
-  <Style Selector="ListBox.files Grid.hidden">
+  <Style Selector="ListBox.files DockPanel.hidden">
     <Setter Property="Opacity" Value="0.55" />
+  </Style>
+
+  <!-- Column headers -->
+  <Style Selector="Button.header">
+    <Setter Property="Padding" Value="6,2" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="VerticalAlignment" Value="Stretch" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Foreground" Value="{DynamicResource Rift.Dim}" />
+  </Style>
+  <Style Selector="Button.header c|Icon.sort">
+    <Setter Property="Width" Value="12" />
+    <Setter Property="Height" Value="12" />
+    <Setter Property="StrokeThickness" Value="2.2" />
+    <Setter Property="Foreground" Value="{DynamicResource Rift.Accent}" />
+  </Style>
+  <Style Selector="Thumb.resize">
+    <Setter Property="Width" Value="8" />
+    <Setter Property="Margin" Value="-4,3,0,3" />
+    <Setter Property="HorizontalAlignment" Value="Left" />
+    <Setter Property="Cursor" Value="SizeWestEast" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Background="Transparent">
+          <Border Width="1" Background="{DynamicResource Rift.Line}" HorizontalAlignment="Center" />
+        </Border>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="TextBlock.cell">
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+  </Style>
+
+  <Style Selector="Border.filterbar">
+    <Setter Property="BorderBrush" Value="{DynamicResource Rift.Line}" />
+    <Setter Property="BorderThickness" Value="0,1,0,0" />
+    <Setter Property="Background" Value="{DynamicResource Rift.AccentBg}" />
+    <Setter Property="Padding" Value="12,3,8,3" />
+  </Style>
+
+  <!-- Preview pane -->
+  <Style Selector="Border.preview">
+    <Setter Property="BorderBrush" Value="{DynamicResource Rift.Line}" />
+    <Setter Property="BorderThickness" Value="1,0,0,0" />
+    <Setter Property="Background" Value="{DynamicResource Rift.Bg}" />
+  </Style>
+  <Style Selector="Border.previewtext">
+    <Setter Property="Background" Value="{DynamicResource Rift.Panel}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Rift.Line}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="Padding" Value="10,8" />
+  </Style>
+  <Style Selector="SelectableTextBlock.mono">
+    <Setter Property="FontFamily" Value="Cascadia Mono, Consolas, monospace" />
+    <Setter Property="FontSize" Value="12" />
+  </Style>
+
+  <!-- Command palette -->
+  <Style Selector="TextBox.palette">
+    <Setter Property="MinHeight" Value="48" />
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="Padding" Value="10,12" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="CornerRadius" Value="12,12,0,0" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+  <Style Selector="TextBox.palette:focus /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Rift.Line}" />
+  </Style>
+  <Style Selector="ListBox.palette">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Padding" Value="6" />
+  </Style>
+  <Style Selector="ListBox.palette ListBoxItem">
+    <Setter Property="Padding" Value="10,7" />
+    <Setter Property="CornerRadius" Value="6" />
+  </Style>
+  <Style Selector="ListBox.palette ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource Rift.AccentBg}" />
+  </Style>
+
+  <Style Selector="TextBox.search">
+    <Setter Property="MinHeight" Value="28" />
+    <Setter Property="Height" Value="28" />
+    <Setter Property="Padding" Value="6,4" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Background" Value="{DynamicResource Rift.Bg}" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+  <!-- The search box stays small next to the path and opens up while typing. -->
+  <Style Selector="TextBox.search">
+    <Setter Property="Width" Value="120" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <DoubleTransition Property="Width" Duration="0:0:0.12" />
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="TextBox.search:focus-within">
+    <Setter Property="Width" Value="210" />
+  </Style>
+  <Style Selector="ProgressBar.busy">
+    <Setter Property="MinHeight" Value="2" />
+    <Setter Property="Height" Value="2" />
+    <Setter Property="Margin" Value="0,-2,0,0" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{DynamicResource Rift.Accent}" />
+  </Style>
+
+  <Style Selector="AutoCompleteBox.address">
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Margin" Value="-4,0" />
+  </Style>
+  <Style Selector="AutoCompleteBox.address /template/ TextBox">
+    <Setter Property="MinHeight" Value="28" />
+    <Setter Property="Height" Value="28" />
+    <Setter Property="Padding" Value="8,4" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="CornerRadius" Value="6" />
+  </Style>
+  <Style Selector="AutoCompleteBox.address.error /template/ TextBox">
+    <Setter Property="BorderBrush" Value="{DynamicResource Rift.Danger}" />
   </Style>
 
   <Style Selector="Button.crumb">

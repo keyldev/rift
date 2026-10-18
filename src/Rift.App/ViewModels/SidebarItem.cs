@@ -18,6 +18,8 @@ public sealed record SidebarItem(string Label, string Path, string Icon, double?
             new(Strings.PlaceDocuments, Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Icon.Document"),
             new(Strings.PlaceHome, home, "Icon.Home"),
             new(Strings.PlaceThisPc, Locations.ThisPc, "Icon.Pc"),
+            new(Strings.PlaceLibraries, Locations.LibrariesFolder, "Icon.Library"),
+            new(Strings.PlaceNetwork, Locations.Network, "Icon.Network"),
             new(Strings.PlaceRecycleBin, Locations.RecycleBin, "Icon.Trash"),
         ];
     }

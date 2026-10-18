@@ -52,16 +52,23 @@ Moved to later stages:
 - Network and libraries in the sidebar → 0.4, with favorites
 - Top-level "Open in Rift" in the Windows 11 menu (`IExplorerCommand` + sparse package) → Distribution: it needs a signed package
 
-## 0.4 — Views and search
+## Done — 0.4: views and search
 
-- [ ] Sort by column, resize and pick columns
-- [ ] View modes: details, tiles, thumbnails (`IShellItemImageFactory`)
-- [ ] Preview pane: images, text, video, PDF
-- [ ] Type-to-filter in the current folder
-- [ ] Command palette (Ctrl+K): commands, folders, recent places
-- [ ] Recursive search with results in their own tab
-- [ ] Editable address bar (click the path → type), autocomplete
-- [ ] Favorites and tags in the sidebar; Network and libraries
+- [x] Sort by column (folders stay first), resize columns by dragging, pick columns (right-click the header);
+      a narrow pane drops Created, Type, Modified in that order
+- [x] View modes: details, tiles, thumbnails (`IShellItemImageFactory`), Ctrl+Shift+1/2/3 or Ctrl+wheel;
+      tiles and thumbnails sit in Rift's own virtualizing grid, so big folders stay fast
+- [x] Preview pane (Alt+P): images with their size, text and code, the shell's thumbnail for video, PDF and documents
+- [x] Type-to-filter: start typing in the list; `*` and `?` work; Backspace edits, Esc clears
+- [x] Command palette (Ctrl+K): commands with their shortcuts, recent folders, open tabs, places, typed paths
+- [x] Recursive search (Ctrl+F) with results streaming into their own tab; file operations work on the results
+- [x] Editable address bar (click the path, Ctrl+L, Alt+D, F4) with folder autocomplete, `%VARS%`, `..` and file paths
+- [x] Pinned folders in the sidebar; Network (computers, a server's shares) and Libraries
+
+Moved to later stages:
+
+- Tags → Settings (0.6): they need Rift's own storage
+- Live previews through shell preview handlers (`IPreviewHandler`) → later; for now video and PDF show the shell thumbnail
 
 ## 0.5 — Layouts and tabs
 
@@ -76,6 +83,8 @@ Moved to later stages:
 - [ ] Settings screen; stored in `%AppData%\Rift\settings.json`
 - [ ] Accent color (azure, amber, mint, iris, rose), "follow system" theme
 - [ ] Language picker
+- [ ] Tags on files and folders, shown in the sidebar
+- [ ] Remember column layout, view mode and sort per folder
 - [ ] Custom hotkeys
 - [ ] Mica / Acrylic background on Windows 11
 

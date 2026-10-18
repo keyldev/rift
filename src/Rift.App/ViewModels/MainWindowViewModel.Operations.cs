@@ -59,7 +59,7 @@ public partial class MainWindowViewModel
     private Task TransferToOtherAsync(TransferMode mode)
     {
         var sources = ActiveTab.SelectedPaths;
-        if (!IsSplit || sources.Count == 0 || !ActiveTab.IsFileSystem || !OtherPane.SelectedTab.IsFileSystem)
+        if (!IsSplit || sources.Count == 0 || !ActiveTab.CanEditItems || !OtherPane.SelectedTab.IsFileSystem)
             return Task.CompletedTask;
         return TransferAsync(mode, sources, OtherPane.SelectedTab.Path);
     }
@@ -97,7 +97,7 @@ public partial class MainWindowViewModel
             return;
         }
         var paths = tab.SelectedPaths;
-        if (paths.Count == 0 || !tab.IsFileSystem)
+        if (paths.Count == 0 || !tab.CanEditItems)
             return;
         if (!OperatingSystem.IsWindows())
             permanent = true;
@@ -146,7 +146,7 @@ public partial class MainWindowViewModel
             op.Complete(canceled: false, [new OperationError(paths[0], ex.Message)]);
         }
 
-        await RefreshAsync([tab.Path, Locations.RecycleBin]);
+        await RefreshAsync(paths.Select(Path.GetDirectoryName).Append(tab.Path).Append(Locations.RecycleBin));
     }
 
     /// <summary>Ctrl+Z after Del: find what just went to the bin, so undo can bring it back.</summary>
@@ -282,7 +282,9 @@ public partial class MainWindowViewModel
         {
             var (path, journal) = FileOps.Rename(item.FullPath, newName);
             Remember($"{item.Name} → {Path.GetFileName(path)}", journal);
-            await RefreshAsync([tab.Path], tab.Path, [path]);
+            if (tab.IsSearch)
+                tab.ReplaceEntry(item.FullPath, path);
+            await RefreshAsync([Path.GetDirectoryName(item.FullPath)], tab.Path, [path]);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
         {
@@ -320,7 +322,7 @@ public partial class MainWindowViewModel
     private void SetClipboard(bool cut)
     {
         var paths = ActiveTab.SelectedPaths;
-        if (OperatingSystem.IsWindows() && paths.Count > 0 && ActiveTab.IsFileSystem)
+        if (OperatingSystem.IsWindows() && paths.Count > 0 && ActiveTab.CanEditItems)
             FileClipboard.SetFiles(WindowHandle(), paths, cut);
     }
 
@@ -372,8 +374,9 @@ public partial class MainWindowViewModel
     private Task RefreshAsync(IEnumerable<string?> folders, string? selectIn = null, IReadOnlyList<string>? select = null)
     {
         var set = folders.OfType<string>().Select(NormalizeDir).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        // Search tabs can hold files from anywhere; their refresh only rechecks the hits, it doesn't search again.
         var refreshes = AllTabs
-            .Where(t => set.Contains(NormalizeDir(t.Path)))
+            .Where(t => t.IsSearch || set.Contains(NormalizeDir(t.Path)))
             .Select(t => selectIn is not null && select is { Count: > 0 } &&
                          string.Equals(NormalizeDir(t.Path), NormalizeDir(selectIn), StringComparison.OrdinalIgnoreCase)
                 ? t.RefreshAsync(select)

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using CommunityToolkit.Mvvm.Input;
+using Rift.Core;
 using Rift.Shell;
 
 namespace Rift.App.ViewModels;
@@ -37,10 +38,33 @@ public partial class MainWindowViewModel
         FocusFilesRequested?.Invoke();
     }
 
+    /// <summary>Search hit → its folder in a new tab, with the file selected.</summary>
+    [RelayCommand]
+    private async Task OpenLocation()
+    {
+        if (ActiveTab.Selected.FirstOrDefault() is not { } item || Path.GetDirectoryName(item.FullPath) is not { } folder)
+            return;
+        var tab = ActivePane.OpenTab(folder);
+        await tab.RefreshAsync([item.FullPath]);
+    }
+
+    /// <summary>Recursive search from the active tab's folder; results go to a new tab (or replace a search tab's results).</summary>
+    public async Task SearchAsync(string query)
+    {
+        var tab = ActiveTab;
+        if (string.IsNullOrWhiteSpace(query) || tab.SearchRoot is not { } root)
+            return;
+        var path = Locations.Search(root, query.Trim());
+        if (tab.IsSearch)
+            await tab.NavigateTo(path);
+        else
+            ActivePane.OpenTab(path); // a new tab starts loading (here: searching) by itself
+    }
+
     [RelayCommand]
     private void OpenWith()
     {
-        if (OperatingSystem.IsWindows() && ActiveTab.IsFileSystem && ActiveTab.Selected.FirstOrDefault(i => !i.IsDirectory) is { } file)
+        if (OperatingSystem.IsWindows() && ActiveTab.CanEditItems && ActiveTab.Selected.FirstOrDefault(i => !i.IsDirectory) is { } file)
             ShellDialogs.OpenWith(WindowHandle(), file.FullPath);
     }
 
@@ -67,6 +91,9 @@ public partial class MainWindowViewModel
         var paths = tab.SelectedPaths;
         if (paths.Count == 0 && !tab.IsFileSystem)
             return;
+        // Several folders at once (search hits): the combined sheet needs one folder, so show the first item.
+        if (paths.Select(Path.GetDirectoryName).Distinct(StringComparer.OrdinalIgnoreCase).Count() > 1)
+            paths = [paths[0]];
         try
         {
             ShellDialogs.Properties(WindowHandle(), paths.Count > 0 ? paths : [tab.Path]);
@@ -90,7 +117,10 @@ public partial class MainWindowViewModel
         var tab = ActiveTab;
         var paths = tab.SelectedPaths;
         // Recycle Bin rows are $R files: Explorer's menu for them would show nonsense names.
-        if (tab.IsRecycleBin || (!tab.IsFileSystem && (!forSelection || paths.Count == 0)))
+        if (tab.IsRecycleBin || tab.Location == LocationKind.Libraries || (!tab.IsFileSystem && (!forSelection || paths.Count == 0)))
+            return;
+        // Explorer's menu works on items of one folder; search hits from several folders get Rift's menu only.
+        if (forSelection && paths.Select(Path.GetDirectoryName).Distinct(StringComparer.OrdinalIgnoreCase).Count() > 1)
             return;
         try
         {

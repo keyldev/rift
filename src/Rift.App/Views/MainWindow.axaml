@@ -34,6 +34,17 @@
     <KeyBinding Gesture="Alt+Right" Command="{Binding ActivePane.SelectedTab.ForwardCommand}" />
     <KeyBinding Gesture="Alt+Up" Command="{Binding ActivePane.SelectedTab.UpCommand}" />
     <KeyBinding Gesture="Ctrl+H" Command="{Binding ToggleHiddenCommand}" />
+    <KeyBinding Gesture="Ctrl+F" Command="{Binding FocusSearchCommand}" />
+    <KeyBinding Gesture="Ctrl+Shift+D1" Command="{Binding ActivePane.SelectedTab.SetViewCommand}" CommandParameter="{x:Static vm:ViewMode.Details}" />
+    <KeyBinding Gesture="Ctrl+Shift+D2" Command="{Binding ActivePane.SelectedTab.SetViewCommand}" CommandParameter="{x:Static vm:ViewMode.Tiles}" />
+    <KeyBinding Gesture="Ctrl+Shift+D3" Command="{Binding ActivePane.SelectedTab.SetViewCommand}" CommandParameter="{x:Static vm:ViewMode.Thumbnails}" />
+    <KeyBinding Gesture="Alt+P" Command="{Binding ActivePane.TogglePreviewCommand}" />
+    <KeyBinding Gesture="Ctrl+K" Command="{Binding OpenPaletteCommand}" />
+    <KeyBinding Gesture="Ctrl+Shift+P" Command="{Binding OpenPaletteCommand}" />
+    <KeyBinding Gesture="Ctrl+E" Command="{Binding FocusSearchCommand}" />
+    <KeyBinding Gesture="Ctrl+L" Command="{Binding ActivePane.SelectedTab.EditAddressCommand}" />
+    <KeyBinding Gesture="Alt+D" Command="{Binding ActivePane.SelectedTab.EditAddressCommand}" />
+    <KeyBinding Gesture="F4" Command="{Binding ActivePane.SelectedTab.EditAddressCommand}" />
     <KeyBinding Gesture="Alt+Enter" Command="{Binding PropertiesCommand}" />
     <KeyBinding Gesture="Ctrl+Shift+C" Command="{Binding CopyPathCommand}" />
   </Window.KeyBindings>
@@ -126,6 +137,30 @@
           </StackPanel>
         <ScrollViewer>
           <StackPanel Margin="8,12" Spacing="2">
+            <StackPanel Spacing="2" Margin="0,0,0,16" IsVisible="{Binding HasPinned}">
+              <TextBlock Classes="section" Text="{x:Static l:Strings.SectionPinned}" />
+              <ItemsControl ItemsSource="{Binding Pinned}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:SidebarItem">
+                    <Button Classes="flat nav"
+                            Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenSidebarItemCommand}"
+                            CommandParameter="{Binding}" ToolTip.Tip="{Binding Tip}">
+                      <Button.ContextMenu>
+                        <ContextMenu>
+                          <MenuItem Header="{x:Static l:Strings.MenuUnpin}"
+                                    Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).UnpinCommand}"
+                                    CommandParameter="{Binding}" />
+                        </ContextMenu>
+                      </Button.ContextMenu>
+                      <StackPanel Orientation="Horizontal" Spacing="10">
+                        <c:Icon Data="{StaticResource Icon.Folder}" />
+                        <TextBlock Text="{Binding Label}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                      </StackPanel>
+                    </Button>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
             <TextBlock Classes="section" Text="{x:Static l:Strings.SectionQuickAccess}" />
             <ItemsControl ItemsSource="{Binding QuickAccess}">
               <ItemsControl.ItemTemplate>
@@ -237,6 +272,7 @@
             <Setter Property="Foreground" Value="{DynamicResource Rift.Muted}" />
           </Style>
         </StackPanel.Styles>
+        <StackPanel Orientation="Horizontal"><Border Classes="kbd"><TextBlock Text="Ctrl+K" /></Border><TextBlock Text="{x:Static l:Strings.HintPalette}" /></StackPanel>
         <StackPanel Orientation="Horizontal"><Border Classes="kbd"><TextBlock Text="Tab" /></Border><TextBlock Text="{x:Static l:Strings.HintOtherPane}" /></StackPanel>
         <StackPanel Orientation="Horizontal"><Border Classes="kbd"><TextBlock Text="F5" /></Border><TextBlock Text="{x:Static l:Strings.HintCopy}" /></StackPanel>
         <StackPanel Orientation="Horizontal"><Border Classes="kbd"><TextBlock Text="F6" /></Border><TextBlock Text="{x:Static l:Strings.HintMove}" /></StackPanel>
@@ -245,6 +281,41 @@
         <StackPanel Orientation="Horizontal"><Border Classes="kbd"><TextBlock Text="Ctrl+Shift+N" /></Border><TextBlock Text="{x:Static l:Strings.HintNewFolder}" /></StackPanel>
         <StackPanel Orientation="Horizontal"><Border Classes="kbd"><TextBlock Text="Ctrl+Z" /></Border><TextBlock Text="{x:Static l:Strings.HintUndo}" /></StackPanel>
       </StackPanel>
+    </Border>
+
+    <!-- Command palette (Ctrl+K): commands, places, recent folders, tabs, typed paths -->
+    <Border x:Name="PaletteScrim" Grid.RowSpan="3" Background="{DynamicResource Rift.Scrim}" IsVisible="{Binding Palette.IsOpen}">
+      <Border Classes="card palette" Width="580" Margin="0,70,0,0" VerticalAlignment="Top" HorizontalAlignment="Center"
+              Background="{DynamicResource Rift.Panel}" CornerRadius="12">
+        <DockPanel>
+          <TextBox x:Name="PaletteBox" DockPanel.Dock="Top" Classes="palette" Text="{Binding Palette.Query, Mode=TwoWay}"
+                   PlaceholderText="{x:Static l:Strings.PalettePlaceholder}">
+            <TextBox.InnerLeftContent>
+              <c:Icon Width="16" Height="16" Margin="14,0,0,0" Foreground="{DynamicResource Rift.Dim}" Data="{StaticResource Icon.Search}" />
+            </TextBox.InnerLeftContent>
+          </TextBox>
+          <ListBox x:Name="PaletteList" Classes="palette" ItemsSource="{Binding Palette.Results}"
+                   SelectedIndex="{Binding Palette.SelectedIndex, Mode=TwoWay}" MaxHeight="420">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:PaletteItem">
+                <DockPanel>
+                  <c:Icon DockPanel.Dock="Left" Width="16" Height="16" Margin="0,0,12,0" Foreground="{DynamicResource Rift.Muted}"
+                          Data="{Binding Icon, Converter={x:Static app:Converters.ResourceToGeometry}}" />
+                  <Border DockPanel.Dock="Right" Classes="kbd" IsVisible="{Binding HasGesture}" Margin="8,0,0,0">
+                    <TextBlock Text="{Binding Gesture}" />
+                  </Border>
+                  <TextBlock DockPanel.Dock="Right" Classes="dim" FontSize="11" Text="{Binding KindText}" VerticalAlignment="Center"
+                             IsVisible="{Binding !HasGesture}" />
+                  <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Classes="dim" FontSize="12" Text="{Binding Detail}" TextTrimming="CharacterEllipsis" MaxWidth="300" />
+                  </StackPanel>
+                </DockPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </DockPanel>
+      </Border>
     </Border>
 
     <!-- Modal dialog: conflicts, delete confirmation, errors -->

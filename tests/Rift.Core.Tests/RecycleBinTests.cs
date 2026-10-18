@@ -111,7 +111,7 @@ public class LocationsTests
     [InlineData(@"C:\Users", @"C:\")]
     [InlineData(@"C:\", Locations.ThisPc)]
     [InlineData(Locations.ThisPc, null)]
-    [InlineData(@"\\nas\media", null)]
+    [InlineData(@"\\nas\media", @"\\nas")]
     public void Parent_of_a_drive_is_this_pc(string path, string? parent) => Assert.Equal(parent, Locations.Parent(path));
 }
 

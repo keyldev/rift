@@ -22,7 +22,8 @@
 
 </details>
 
-> Early stage. Rift already browses, copies and moves, and fits into Windows like Explorer does; next up are views and search.
+> Early stage. Rift already browses, copies, moves, searches and previews, and fits into Windows like Explorer does;
+> next up are flexible layouts and saved sessions.
 > See [ROADMAP.md](ROADMAP.md).
 
 ## Features
@@ -38,7 +39,12 @@
 - Folders refresh by themselves when files change on disk
 - Hidden and system files on demand (Ctrl+H)
 - Inline rename, new folder
-- Breadcrumbs, back / forward / up, quick access, This PC and drives in the sidebar
+- Sort by any column, resize and pick columns; details, tiles and thumbnail views
+- Preview pane for images, text and code, video and PDF thumbnails
+- Type-to-filter, recursive search with results in their own tab
+- Command palette (Ctrl+K) for commands, recent folders, tabs and paths
+- Editable address bar with autocomplete, breadcrumbs, back / forward / up
+- Sidebar: pinned folders, quick access, This PC, Libraries, Network, Recycle Bin, drives
 - Dark and light themes, custom title bar
 - One window: "Open in Rift" and the taskbar jump list (recent folders) open tabs in the running Rift
 - "Open in Rift" in Explorer's context menu
@@ -64,6 +70,12 @@ Grab the latest build from the artifacts of the latest [CI run](https://github.c
 | Alt+Enter | Properties |
 | Ctrl+Shift+C | Copy path |
 | Ctrl+H | Show / hide hidden files |
+| Ctrl+K, Ctrl+Shift+P | Command palette |
+| Ctrl+F, Ctrl+E | Search in this folder and below |
+| Ctrl+L, Alt+D, F4 | Edit the path |
+| Alt+P | Preview pane |
+| Ctrl+Shift+1 / 2 / 3, Ctrl+wheel | Details / tiles / thumbnails |
+| Typing in the list | Filter; Esc clears |
 | Ctrl+T / Ctrl+W | New tab / close tab |
 | Enter, double click | Open |
 | Backspace, Alt+↑ | Up |
@@ -80,7 +92,8 @@ Rift.exe C:\Projects --right D:\Backup
 
 - Every path opens as a tab; bare paths and `--left` go to the left pane, `--right` to the right one.
 - If Rift is already running, the paths open as new tabs in its window; `--new-window` starts a separate window instead.
-- `shell:MyComputerFolder` and `shell:RecycleBinFolder` open This PC and the Recycle Bin.
+- `shell:MyComputerFolder`, `shell:RecycleBinFolder`, `shell:Libraries` and `shell:NetworkPlacesFolder` open This PC,
+  the Recycle Bin, Libraries and Network.
 - `--lang en` or `--lang ru` overrides the UI language (by default Rift follows Windows).
 - `--register-shell` / `--unregister-shell` add or remove "Open in Rift" in Explorer.
 

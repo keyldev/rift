@@ -143,4 +143,57 @@
   <data name="EmptyBinMessage" xml:space="preserve"><value>{0} will be deleted permanently.</value></data>
   <data name="OpRestore" xml:space="preserve"><value>Restoring</value></data>
   <data name="BinEmpty" xml:space="preserve"><value>The Recycle Bin is empty</value></data>
+  <data name="FilteredCount" xml:space="preserve"><value>{0} of {1} items</value></data>
+  <data name="ColumnCreated" xml:space="preserve"><value>Created</value></data>
+  <data name="FilterLabel" xml:space="preserve"><value>Filter</value></data>
+  <data name="TipClearFilter" xml:space="preserve"><value>Clear filter (Esc)</value></data>
+  <data name="MenuColumns" xml:space="preserve"><value>Columns</value></data>
+  <data name="SearchTitle" xml:space="preserve"><value>Search: {0}</value></data>
+  <data name="SearchPlaceholder" xml:space="preserve"><value>Search</value></data>
+  <data name="TipSearch" xml:space="preserve"><value>Search in this folder and subfolders (Ctrl+F)</value></data>
+  <data name="ColumnLocation" xml:space="preserve"><value>Location</value></data>
+  <data name="SearchRunning" xml:space="preserve"><value>Searching… {0} found</value></data>
+  <data name="SearchDone" xml:space="preserve"><value>{0} found</value></data>
+  <data name="SearchCapped" xml:space="preserve"><value>{0} found, stopped at the limit: refine the query</value></data>
+  <data name="SearchNothing" xml:space="preserve"><value>Nothing found</value></data>
+  <data name="MenuOpenLocation" xml:space="preserve"><value>Open file location</value></data>
+  <data name="PalettePlaceholder" xml:space="preserve"><value>Type a command, folder or path…</value></data>
+  <data name="PaletteGoTo" xml:space="preserve"><value>Go to {0}</value></data>
+  <data name="PaletteKindCommand" xml:space="preserve"><value>Command</value></data>
+  <data name="PaletteKindPlace" xml:space="preserve"><value>Place</value></data>
+  <data name="PaletteKindRecent" xml:space="preserve"><value>Recent</value></data>
+  <data name="PaletteKindTab" xml:space="preserve"><value>Open tab</value></data>
+  <data name="CmdNewTab" xml:space="preserve"><value>New tab</value></data>
+  <data name="CmdCloseTab" xml:space="preserve"><value>Close tab</value></data>
+  <data name="CmdUndo" xml:space="preserve"><value>Undo</value></data>
+  <data name="CmdSearch" xml:space="preserve"><value>Search in folder</value></data>
+  <data name="CmdEditAddress" xml:space="preserve"><value>Edit path</value></data>
+  <data name="CmdGoUp" xml:space="preserve"><value>Up one level</value></data>
+  <data name="CmdBack" xml:space="preserve"><value>Back</value></data>
+  <data name="CmdForward" xml:space="preserve"><value>Forward</value></data>
+  <data name="CmdSwitchPane" xml:space="preserve"><value>Switch to other pane</value></data>
+  <data name="HintPalette" xml:space="preserve"><value>commands</value></data>
+  <data name="TipViewDetails" xml:space="preserve"><value>Details (Ctrl+Shift+1)</value></data>
+  <data name="TipViewTiles" xml:space="preserve"><value>Tiles (Ctrl+Shift+2)</value></data>
+  <data name="TipViewThumbnails" xml:space="preserve"><value>Thumbnails (Ctrl+Shift+3)</value></data>
+  <data name="TipPreview" xml:space="preserve"><value>Preview pane (Alt+P)</value></data>
+  <data name="PreviewNothing" xml:space="preserve"><value>Select a file to preview it</value></data>
+  <data name="PreviewDimensions" xml:space="preserve"><value>Dimensions</value></data>
+  <data name="PreviewContains" xml:space="preserve"><value>Contains</value></data>
+  <data name="CmdPreview" xml:space="preserve"><value>Preview pane</value></data>
+  <data name="CmdViewDetails" xml:space="preserve"><value>View: details</value></data>
+  <data name="CmdViewTiles" xml:space="preserve"><value>View: tiles</value></data>
+  <data name="CmdViewThumbnails" xml:space="preserve"><value>View: thumbnails</value></data>
+  <data name="PlaceNetwork" xml:space="preserve"><value>Network</value></data>
+  <data name="PlaceLibraries" xml:space="preserve"><value>Libraries</value></data>
+  <data name="SectionPinned" xml:space="preserve"><value>PINNED</value></data>
+  <data name="MenuPin" xml:space="preserve"><value>Pin to sidebar</value></data>
+  <data name="MenuUnpin" xml:space="preserve"><value>Unpin from sidebar</value></data>
+  <data name="CmdPinFolder" xml:space="preserve"><value>Pin current folder</value></data>
+  <data name="NetworkEmpty" xml:space="preserve"><value>No computers found. Network discovery may be off; you can type \\server in the address bar.</value></data>
+  <data name="ServerEmpty" xml:space="preserve"><value>This computer shares no folders</value></data>
+  <data name="KindComputer" xml:space="preserve"><value>Computer</value></data>
+  <data name="KindShare" xml:space="preserve"><value>Shared folder</value></data>
+  <data name="KindLibrary" xml:space="preserve"><value>Library</value></data>
+  <data name="LibraryFolders" xml:space="preserve"><value>Folders: {0}</value></data>
 </root>

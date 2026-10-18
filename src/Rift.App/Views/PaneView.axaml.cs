@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -40,15 +41,38 @@ public partial class PaneView : UserControl
         AddHandler(GotFocusEvent, (_, _) => Activate(), RoutingStrategies.Bubble);
 
         Files.DoubleTapped += OnDoubleTapped;
-        Files.KeyDown += OnFilesKeyDown;
+        // Tunnel: the ListBox itself swallows Enter before a bubbling handler would see it.
+        Files.AddHandler(KeyDownEvent, OnFilesKeyDown, RoutingStrategies.Tunnel);
         Files.SelectionChanged += (_, _) => SyncSelection();
+        Files.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == BoundsProperty)
+                _pane?.Columns.Fit(Files.Bounds.Width - 30); // list padding, row padding, scrollbar
+        };
         // Icons load lazily, for the rows that actually get on screen.
         Files.ContainerPrepared += (_, e) =>
         {
             // ItemFromContainer isn't wired up yet at this point; the DataContext is.
-            if (e.Container.DataContext is FileItem item)
-                FileIcons.Request(item);
+            if (e.Container.DataContext is not FileItem item)
+                return;
+            FileIcons.Request(item);
+            if (_tab is { IsDetails: false } tab)
+                FileThumbnails.Request(item, ThumbnailPixels(tab.ViewMode));
         };
+        Files.ContainerClearing += (_, e) =>
+        {
+            if (e.Container.DataContext is FileItem item)
+                FileThumbnails.Forget(item);
+        };
+        // Ctrl+wheel switches between details, tiles and thumbnails, like zooming in Explorer.
+        Files.AddHandler(PointerWheelChangedEvent, (_, e) =>
+        {
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && _tab is { } tab)
+            {
+                tab.StepView(e.Delta.Y > 0 ? 1 : -1);
+                e.Handled = true;
+            }
+        }, RoutingStrategies.Tunnel);
 
         // Inline rename: Enter commits, Esc cancels, clicking away commits.
         Files.AddHandler(KeyDownEvent, OnRenameKey, RoutingStrategies.Tunnel);
@@ -63,6 +87,32 @@ public partial class PaneView : UserControl
         Files.AddHandler(PointerPressedEvent, OnRightPressed, RoutingStrategies.Tunnel, handledEventsToo: true);
         Files.ContextRequested += OnContextRequested;
 
+        // Typing letters filters the folder; Backspace edits the filter, Esc clears it.
+        Files.AddHandler(TextInputEvent, OnFilesTextInput, RoutingStrategies.Tunnel);
+        Header.ContextRequested += OnHeaderContextRequested;
+
+        // Address bar: a click on empty space in the breadcrumbs edits the path.
+        AddressBar.PointerPressed += (_, e) =>
+        {
+            if (!e.Handled && e.GetCurrentPoint(AddressBar).Properties.IsLeftButtonPressed && _tab is { IsEditingAddress: false } tab)
+            {
+                tab.EditAddressCommand.Execute(null);
+                e.Handled = true;
+            }
+        };
+        AddressBox.AsyncPopulator = (text, ct) => Task.Run(() => (IEnumerable<object>)AddressResolver.Suggest(text ?? "", _tab?.Path ?? ""), ct);
+        AddressBox.AddHandler(KeyDownEvent, OnAddressKey, RoutingStrategies.Tunnel);
+        SearchBox.AddHandler(KeyDownEvent, OnSearchKey, RoutingStrategies.Tunnel);
+        AddressBox.LostFocus += (_, _) =>
+        {
+            // Clicking a suggestion briefly moves focus into the popup; only give up when focus really left.
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (!AddressBox.IsKeyboardFocusWithin && !AddressBox.IsDropDownOpen)
+                    _tab?.CancelAddress();
+            });
+        };
+
         // Dropping files in, from Rift or from Explorer.
         DragDrop.SetAllowDrop(this, true);
         AddHandler(DragDrop.DragEnterEvent, OnDragOver);
@@ -73,6 +123,32 @@ public partial class PaneView : UserControl
 
     private PaneViewModel? Pane => DataContext as PaneViewModel;
     private MainWindowViewModel? Main => TopLevel.GetTopLevel(this)?.DataContext as MainWindowViewModel;
+
+    /// <summary>Ctrl+F: into the search box, with what's there selected.</summary>
+    public void FocusSearch()
+    {
+        if (!SearchBox.IsEnabled)
+            return;
+        SearchBox.Focus();
+        SearchBox.SelectAll();
+    }
+
+    private async void OnSearchKey(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter && Main is { } main)
+        {
+            e.Handled = true;
+            Activate();
+            await main.SearchAsync(SearchBox.Text ?? "");
+            FocusFiles();
+        }
+        else if (e.Key == Key.Escape)
+        {
+            e.Handled = true;
+            SearchBox.Text = Locations.ParseSearch(_tab?.Path ?? "")?.Query ?? "";
+            FocusFiles();
+        }
+    }
 
     public void FocusFiles()
     {
@@ -97,15 +173,84 @@ public partial class PaneView : UserControl
     {
         if (e.PropertyName == nameof(PaneViewModel.SelectedTab))
             WatchTab();
+        else if (e.PropertyName == nameof(PaneViewModel.IsPreviewOpen))
+            UpdatePreview();
     }
 
     private void WatchTab()
     {
         if (_tab is not null)
+        {
             _tab.SelectRequested -= ApplySelection;
+            _tab.PropertyChanged -= OnTabPropertyChanged;
+            _tab.CancelAddress();
+        }
         _tab = _pane?.SelectedTab;
         if (_tab is not null)
+        {
             _tab.SelectRequested += ApplySelection;
+            _tab.PropertyChanged += OnTabPropertyChanged;
+        }
+        ShowSearchQuery();
+    }
+
+    /// <summary>A search tab shows its query in the box; other tabs start empty.</summary>
+    private void ShowSearchQuery() => SearchBox.Text = Locations.ParseSearch(_tab?.Path ?? "")?.Query ?? "";
+
+    private void OnTabPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(TabViewModel.Path) && !SearchBox.IsKeyboardFocusWithin)
+            ShowSearchQuery();
+        if (e.PropertyName != nameof(TabViewModel.IsEditingAddress) || _tab is not { } tab)
+            return;
+        if (tab.IsEditingAddress)
+        {
+            Activate();
+            Dispatcher.UIThread.Post(() =>
+            {
+                AddressBox.Focus();
+                AddressBox.GetVisualDescendants().OfType<TextBox>().FirstOrDefault()?.SelectAll();
+            }, DispatcherPriority.Loaded);
+        }
+        else if (AddressBox.IsKeyboardFocusWithin)
+        {
+            FocusFiles();
+        }
+    }
+
+    /// <summary>A suggestion was chosen with the arrows; otherwise Enter takes the typed text as it is.</summary>
+    private bool _addressPicked;
+
+    private async void OnAddressKey(object? sender, KeyEventArgs e)
+    {
+        if (_tab is not { } tab)
+            return;
+        switch (e.Key)
+        {
+            case Key.Up or Key.Down:
+                _addressPicked = true;
+                break;
+            case Key.Escape:
+                e.Handled = true;
+                if (AddressBox.IsDropDownOpen)
+                    AddressBox.IsDropDownOpen = false;
+                else
+                    tab.CancelAddress();
+                break;
+            case Key.Enter:
+                e.Handled = true;
+                // AutoCompleteBox also "selects" a suggestion that merely equals the text halfway through typing.
+                var text = _addressPicked && AddressBox.IsDropDownOpen && AddressBox.SelectedItem is string picked ? picked : AddressBox.Text ?? "";
+                _addressPicked = false;
+                AddressBox.IsDropDownOpen = false;
+                if (!await tab.CommitAddressAsync(text))
+                    AddressBox.Classes.Set("error", true);
+                break;
+            default:
+                _addressPicked = false;
+                AddressBox.Classes.Set("error", false);
+                break;
+        }
     }
 
     private void ApplySelection(IReadOnlyList<FileItem> items)
@@ -138,7 +283,7 @@ public partial class PaneView : UserControl
 
     private void OnFilesKeyDown(object? sender, KeyEventArgs e)
     {
-        if (Pane?.SelectedTab is not { } tab)
+        if (e.Handled || Pane?.SelectedTab is not { } tab || IsInsideRenameBox(e.Source) || e.KeyModifiers != KeyModifiers.None)
             return;
 
         switch (e.Key)
@@ -147,9 +292,19 @@ public partial class PaneView : UserControl
                 OpenSelected();
                 e.Handled = true;
                 break;
+            case Key.Back when tab.IsFiltered:
+                tab.Filter = tab.Filter[..^1];
+                e.Handled = true;
+                KeepFocusAfterFilter();
+                break;
             case Key.Back:
                 tab.UpCommand.Execute(null);
                 e.Handled = true;
+                break;
+            case Key.Escape when tab.IsFiltered:
+                tab.Filter = "";
+                e.Handled = true;
+                KeepFocusAfterFilter();
                 break;
         }
     }
@@ -161,10 +316,93 @@ public partial class PaneView : UserControl
         tab.Selected.Clear();
         if (Files.SelectedItems is { } items)
         {
-            foreach (var item in items.OfType<FileItem>())
+            // Right after a tab switch the list can still report the previous tab's selection.
+            var shown = tab.Items.ToHashSet();
+            foreach (var item in items.OfType<FileItem>().Where(shown.Contains))
                 tab.Selected.Add(item);
         }
         tab.UpdateStatus();
+        UpdatePreview();
+    }
+
+    private void UpdatePreview()
+    {
+        if (_pane is not { IsPreviewOpen: true } pane || _tab is not { } tab)
+            return;
+        var item = tab.Selected.Count == 1 ? tab.Selected[0] : null;
+        _ = pane.Preview.ShowAsync(item, TopLevel.GetTopLevel(this)?.RenderScaling ?? 1);
+    }
+
+    private void OnPreviewResize(object? sender, VectorEventArgs e) => _pane?.ResizePreview(-e.Vector.X);
+
+    /// <summary>Thumbnail size in device pixels, so pictures stay sharp on high-DPI screens.</summary>
+    private int ThumbnailPixels(ViewMode mode) =>
+        (int)Math.Ceiling((mode == ViewMode.Tiles ? 48 : 112) * (TopLevel.GetTopLevel(this)?.RenderScaling ?? 1));
+
+    // ---------- columns and filter ----------
+
+    private void OnHeaderClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is Control { Tag: SortColumn column } && _tab is { } tab)
+            tab.SortBy(column);
+    }
+
+    private void OnColumnResize(object? sender, VectorEventArgs e)
+    {
+        if (sender is Control { Tag: SortColumn column })
+            ViewOptions.Current.Columns.Resize(column, -e.Vector.X);
+    }
+
+    private void OnHeaderContextRequested(object? sender, ContextRequestedEventArgs e)
+    {
+        e.Handled = true;
+        var columns = ViewOptions.Current.Columns;
+        var items = new List<Control>();
+        foreach (var (column, label) in new[]
+                 {
+                     (SortColumn.Modified, Strings.ColumnModified),
+                     (SortColumn.Created, Strings.ColumnCreated),
+                     (SortColumn.Type, Strings.ColumnType),
+                     (SortColumn.Size, Strings.ColumnSize),
+                 })
+        {
+            var item = new MenuItem { Header = label, ToggleType = MenuItemToggleType.CheckBox, IsChecked = columns.IsShown(column) };
+            item.Click += (_, _) => columns.Toggle(column);
+            items.Add(item);
+        }
+        new ContextMenu { ItemsSource = items, Placement = PlacementMode.Pointer }.Open(Header);
+    }
+
+    private void OnFilesTextInput(object? sender, TextInputEventArgs e)
+    {
+        if (_tab is not { } tab || IsInsideRenameBox(e.Source) || string.IsNullOrEmpty(e.Text) || tab.Location == LocationKind.ThisPc)
+            return;
+        // A space only continues a filter; on its own it belongs to the list (toggles selection).
+        if (e.Text == " " && !tab.IsFiltered)
+            return;
+        if (e.Text.Any(char.IsControl))
+            return;
+        tab.Filter += e.Text;
+        e.Handled = true;
+        KeepFocusAfterFilter();
+    }
+
+    /// <summary>
+    /// The focused row may have just been filtered out, taking keyboard focus with it:
+    /// select the first match instead, so typing goes on and Enter opens it.
+    /// </summary>
+    private void KeepFocusAfterFilter() => Dispatcher.UIThread.Post(() =>
+    {
+        if (Files.SelectedItems is { Count: 0 } && Files.ItemCount > 0)
+            Files.SelectedIndex = 0;
+        FocusFiles();
+    }, DispatcherPriority.Loaded);
+
+    private void OnClearFilter(object? sender, RoutedEventArgs e)
+    {
+        if (_tab is { } tab)
+            tab.Filter = "";
+        FocusFiles();
     }
 
     // ---------- rename ----------
@@ -250,7 +488,7 @@ public partial class PaneView : UserControl
             {
                 LocationKind.RecycleBin => RecycleBinMenu(main, forSelection),
                 _ when forSelection => SelectionMenu(main, tab, screen),
-                LocationKind.ThisPc => [Item(Strings.MenuRefresh, "Icon.Refresh", "Ctrl+R", tab.RefreshCommand)],
+                _ when !tab.IsFileSystem => [Item(Strings.MenuRefresh, "Icon.Refresh", "Ctrl+R", tab.RefreshCommand)],
                 _ => FolderMenu(main, screen),
             },
             Placement = anchor == Files && e.TryGetPosition(Files, out _) ? PlacementMode.Pointer : PlacementMode.BottomEdgeAlignedLeft,
@@ -275,8 +513,14 @@ public partial class PaneView : UserControl
         if (files == 1 && folders == 0 && OperatingSystem.IsWindows())
             items.Add(Item(Strings.MenuOpenWith, "Icon.OpenWith", null, main.OpenWithCommand));
 
-        // This PC: drives can be opened and inspected, not cut, renamed or deleted.
-        if (!tab.IsFileSystem)
+        if (tab.IsSearch)
+            items.Add(Item(Strings.MenuOpenLocation, "Icon.Folder", null, main.OpenLocationCommand));
+
+        if (folders == 1 && files == 0 && main.CanPin(tab.Selected[0].FullPath))
+            items.Add(Item(Strings.MenuPin, "Icon.Pin", null, main.PinCommand, parameter: tab.Selected[0].FullPath));
+
+        // Drives, computers, shares, libraries: they can be opened and inspected, not cut, renamed or deleted.
+        if (tab.IsPlaceList)
         {
             items.Add(new Separator());
             items.Add(Item(Strings.MenuCopyPath, "Icon.Link", "Ctrl+Shift+C", main.CopyPathCommand));
@@ -311,12 +555,14 @@ public partial class PaneView : UserControl
         var items = new List<Control>
         {
             Item(Strings.MenuNewFolder, "Icon.Folder", "Ctrl+Shift+N", main.NewFolderCommand),
-            Item(Strings.MenuPaste, "Icon.Paste", "Ctrl+V", main.PasteCommand, enabled: main.CanPaste),
+            Item(Strings.MenuPaste, "Icon.Paste", "Ctrl+V", main.PasteCommand, enabled: main.CanPaste && _tab!.IsFileSystem),
             new Separator(),
             Item(Strings.MenuRefresh, "Icon.Refresh", "Ctrl+R", _tab!.RefreshCommand),
             hidden,
             Item(Strings.MenuCopyPath, "Icon.Link", "Ctrl+Shift+C", main.CopyPathCommand),
         };
+        if (main.CanPin(_tab.Path))
+            items.Add(Item(Strings.MenuPin, "Icon.Pin", null, main.PinCommand, parameter: _tab.Path));
         AddShellItems(items, main, forSelection: false, screen);
         return items;
     }
@@ -348,12 +594,13 @@ public partial class PaneView : UserControl
     }
 
     private static MenuItem Item(string header, string? icon, string? gesture, System.Windows.Input.ICommand? command,
-        bool enabled = true, bool isDefault = false)
+        bool enabled = true, bool isDefault = false, object? parameter = null)
     {
         var item = new MenuItem
         {
             Header = header,
             Command = command,
+            CommandParameter = parameter,
             IsEnabled = enabled,
             InputGesture = gesture is null ? null : KeyGesture.Parse(gesture),
             FontWeight = isDefault ? FontWeight.SemiBold : FontWeight.Normal,
@@ -404,7 +651,7 @@ public partial class PaneView : UserControl
         _selectOnRelease = null;
         var paths = tab.SelectedPaths;
         // Drives and deleted files don't travel; the Recycle Bin's own Restore puts files back.
-        if (paths.Count == 0 || !tab.IsFileSystem)
+        if (paths.Count == 0 || !tab.CanEditItems)
             return;
 
         var data = new DataTransfer();

@@ -1,3 +1,5 @@
+using Rift.Core.Localization;
+
 namespace Rift.Core;
 
 public static class FileKinds
@@ -13,6 +15,21 @@ public static class FileKinds
         (FileKind.Document, ["txt", "md", "log", "ini", "cfg", "doc", "docx", "rtf", "odt", "xls", "xlsx", "csv", "ppt", "pptx"]),
         (FileKind.Pdf, ["pdf"]),
         (FileKind.Executable, ["exe", "msi", "bat", "cmd", "lnk", "appx", "msix"]));
+
+    /// <summary>What the Type column shows: "Image", "Folder", or the extension for unknown types ("BAK").</summary>
+    public static string Label(FileEntry e) => e.TypeNote ?? e.Kind switch
+    {
+        FileKind.Folder => Strings.KindFolder,
+        FileKind.Image => Strings.KindImage,
+        FileKind.Video => Strings.KindVideo,
+        FileKind.Audio => Strings.KindAudio,
+        FileKind.Archive => Strings.KindArchive,
+        FileKind.Code => Strings.KindCode,
+        FileKind.Document => Strings.KindDocument,
+        FileKind.Pdf => Strings.KindPdf,
+        FileKind.Executable => Strings.KindExecutable,
+        _ => Path.GetExtension(e.Name) is { Length: > 1 } ext ? ext[1..].ToUpperInvariant() : Strings.KindFile,
+    };
 
     public static FileKind FromExtension(string extension)
     {

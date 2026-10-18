@@ -58,11 +58,15 @@ public sealed record StartupArgs(IReadOnlyList<string> Left, IReadOnlyList<strin
             if (path is [_, ':'])
                 path += '\\';
 
-            (pendingSide ? target : left).Add(Locations.IsVirtual(path) ? Locations.KindOf(path) switch
+            (pendingSide ? target : left).Add(Locations.KindOf(path) switch
             {
                 LocationKind.ThisPc => Locations.ThisPc,
-                _ => Locations.RecycleBin,
-            } : Path.GetFullPath(path));
+                LocationKind.RecycleBin => Locations.RecycleBin,
+                LocationKind.Network => Locations.Network,
+                LocationKind.Libraries => Locations.LibrariesFolder,
+                LocationKind.Server => path.TrimEnd('\\'),
+                _ => Path.GetFullPath(path),
+            });
             pendingSide = false;
         }
 

@@ -10,4 +10,6 @@ public sealed partial class ViewOptions : ObservableObject
 
     /// <summary>Hidden and system files; starts from Explorer's own setting.</summary>
     [ObservableProperty] private bool _showHidden = OperatingSystem.IsWindows() && ExplorerSettings.ShowsHiddenFiles();
+
+    public ColumnLayout Columns { get; } = new();
 }
