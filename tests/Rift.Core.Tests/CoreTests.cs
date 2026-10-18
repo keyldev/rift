@@ -98,6 +98,14 @@ public class StartupArgsTests
     }
 
     [Fact]
+    public void Strips_stray_quote_from_explorer_drive_root()
+    {
+        // "Rift.exe" "C:\" from the Explorer verb arrives as C:"
+        var args = StartupArgs.Parse(["C:\""]);
+        Assert.Equal([@"C:\"], args.Left);
+    }
+
+    [Fact]
     public void Empty_args_give_empty_lists()
     {
         var args = StartupArgs.Parse([]);

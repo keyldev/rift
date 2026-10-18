@@ -3,6 +3,7 @@ using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Rift.Core;
+using Rift.Shell;
 
 namespace Rift.App.ViewModels;
 
@@ -30,6 +31,21 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty] private PaneViewModel _activePane;
     [ObservableProperty] private bool _isSplit = true;
     [ObservableProperty] private bool _isDark = true;
+
+    public bool IsExplorerMenuSupported => OperatingSystem.IsWindows();
+
+    [ObservableProperty]
+    private bool _isExplorerMenuEnabled = OperatingSystem.IsWindows() && ExplorerIntegration.IsRegistered();
+
+    partial void OnIsExplorerMenuEnabledChanged(bool value)
+    {
+        if (!OperatingSystem.IsWindows())
+            return;
+        if (value)
+            ExplorerIntegration.Register(Environment.ProcessPath!);
+        else
+            ExplorerIntegration.Unregister();
+    }
 
     partial void OnActivePaneChanged(PaneViewModel? oldValue, PaneViewModel newValue)
     {

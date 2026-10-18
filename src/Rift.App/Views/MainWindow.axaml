@@ -99,6 +99,14 @@
 
       <!-- Сайдбар -->
       <Border Background="{DynamicResource Rift.Panel}" BorderBrush="{DynamicResource Rift.Line}" BorderThickness="0,0,1,0">
+        <DockPanel>
+          <StackPanel DockPanel.Dock="Bottom" Margin="8,0,8,12" Spacing="6"
+                      IsVisible="{Binding IsExplorerMenuSupported}">
+            <TextBlock Classes="section" Text="ПРОВОДНИК" />
+            <CheckBox Margin="8,0,0,0" FontSize="12" IsChecked="{Binding IsExplorerMenuEnabled}"
+                      Content="«Открыть в Rift» в меню"
+                      ToolTip.Tip="Пункт в контекстном меню папок и дисков. В Windows 11 — в «Показать дополнительные параметры»." />
+          </StackPanel>
         <ScrollViewer>
           <StackPanel Margin="8,12" Spacing="2">
             <TextBlock Classes="section" Text="БЫСТРЫЙ ДОСТУП" />
@@ -140,6 +148,7 @@
             </ItemsControl>
           </StackPanel>
         </ScrollViewer>
+        </DockPanel>
       </Border>
 
       <!-- Панели -->

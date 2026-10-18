@@ -1,0 +1,61 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+          cache: true
+          cache-dependency-path: '**/*.csproj'
+
+      - name: Restore
+        run: dotnet restore Rift.slnx
+
+      - name: Build
+        run: dotnet build Rift.slnx -c Release --no-restore
+
+      - name: Test
+        run: dotnet test Rift.slnx -c Release --no-build --logger "trx;LogFileName=results.trx"
+
+      - name: Publish win-x64
+        run: >
+          dotnet publish src/Rift.App -c Release -r win-x64 --self-contained
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -o publish/win-x64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rift-win-x64
+          path: |
+            publish/win-x64
+            !publish/win-x64/*.pdb
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: '**/TestResults/*.trx'
+          if-no-files-found: ignore

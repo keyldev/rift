@@ -27,7 +27,15 @@ public sealed record StartupArgs(IReadOnlyList<string> Left, IReadOnlyList<strin
                     continue;
             }
 
-            (pendingSide ? target : left).Add(Path.GetFullPath(arg));
+            // Explorer passes drive roots as "C:\" — the trailing \" turns into a stray quote.
+            var path = arg.Trim().TrimEnd('"');
+            if (path.Length == 0)
+                continue;
+            // A bare "C:" means "current folder on drive C", not its root.
+            if (path is [_, ':'])
+                path += '\\';
+
+            (pendingSide ? target : left).Add(Path.GetFullPath(path));
             pendingSide = false;
         }
 
