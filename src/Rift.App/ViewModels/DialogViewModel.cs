@@ -5,7 +5,7 @@ namespace Rift.App.ViewModels;
 
 public sealed record DialogButton(string Label, int Result, bool IsPrimary = false, bool IsDanger = false);
 
-public readonly record struct DialogResult(int Button, bool IsChecked);
+public readonly record struct DialogResult(int Button, bool IsChecked, string? Input = null);
 
 /// <summary>
 /// A modal card drawn over the window: conflicts, delete confirmation, errors.
@@ -25,10 +25,17 @@ public sealed partial class DialogViewModel : ViewModelBase
 
     [ObservableProperty] private bool _isChecked;
 
+    /// <summary>A text box under the message (e.g. a workspace name); null for no box.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasInput))]
+    private string? _input;
+
+    public bool HasInput => Input is not null;
+
     public Task<DialogResult> Result => _result.Task;
 
     [RelayCommand]
-    public void Choose(DialogButton button) => _result.TrySetResult(new DialogResult(button.Result, IsChecked));
+    public void Choose(DialogButton button) => _result.TrySetResult(new DialogResult(button.Result, IsChecked, Input));
 
     public void ChoosePrimary() => Choose(Buttons.FirstOrDefault(b => b.IsPrimary) ?? Buttons[0]);
 

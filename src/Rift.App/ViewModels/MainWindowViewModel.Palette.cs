@@ -32,12 +32,12 @@ public partial class MainWindowViewModel
                 items.Add(Place(Locations.Title(path), path, "Icon.Folder", PaletteKind.Recent));
         }
 
-        foreach (var tab in AllTabs)
+        foreach (var pane in Panes)
+        foreach (var tab in pane.Tabs)
         {
-            var pane = Left.Tabs.Contains(tab) ? Left : Right;
             items.Add(new PaletteItem(tab.Title, tab.DisplayPath, "Icon.Split", PaletteKind.Tab, () =>
             {
-                IsSplit |= pane == Right;
+                IsZoomed &= pane == ActivePane;
                 ActivePane = pane;
                 pane.SelectedTab = tab;
                 FocusFilesRequested?.Invoke();
@@ -46,6 +46,20 @@ public partial class MainWindowViewModel
         }
 
         items.AddRange(Commands());
+
+        foreach (var name in SessionStore.Workspaces())
+        {
+            items.Add(new PaletteItem(Strings.WorkspaceOpen(name), null, "Icon.ViewGrid", PaletteKind.Command, () =>
+            {
+                OpenWorkspace(name);
+                return Task.CompletedTask;
+            }));
+            items.Add(new PaletteItem(Strings.WorkspaceDelete(name), null, "Icon.Trash", PaletteKind.Command, () =>
+            {
+                DeleteWorkspace(name);
+                return Task.CompletedTask;
+            }));
+        }
 
         foreach (var place in Pinned.Concat(QuickAccess).Concat(Drives))
         {
@@ -116,9 +130,16 @@ public partial class MainWindowViewModel
         yield return Cmd(Strings.CmdViewThumbnails, "Icon.ViewGrid", "Ctrl+Shift+3", tab.SetViewCommand, ViewMode.Thumbnails);
         yield return Cmd(Strings.MenuShowHidden, View.ShowHidden ? "Icon.Eye" : "Icon.EyeOff", "Ctrl+H", ToggleHiddenCommand);
         yield return Cmd(Strings.TipTheme, IsDark ? "Icon.Sun" : "Icon.Moon", null, ToggleThemeCommand);
-        yield return Cmd(Strings.TipSinglePane, "Icon.Single", null, ShowSingleCommand);
-        yield return Cmd(Strings.TipSplitPane, "Icon.Split", null, ShowSplitCommand);
+        yield return Cmd(Strings.CmdSplitRight, "Icon.Split", "Ctrl+\\", SplitRightCommand);
+        yield return Cmd(Strings.CmdSplitDown, "Icon.SplitDown", "Ctrl+Shift+\\", SplitDownCommand);
+        yield return Cmd(Strings.CmdZoom, "Icon.Single", "Ctrl+Shift+Enter", ToggleZoomCommand);
+        yield return Cmd(Strings.CmdClosePane, "Icon.Close", "Ctrl+Shift+W", CloseActivePaneCommand);
         yield return Cmd(Strings.CmdSwitchPane, "Icon.Split", "Tab", SwitchPaneCommand);
+        yield return Cmd(Strings.CmdReopenTab, "Icon.Restore", "Ctrl+Shift+T", ReopenTabCommand);
+        yield return Cmd(Strings.CmdDuplicateTab, "Icon.Copy", null, DuplicateTabCommand);
+        yield return Cmd(Strings.CmdPinTab, "Icon.PinTab", null, TogglePinTabCommand);
+        yield return Cmd(Strings.CmdCloseOtherTabs, "Icon.Close", null, CloseOtherTabsCommand);
+        yield return Cmd(Strings.CmdSaveWorkspace, "Icon.Plus", null, SaveWorkspaceCommand);
         yield return Cmd(Strings.MenuEmptyBin, "Icon.Trash", null, EmptyBinCommand);
         yield return new PaletteItem(Strings.JumpNewWindow, null, "Icon.Plus", PaletteKind.Command, () =>
         {

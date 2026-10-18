@@ -196,4 +196,30 @@
   <data name="KindShare" xml:space="preserve"><value>Общая папка</value></data>
   <data name="KindLibrary" xml:space="preserve"><value>Библиотека</value></data>
   <data name="LibraryFolders" xml:space="preserve"><value>Папок: {0}</value></data>
+  <data name="TipZoom" xml:space="preserve"><value>Только эта панель (Ctrl+Shift+Enter)</value></data>
+  <data name="TipSplitRight" xml:space="preserve"><value>Разделить вправо (Ctrl+\)</value></data>
+  <data name="TipSplitDown" xml:space="preserve"><value>Разделить вниз (Ctrl+Shift+\)</value></data>
+  <data name="CmdSplitRight" xml:space="preserve"><value>Разделить вправо</value></data>
+  <data name="CmdSplitDown" xml:space="preserve"><value>Разделить вниз</value></data>
+  <data name="CmdZoom" xml:space="preserve"><value>Только эта панель / все панели</value></data>
+  <data name="CmdClosePane" xml:space="preserve"><value>Закрыть панель</value></data>
+  <data name="CmdReopenTab" xml:space="preserve"><value>Вернуть закрытую вкладку</value></data>
+  <data name="CmdDuplicateTab" xml:space="preserve"><value>Дублировать вкладку</value></data>
+  <data name="CmdPinTab" xml:space="preserve"><value>Закрепить / открепить вкладку</value></data>
+  <data name="CmdCloseOtherTabs" xml:space="preserve"><value>Закрыть остальные вкладки</value></data>
+  <data name="CmdSaveWorkspace" xml:space="preserve"><value>Сохранить рабочее пространство…</value></data>
+  <data name="WorkspaceOpen" xml:space="preserve"><value>Пространство: {0}</value></data>
+  <data name="WorkspaceDelete" xml:space="preserve"><value>Удалить пространство: {0}</value></data>
+  <data name="WorkspaceSaveTitle" xml:space="preserve"><value>Сохранить рабочее пространство</value></data>
+  <data name="WorkspaceSaveMessage" xml:space="preserve"><value>Панели и вкладки как сейчас; открыть потом можно из Ctrl+K.</value></data>
+  <data name="WorkspaceSave" xml:space="preserve"><value>Сохранить</value></data>
+  <data name="MenuTabClose" xml:space="preserve"><value>Закрыть</value></data>
+  <data name="MenuTabCloseOthers" xml:space="preserve"><value>Закрыть остальные</value></data>
+  <data name="MenuTabCloseRight" xml:space="preserve"><value>Закрыть вкладки справа</value></data>
+  <data name="MenuTabPin" xml:space="preserve"><value>Закрепить вкладку</value></data>
+  <data name="MenuTabUnpin" xml:space="preserve"><value>Открепить вкладку</value></data>
+  <data name="MenuTabDuplicate" xml:space="preserve"><value>Дублировать</value></data>
+  <data name="MenuTabMoveOther" xml:space="preserve"><value>Переместить в другую панель</value></data>
+  <data name="MenuTabSplitRight" xml:space="preserve"><value>Разделить вправо</value></data>
+  <data name="MenuTabSplitDown" xml:space="preserve"><value>Разделить вниз</value></data>
 </root>

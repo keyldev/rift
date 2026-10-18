@@ -196,4 +196,30 @@
   <data name="KindShare" xml:space="preserve"><value>Shared folder</value></data>
   <data name="KindLibrary" xml:space="preserve"><value>Library</value></data>
   <data name="LibraryFolders" xml:space="preserve"><value>Folders: {0}</value></data>
+  <data name="TipZoom" xml:space="preserve"><value>Show only this pane (Ctrl+Shift+Enter)</value></data>
+  <data name="TipSplitRight" xml:space="preserve"><value>Split right (Ctrl+\)</value></data>
+  <data name="TipSplitDown" xml:space="preserve"><value>Split down (Ctrl+Shift+\)</value></data>
+  <data name="CmdSplitRight" xml:space="preserve"><value>Split right</value></data>
+  <data name="CmdSplitDown" xml:space="preserve"><value>Split down</value></data>
+  <data name="CmdZoom" xml:space="preserve"><value>Show only this pane / all panes</value></data>
+  <data name="CmdClosePane" xml:space="preserve"><value>Close pane</value></data>
+  <data name="CmdReopenTab" xml:space="preserve"><value>Reopen closed tab</value></data>
+  <data name="CmdDuplicateTab" xml:space="preserve"><value>Duplicate tab</value></data>
+  <data name="CmdPinTab" xml:space="preserve"><value>Pin / unpin tab</value></data>
+  <data name="CmdCloseOtherTabs" xml:space="preserve"><value>Close other tabs</value></data>
+  <data name="CmdSaveWorkspace" xml:space="preserve"><value>Save workspace…</value></data>
+  <data name="WorkspaceOpen" xml:space="preserve"><value>Workspace: {0}</value></data>
+  <data name="WorkspaceDelete" xml:space="preserve"><value>Delete workspace: {0}</value></data>
+  <data name="WorkspaceSaveTitle" xml:space="preserve"><value>Save workspace</value></data>
+  <data name="WorkspaceSaveMessage" xml:space="preserve"><value>Panes and tabs as they are now; open it later from Ctrl+K.</value></data>
+  <data name="WorkspaceSave" xml:space="preserve"><value>Save</value></data>
+  <data name="MenuTabClose" xml:space="preserve"><value>Close</value></data>
+  <data name="MenuTabCloseOthers" xml:space="preserve"><value>Close others</value></data>
+  <data name="MenuTabCloseRight" xml:space="preserve"><value>Close tabs to the right</value></data>
+  <data name="MenuTabPin" xml:space="preserve"><value>Pin tab</value></data>
+  <data name="MenuTabUnpin" xml:space="preserve"><value>Unpin tab</value></data>
+  <data name="MenuTabDuplicate" xml:space="preserve"><value>Duplicate</value></data>
+  <data name="MenuTabMoveOther" xml:space="preserve"><value>Move to other pane</value></data>
+  <data name="MenuTabSplitRight" xml:space="preserve"><value>Split right</value></data>
+  <data name="MenuTabSplitDown" xml:space="preserve"><value>Split down</value></data>
 </root>

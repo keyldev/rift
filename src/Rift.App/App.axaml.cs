@@ -27,8 +27,12 @@ public partial class App : Application
             if (args.Language is { } lang && Strings.Supported.Contains(lang))
                 Strings.Culture = new CultureInfo(lang);
 
-            var vm = new MainWindowViewModel(args);
-            desktop.MainWindow = new MainWindow { DataContext = vm };
+            // Started plainly (Start menu, taskbar): bring back the last session. Started with paths: open exactly those.
+            var session = args.HasPaths ? null : SessionStore.Load(SessionStore.LastSessionFile);
+            var vm = new MainWindowViewModel(args, session);
+            var window = new MainWindow { DataContext = vm };
+            window.RestorePlacement(session?.Window);
+            desktop.MainWindow = window;
 
             RecentPlaces.Initialize();
             Program.Instance?.Listen(forwarded =>

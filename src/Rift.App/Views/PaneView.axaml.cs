@@ -24,6 +24,11 @@ public partial class PaneView : UserControl
 
     private sealed record RiftDrag(PaneViewModel Source, IReadOnlyList<string> Paths);
 
+    /// <summary>A tab being dragged: to reorder, move to another pane, or split.</summary>
+    private static readonly DataFormat<TabDrag> TabFormat = DataFormat.CreateInProcessFormat<TabDrag>("rift-tab");
+
+    private sealed record TabDrag(TabViewModel Tab, PaneViewModel Source);
+
     private const double DragThreshold = 6;
 
     private PaneViewModel? _pane;
@@ -111,6 +116,24 @@ public partial class PaneView : UserControl
                 if (!AddressBox.IsKeyboardFocusWithin && !AddressBox.IsDropDownOpen)
                     _tab?.CancelAddress();
             });
+        };
+
+        // Tabs: drag, middle-click to close, right-click menu.
+        TabStrip.AddHandler(PointerPressedEvent, OnTabPressed, RoutingStrategies.Tunnel);
+        TabStrip.AddHandler(PointerMovedEvent, OnTabMoved, RoutingStrategies.Tunnel, handledEventsToo: true);
+        TabStrip.AddHandler(PointerReleasedEvent, (_, _) => _tabPressed = null, RoutingStrategies.Tunnel, handledEventsToo: true);
+        TabStrip.ContextRequested += OnTabContextRequested;
+        TabStrip.SelectionChanged += (_, _) =>
+        {
+            if (TabStrip.SelectedItem is { } selected)
+                TabStrip.ScrollIntoView(selected);
+        };
+
+        // A narrow pane hides its view buttons so the path stays readable.
+        PaneRoot.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == BoundsProperty)
+                PaneRoot.Classes.Set("narrow", PaneRoot.Bounds.Width < 430);
         };
 
         // Dropping files in, from Rift or from Explorer.
@@ -531,7 +554,7 @@ public partial class PaneView : UserControl
         items.Add(new Separator());
         items.Add(Item(Strings.MenuCut, "Icon.Cut", "Ctrl+X", main.CutToClipboardCommand));
         items.Add(Item(Strings.MenuCopy, "Icon.Copy", "Ctrl+C", main.CopyToClipboardCommand));
-        if (main.IsSplit)
+        if (main.CanTransfer)
         {
             items.Add(Item(Strings.MenuCopyToOther, "Icon.Copy", "F5", main.CopyToOtherCommand));
             items.Add(Item(Strings.MenuMoveToOther, "Icon.Move", "F6", main.MoveToOtherCommand));
@@ -608,6 +631,134 @@ public partial class PaneView : UserControl
         if (icon is not null && Application.Current?.TryFindResource(icon, out var geometry) == true)
             item.Icon = new Icon { Data = geometry as Geometry, Width = 16, Height = 16 };
         return item;
+    }
+
+    // ---------- tabs ----------
+
+    private PointerPressedEventArgs? _tabPressed;
+    private Point _tabPressedAt;
+
+    private static TabViewModel? TabItem(object? source) =>
+        (source as Visual)?.FindAncestorOfType<ListBoxItem>(includeSelf: true)?.DataContext as TabViewModel;
+
+    private void OnTabPressed(object? sender, PointerPressedEventArgs e)
+    {
+        _tabPressed = null;
+        if (TabItem(e.Source) is not { } tab || _pane is not { } pane)
+            return;
+        var point = e.GetCurrentPoint(TabStrip).Properties;
+        if (point.IsMiddleButtonPressed)
+        {
+            pane.CloseTabCommand.Execute(tab);
+            e.Handled = true;
+        }
+        else if (point.IsLeftButtonPressed && (e.Source as Visual)?.FindAncestorOfType<Button>() is null)
+        {
+            _tabPressed = e;
+            _tabPressedAt = e.GetPosition(TabStrip);
+        }
+    }
+
+    private async void OnTabMoved(object? sender, PointerEventArgs e)
+    {
+        if (_tabPressed is not { } pressed || _pane is not { } pane || TabItem(pressed.Source) is not { } tab)
+            return;
+        if (!e.GetCurrentPoint(TabStrip).Properties.IsLeftButtonPressed)
+        {
+            _tabPressed = null;
+            return;
+        }
+        var delta = e.GetPosition(TabStrip) - _tabPressedAt;
+        if (Math.Abs(delta.X) < DragThreshold && Math.Abs(delta.Y) < DragThreshold)
+            return;
+
+        _tabPressed = null;
+        var data = new DataTransfer();
+        data.Add(DataTransferItem.Create(TabFormat, new TabDrag(tab, pane)));
+        await DragDrop.DoDragDropAsync(pressed, data, DragDropEffects.Move);
+    }
+
+    /// <summary>
+    /// Over the tab strip: a tab (reorder or move here). Over the pane: its outer quarters split it,
+    /// the middle takes the tab in.
+    /// </summary>
+    private TabDropZone? TabZone(DragEventArgs e)
+    {
+        if ((e.Source as Visual)?.FindAncestorOfType<ListBox>(includeSelf: true) == TabStrip)
+            return TabDropZone.Center;
+        var p = e.GetPosition(this);
+        double w = Bounds.Width, h = Bounds.Height;
+        if (w <= 0 || h <= 0)
+            return null;
+        double x = p.X / w, y = p.Y / h;
+        var edge = Math.Min(Math.Min(x, 1 - x), Math.Min(y, 1 - y));
+        if (edge > 0.25)
+            return TabDropZone.Center;
+        return edge == x ? TabDropZone.Left : edge == 1 - x ? TabDropZone.Right : edge == y ? TabDropZone.Top : TabDropZone.Bottom;
+    }
+
+    /// <summary>Where in the strip a dropped tab goes: before the tab under the pointer's left half, after its right half.</summary>
+    private int TabIndexAt(DragEventArgs e)
+    {
+        if (_pane is not { } pane)
+            return 0;
+        var x = e.GetPosition(TabStrip).X;
+        for (var i = 0; i < pane.Tabs.Count; i++)
+        {
+            if (TabStrip.ContainerFromIndex(i) is { } container && container.TranslatePoint(default, TabStrip) is { } origin
+                && x < origin.X + container.Bounds.Width / 2)
+                return i;
+        }
+        return pane.Tabs.Count;
+    }
+
+    private void ShowTabDrop(TabDropZone? zone)
+    {
+        TabDropOverlay.IsVisible = zone is not null;
+        if (zone is not { } z)
+            return;
+        double w = PaneRoot.Bounds.Width / 2, h = PaneRoot.Bounds.Height / 2;
+        TabDropOverlay.Margin = z switch
+        {
+            TabDropZone.Left => new Thickness(4, 4, w, 4),
+            TabDropZone.Right => new Thickness(w, 4, 4, 4),
+            TabDropZone.Top => new Thickness(4, 4, 4, h),
+            TabDropZone.Bottom => new Thickness(4, h, 4, 4),
+            _ => new Thickness(4),
+        };
+    }
+
+    private void OnTabContextRequested(object? sender, ContextRequestedEventArgs e)
+    {
+        if (TabItem(e.Source) is not { } tab || _pane is not { } pane || Main is not { } main)
+            return;
+        e.Handled = true;
+        Activate();
+        pane.SelectedTab = tab;
+
+        MenuItem Action(string header, string? icon, string? gesture, Action run, bool enabled = true)
+        {
+            var item = Item(header, icon, gesture, null, enabled);
+            item.Click += (_, _) => run();
+            return item;
+        }
+
+        var index = pane.Tabs.IndexOf(tab);
+        var items = new List<Control>
+        {
+            Action(Strings.MenuTabClose, "Icon.Close", tab.IsPinned ? null : "Ctrl+W", () => pane.Close(tab)),
+            Action(Strings.MenuTabCloseOthers, null, null, () => pane.CloseOthers(tab), pane.Tabs.Any(t => t != tab && !t.IsPinned)),
+            Action(Strings.MenuTabCloseRight, null, null, () => pane.CloseToTheRight(tab), pane.Tabs.Skip(index + 1).Any(t => !t.IsPinned)),
+            new Separator(),
+            Action(tab.IsPinned ? Strings.MenuTabUnpin : Strings.MenuTabPin, "Icon.PinTab", null, () => pane.TogglePin(tab)),
+            Action(Strings.MenuTabDuplicate, "Icon.Copy", null, () => pane.Duplicate(tab)),
+            new Separator(),
+            Action(Strings.MenuTabSplitRight, "Icon.Split", null, () => main.SplitWithCopy(tab, pane, SplitDirection.Horizontal)),
+            Action(Strings.MenuTabSplitDown, "Icon.SplitDown", null, () => main.SplitWithCopy(tab, pane, SplitDirection.Vertical)),
+            Action(Strings.MenuTabMoveOther, "Icon.Move", null, () => main.MoveTabToOtherPane(tab, pane),
+                main.Panes.Count > 1 || pane.Tabs.Count > 1),
+        };
+        new ContextMenu { ItemsSource = items, Placement = PlacementMode.Pointer }.Open(TabStrip);
     }
 
     // ---------- drag out ----------
@@ -725,6 +876,13 @@ public partial class PaneView : UserControl
 
     private void OnDragOver(object? sender, DragEventArgs e)
     {
+        if (e.DataTransfer.TryGetValue(TabFormat) is not null)
+        {
+            ShowTabDrop(TabZone(e));
+            e.DragEffects = DragDropEffects.Move;
+            e.Handled = true;
+            return;
+        }
         var plan = Plan(e);
         e.DragEffects = plan is null ? DragDropEffects.None : plan.Copy ? DragDropEffects.Copy : DragDropEffects.Move;
         e.Handled = true;
@@ -742,12 +900,26 @@ public partial class PaneView : UserControl
 
     private void OnDragLeave(object? sender, DragEventArgs e)
     {
+        ShowTabDrop(null);
         if (_pane is not null)
             _pane.IsDropTarget = false;
     }
 
     private void OnDrop(object? sender, DragEventArgs e)
     {
+        if (e.DataTransfer.TryGetValue(TabFormat) is { } tabDrag)
+        {
+            var zone = TabZone(e);
+            ShowTabDrop(null);
+            e.Handled = true;
+            if (Main is not { } m || _pane is not { } target)
+                return;
+            if (zone is { } z and not TabDropZone.Center)
+                m.SplitWithTab(tabDrag.Tab, tabDrag.Source, target, z);
+            else
+                m.MoveTab(tabDrag.Tab, tabDrag.Source, target, TabIndexAt(e));
+            return;
+        }
         if (_pane is not null)
             _pane.IsDropTarget = false;
         var plan = Plan(e);

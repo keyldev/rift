@@ -89,9 +89,33 @@ public partial class TabViewModel : ViewModelBase, IDisposable
         _ => null,
     };
 
-    [ObservableProperty]
+    /// <summary>Kept in front of the other tabs, spared by "close others" and Ctrl+W.</summary>
+    [ObservableProperty] private bool _isPinned;
+
+        [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsDetails), nameof(IsTiles), nameof(IsThumbnails))]
     private ViewMode _viewMode = ViewMode.Details;
+
+    /// <summary>A new tab on the same place with the same view and sort; the history starts fresh.</summary>
+    public TabViewModel Clone() => FromState(ToState() with { Pinned = false });
+
+    public TabState ToState() => new()
+    {
+        // A search re-runs from scratch on restore; the folder it searched is the safer thing to bring back.
+        Path = IsSearch ? SearchRoot ?? Path : Path,
+        View = ViewMode.ToString(),
+        Sort = SortColumn,
+        Descending = SortDescending,
+        Pinned = IsPinned,
+    };
+
+    public static TabViewModel FromState(TabState state) => new(state.Path)
+    {
+        ViewMode = Enum.TryParse<ViewMode>(state.View, out var view) ? view : ViewMode.Details,
+        SortColumn = state.Sort,
+        SortDescending = state.Descending,
+        IsPinned = state.Pinned,
+    };
 
     public bool IsDetails => ViewMode == ViewMode.Details;
     public bool IsTiles => ViewMode == ViewMode.Tiles;

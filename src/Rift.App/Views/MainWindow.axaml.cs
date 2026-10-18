@@ -1,9 +1,11 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Rift.App.ViewModels;
+using Rift.Core;
 
 namespace Rift.App.Views;
 
@@ -17,6 +19,9 @@ public partial class MainWindow : Window
         AddHandler(KeyDownEvent, OnPreviewKeyDown, RoutingStrategies.Tunnel);
         PaletteScrim.PointerPressed += OnPaletteScrimPressed;
         PaletteList.Tapped += OnPaletteItemTapped;
+        Panes.CreateView = pane => new PaneView { DataContext = pane };
+        Panes.RatioChanged = (split, ratio) => Vm?.SetRatio(split, ratio);
+        Closing += (_, _) => Vm?.SaveSession();
         Opened += (_, _) =>
         {
             if (Vm is { } vm)
@@ -34,9 +39,12 @@ public partial class MainWindow : Window
                     else
                         FocusActivePane();
                 };
-                vm.FocusSearchRequested += () => (vm.ActivePane == vm.Right && vm.IsSplit ? RightPane : LeftPane).FocusSearch();
+                vm.FocusSearchRequested += () => ActiveView()?.FocusSearch();
+                vm.LayoutChanged += BuildLayout;
+                vm.Placement = SavePlacement;
             }
-            LeftPane.FocusFiles();
+            BuildLayout();
+            FocusActivePane();
         };
     }
 
@@ -48,6 +56,12 @@ public partial class MainWindow : Window
         WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
 
     private void OnClose(object? sender, RoutedEventArgs e) => Close();
+
+    private void OnDialogInputAttached(object? sender, VisualTreeAttachmentEventArgs e)
+    {
+        if (sender is TextBox box)
+            Dispatcher.UIThread.Post(() => box.Focus(), DispatcherPriority.Loaded);
+    }
 
     private void OnPaletteScrimPressed(object? sender, PointerPressedEventArgs e)
     {
@@ -70,10 +84,41 @@ public partial class MainWindow : Window
         FocusActivePane();
     }
 
-    private void FocusActivePane()
+    private void FocusActivePane() => Dispatcher.UIThread.Post(() => ActiveView()?.FocusFiles(), DispatcherPriority.Loaded);
+
+    private PaneView? ActiveView() => Vm is { } vm ? Panes.ViewFor(vm.ActivePane) as PaneView : null;
+
+    private void BuildLayout()
     {
         if (Vm is { } vm)
-            (vm.ActivePane == vm.Right && vm.IsSplit ? RightPane : LeftPane).FocusFiles();
+            Panes.Build(vm.Layout, vm.IsZoomed ? vm.ActivePane : null);
+    }
+
+    private WindowPlacement SavePlacement() => new()
+    {
+        X = Position.X,
+        Y = Position.Y,
+        // The size to come back to: when maximized, the size it had before.
+        Width = Width,
+        Height = Height,
+        Maximized = WindowState == WindowState.Maximized,
+    };
+
+    /// <summary>Puts the window where the last session left it, if that spot is still on a screen.</summary>
+    public void RestorePlacement(WindowPlacement? placement)
+    {
+        if (placement is null || placement.Width < MinWidth || placement.Height < MinHeight)
+            return;
+        Width = placement.Width;
+        Height = placement.Height;
+        var position = new PixelPoint(placement.X, placement.Y);
+        if (Screens.All.Any(s => s.WorkingArea.Contains(position + new PixelPoint(40, 40))))
+        {
+            WindowStartupLocation = WindowStartupLocation.Manual;
+            Position = position;
+        }
+        if (placement.Maximized)
+            WindowState = WindowState.Maximized;
     }
 
     private void OnPreviewKeyDown(object? sender, KeyEventArgs e)
@@ -107,16 +152,33 @@ public partial class MainWindow : Window
                 dialog.ChoosePrimary();
             else if (e.Key == Key.Escape)
                 dialog.ChooseCancel();
-            if (e.Key is not (Key.Tab or Key.Space))
+            // Typing goes to the dialog's text box, if it has one; nothing else leaks to hotkeys.
+            if (e.Key is not (Key.Tab or Key.Space) && !dialog.HasInput)
+                e.Handled = true;
+            else if (e.Key is Key.Enter or Key.Escape)
                 e.Handled = true;
             return;
         }
 
-        if (e.Key != Key.Tab || e.KeyModifiers != KeyModifiers.None || Vm is not { IsSplit: true } vm)
+        if (e.Key != Key.Tab || Vm is not { } vm)
             return;
 
-        vm.SwitchPaneCommand.Execute(null);
-        (vm.ActivePane == vm.Left ? LeftPane : RightPane).FocusFiles();
+        switch (e.KeyModifiers)
+        {
+            // Tab / Shift+Tab: next / previous pane.
+            case KeyModifiers.None or KeyModifiers.Shift:
+                if (!vm.HasManyPanes || vm.IsZoomed)
+                    return;
+                vm.FocusPane(e.KeyModifiers == KeyModifiers.Shift ? -1 : 1);
+                break;
+            // Ctrl+Tab / Ctrl+Shift+Tab: next / previous tab in the pane.
+            case KeyModifiers.Control or (KeyModifiers.Control | KeyModifiers.Shift):
+                vm.ActivePane.SelectNextTab(e.KeyModifiers.HasFlag(KeyModifiers.Shift) ? -1 : 1);
+                FocusActivePane();
+                break;
+            default:
+                return;
+        }
         e.Handled = true;
     }
 }

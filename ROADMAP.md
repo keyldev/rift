@@ -70,13 +70,14 @@ Moved to later stages:
 - Tags → Settings (0.6): they need Rift's own storage
 - Live previews through shell preview handlers (`IPreviewHandler`) → later; for now video and PDF show the shell thumbnail
 
-## 0.5 — Layouts and tabs
+## Done — 0.5: layouts and tabs
 
-- [ ] More than two panes, vertical and horizontal splits (like editor groups in VS Code)
-- [ ] Drag tabs between panes and to an edge to create a split
-- [ ] Workspaces: saved sets of tabs and layouts
-- [ ] Restore the session after restart
-- [ ] Pinned tabs, duplicate tab, "close others"
+- [x] Any number of panes in vertical and horizontal splits, like editor groups in VS Code (Ctrl+\\, Ctrl+Shift+\\);
+      show just one pane with Ctrl+Shift+Enter; "the other pane" for F5/F6 is the one you were in before
+- [x] Drag tabs: reorder them, drop them on another pane, or on a pane's edge to split it
+- [x] Workspaces: saved sets of panes and tabs, opened from the command palette
+- [x] The session comes back after a restart: layout, tabs, views, sort, window size and place
+- [x] Pinned tabs, duplicate, close others / to the right, reopen closed tab (Ctrl+Shift+T), Ctrl+Tab between tabs
 
 ## 0.6 — Settings
 

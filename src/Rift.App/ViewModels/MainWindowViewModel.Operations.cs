@@ -26,7 +26,7 @@ public partial class MainWindowViewModel
     public event Action? FocusFilesRequested;
 
     private TabViewModel ActiveTab => ActivePane.SelectedTab;
-    private IEnumerable<TabViewModel> AllTabs => Left.Tabs.Concat(Right.Tabs);
+    private IEnumerable<TabViewModel> AllTabs => Panes.SelectMany(p => p.Tabs);
 
     // ---------- dialogs ----------
 
@@ -59,9 +59,9 @@ public partial class MainWindowViewModel
     private Task TransferToOtherAsync(TransferMode mode)
     {
         var sources = ActiveTab.SelectedPaths;
-        if (!IsSplit || sources.Count == 0 || !ActiveTab.CanEditItems || !OtherPane.SelectedTab.IsFileSystem)
+        if (!CanTransfer || OtherPane is not { } other || sources.Count == 0 || !ActiveTab.CanEditItems || !other.SelectedTab.IsFileSystem)
             return Task.CompletedTask;
-        return TransferAsync(mode, sources, OtherPane.SelectedTab.Path);
+        return TransferAsync(mode, sources, other.SelectedTab.Path);
     }
 
     /// <summary>Runs a copy or move as a card in the operations panel; used by F5/F6, paste and drag-n-drop.</summary>

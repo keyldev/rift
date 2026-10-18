@@ -31,11 +31,18 @@ public partial class MainWindowViewModel
     {
         if (SelectedFolders.FirstOrDefault() is not { } folder)
             return;
-        IsSplit = true;
-        var target = OtherPane;
-        await target.SelectedTab.NavigateTo(folder.FullPath);
-        ActivePane = target;
-        FocusFilesRequested?.Invoke();
+        if (OtherPane is { } target && !IsZoomed)
+        {
+            await target.SelectedTab.NavigateTo(folder.FullPath);
+            ActivePane = target;
+            FocusFilesRequested?.Invoke();
+        }
+        else
+        {
+            // One pane on screen: open a new one on the right for it.
+            IsZoomed = false;
+            AddPane(Track(new PaneViewModel(folder.FullPath)), ActivePane, SplitDirection.Horizontal, before: false);
+        }
     }
 
     /// <summary>Search hit → its folder in a new tab, with the file selected.</summary>

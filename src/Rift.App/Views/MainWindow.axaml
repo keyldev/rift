@@ -39,6 +39,11 @@
     <KeyBinding Gesture="Ctrl+Shift+D2" Command="{Binding ActivePane.SelectedTab.SetViewCommand}" CommandParameter="{x:Static vm:ViewMode.Tiles}" />
     <KeyBinding Gesture="Ctrl+Shift+D3" Command="{Binding ActivePane.SelectedTab.SetViewCommand}" CommandParameter="{x:Static vm:ViewMode.Thumbnails}" />
     <KeyBinding Gesture="Alt+P" Command="{Binding ActivePane.TogglePreviewCommand}" />
+    <KeyBinding Gesture="Ctrl+OemPipe" Command="{Binding SplitRightCommand}" />
+    <KeyBinding Gesture="Ctrl+Shift+OemPipe" Command="{Binding SplitDownCommand}" />
+    <KeyBinding Gesture="Ctrl+Shift+Enter" Command="{Binding ToggleZoomCommand}" />
+    <KeyBinding Gesture="Ctrl+Shift+W" Command="{Binding CloseActivePaneCommand}" />
+    <KeyBinding Gesture="Ctrl+Shift+T" Command="{Binding ReopenTabCommand}" />
     <KeyBinding Gesture="Ctrl+K" Command="{Binding OpenPaletteCommand}" />
     <KeyBinding Gesture="Ctrl+Shift+P" Command="{Binding OpenPaletteCommand}" />
     <KeyBinding Gesture="Ctrl+E" Command="{Binding FocusSearchCommand}" />
@@ -104,11 +109,15 @@
               <Setter Property="chrome:WindowDecorationProperties.ElementRole" Value="User" />
             </Style>
           </StackPanel.Styles>
-          <Button Classes="flat" Classes.on="{Binding !IsSplit}" Command="{Binding ShowSingleCommand}" ToolTip.Tip="{x:Static l:Strings.TipSinglePane}">
+          <Button Classes="flat" Classes.on="{Binding IsZoomed}" Command="{Binding ToggleZoomCommand}"
+                  IsEnabled="{Binding HasManyPanes}" ToolTip.Tip="{x:Static l:Strings.TipZoom}">
             <c:Icon Data="{StaticResource Icon.Single}" />
           </Button>
-          <Button Classes="flat" Classes.on="{Binding IsSplit}" Command="{Binding ShowSplitCommand}" ToolTip.Tip="{x:Static l:Strings.TipSplitPane}">
+          <Button Classes="flat" Command="{Binding SplitRightCommand}" ToolTip.Tip="{x:Static l:Strings.TipSplitRight}">
             <c:Icon Data="{StaticResource Icon.Split}" />
+          </Button>
+          <Button Classes="flat" Command="{Binding SplitDownCommand}" ToolTip.Tip="{x:Static l:Strings.TipSplitDown}">
+            <c:Icon Data="{StaticResource Icon.SplitDown}" />
           </Button>
           <Border Width="1" Height="18" Margin="6,0" Background="{DynamicResource Rift.Line}" />
           <Button Classes="flat" Classes.on="{Binding View.ShowHidden}" Command="{Binding ToggleHiddenCommand}" ToolTip.Tip="{x:Static l:Strings.TipHidden}">
@@ -203,14 +212,8 @@
         </DockPanel>
       </Border>
 
-      <!-- Panes -->
-      <Grid Grid.Column="1" Margin="8" ColumnDefinitions="*,8,*">
-        <v:PaneView x:Name="LeftPane" DataContext="{Binding Left}"
-                    Grid.ColumnSpan="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsSplit, Converter={x:Static app:Converters.SplitToSpan}}" />
-        <GridSplitter Grid.Column="1" ResizeDirection="Columns" IsVisible="{Binding IsSplit}" />
-        <v:PaneView x:Name="RightPane" Grid.Column="2" DataContext="{Binding Right}"
-                    IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsSplit}" />
-      </Grid>
+      <!-- Panes, in the split layout (built in code from the layout tree) -->
+      <c:LayoutHost x:Name="Panes" Grid.Column="1" Margin="8" />
 
       <!-- Running operations, bottom right -->
       <ItemsControl Grid.Column="1" ItemsSource="{Binding Operations.Items}" Width="320"
@@ -336,6 +339,8 @@
                   </ItemsControl.ItemTemplate>
                 </ItemsControl>
                 <CheckBox Content="{Binding CheckBoxText}" IsChecked="{Binding IsChecked}" IsVisible="{Binding HasCheckBox}" />
+                <TextBox x:Name="DialogInput" Text="{Binding Input, Mode=TwoWay}" IsVisible="{Binding HasInput}"
+                         AttachedToVisualTree="OnDialogInputAttached" />
                 <ItemsControl ItemsSource="{Binding Buttons}" HorizontalAlignment="Right" Margin="0,8,0,0">
                   <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>

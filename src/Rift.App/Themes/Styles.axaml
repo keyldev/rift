@@ -202,6 +202,15 @@
     <Setter Property="Padding" Value="12,3,8,3" />
   </Style>
 
+  <!-- Dragging a tab over a pane -->
+  <Style Selector="Border.tabdrop">
+    <Setter Property="Background" Value="{DynamicResource Rift.AccentBg}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Rift.Accent}" />
+    <Setter Property="BorderThickness" Value="2" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="Margin" Value="4" />
+  </Style>
+
   <!-- Preview pane -->
   <Style Selector="Border.preview">
     <Setter Property="BorderBrush" Value="{DynamicResource Rift.Line}" />
@@ -378,5 +387,18 @@
 
   <Style Selector="GridSplitter">
     <Setter Property="Background" Value="Transparent" />
+  </Style>
+
+  <!-- Last, so they beat the general rules above. -->
+  <!-- A narrow pane keeps the path readable: view buttons go (they're on Ctrl+Shift+1..3 and in Ctrl+K) -->
+  <Style Selector="Border.pane.narrow StackPanel.viewbuttons">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+  <Style Selector="Border.pane.narrow TextBox.search">
+    <Setter Property="Width" Value="34" />
+    <Setter Property="MinWidth" Value="0" />
+  </Style>
+  <Style Selector="Border.pane.narrow TextBox.search:focus-within">
+    <Setter Property="Width" Value="180" />
   </Style>
 </Styles>

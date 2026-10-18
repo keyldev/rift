@@ -23,12 +23,14 @@
 </details>
 
 > Early stage. Rift already browses, copies, moves, searches and previews, and fits into Windows like Explorer does;
-> next up are flexible layouts and saved sessions.
+> next up are settings.
 > See [ROADMAP.md](ROADMAP.md).
 
 ## Features
 
-- Two panes side by side, each with its own tabs and history
+- As many panes as you like, split side by side or stacked, each with its own tabs and history
+- Drag tabs between panes or to a pane's edge to split it; pinned tabs; reopen closed tabs
+- The session (layout, tabs, views, window) comes back after a restart; save layouts as workspaces
 - Copy and move between panes: F5 / F6, drag-n-drop, or Ctrl+C / Ctrl+V
 - Drag files to and from Explorer, clipboard compatible with Explorer (including Cut)
 - Operations panel with progress, pause and cancel; conflict dialog with "do this for all"
@@ -59,7 +61,12 @@ Grab the latest build from the artifacts of the latest [CI run](https://github.c
 
 | Key | Action |
 | --- | --- |
-| Tab | Switch to the other pane |
+| Tab / Shift+Tab | Next / previous pane |
+| Ctrl+Tab / Ctrl+Shift+Tab | Next / previous tab |
+| Ctrl+\\ / Ctrl+Shift+\\ | Split right / down |
+| Ctrl+Shift+Enter | Show only this pane / all panes |
+| Ctrl+Shift+W | Close pane |
+| Ctrl+Shift+T | Reopen closed tab |
 | F5 / F6 | Copy / move selection to the other pane |
 | Ctrl+C / Ctrl+X / Ctrl+V | Copy / cut / paste files (works with Explorer) |
 | Del / Shift+Del | Move to Recycle Bin / delete permanently |
@@ -90,7 +97,8 @@ Dragging: same drive moves, another drive copies; hold Ctrl to copy, Shift to mo
 Rift.exe C:\Projects --right D:\Backup
 ```
 
-- Every path opens as a tab; bare paths and `--left` go to the left pane, `--right` to the right one.
+- Without paths Rift brings back the last session. With paths it opens exactly those, each as a tab:
+  bare paths and `--left` go to the first pane, `--right` to a second one.
 - If Rift is already running, the paths open as new tabs in its window; `--new-window` starts a separate window instead.
 - `shell:MyComputerFolder`, `shell:RecycleBinFolder`, `shell:Libraries` and `shell:NetworkPlacesFolder` open This PC,
   the Recycle Bin, Libraries and Network.
