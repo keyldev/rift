@@ -1,0 +1,151 @@
+using System.Diagnostics;
+using CommunityToolkit.Mvvm.Input;
+using Rift.Shell;
+
+namespace Rift.App.ViewModels;
+
+/// <summary>Context menu commands and the bridges to Windows' own menu and dialogs.</summary>
+public partial class MainWindowViewModel
+{
+    /// <summary>Puts text on the clipboard; set by the window (Avalonia's clipboard lives on the TopLevel).</summary>
+    public Func<string, Task> SetClipboardText { get; set; } = _ => Task.CompletedTask;
+
+    private IEnumerable<FileItem> SelectedFolders => ActiveTab.Selected.Where(i => i.IsDirectory);
+
+    [RelayCommand]
+    private Task OpenItem(FileItem? item) => ActiveTab.Open(item ?? ActiveTab.Selected.FirstOrDefault());
+
+    [RelayCommand]
+    private void OpenInNewTab()
+    {
+        TabViewModel? last = null;
+        foreach (var folder in SelectedFolders.ToList())
+            last = ActivePane.OpenTab(folder.FullPath);
+        if (last is not null)
+            ActivePane.SelectedTab = last;
+    }
+
+    [RelayCommand]
+    private async Task OpenInOtherPane()
+    {
+        if (SelectedFolders.FirstOrDefault() is not { } folder)
+            return;
+        IsSplit = true;
+        var target = OtherPane;
+        await target.SelectedTab.NavigateTo(folder.FullPath);
+        ActivePane = target;
+        FocusFilesRequested?.Invoke();
+    }
+
+    [RelayCommand]
+    private void OpenWith()
+    {
+        if (OperatingSystem.IsWindows() && ActiveTab.IsFileSystem && ActiveTab.Selected.FirstOrDefault(i => !i.IsDirectory) is { } file)
+            ShellDialogs.OpenWith(WindowHandle(), file.FullPath);
+    }
+
+    /// <summary>Like Explorer's "Copy as path": quoted, one per line.</summary>
+    [RelayCommand]
+    private Task CopyPath()
+    {
+        var tab = ActiveTab;
+        var paths = tab.IsRecycleBin ? tab.SelectedRecycled.Select(i => i.OriginalPath).ToList() : tab.SelectedPaths;
+        if (paths.Count == 0 && tab.IsFileSystem)
+            paths = [tab.Path];
+        if (paths.Count == 0)
+            return Task.CompletedTask;
+        return SetClipboardText(string.Join(Environment.NewLine, paths.Select(p => $"\"{p}\"")));
+    }
+
+    /// <summary>Alt+Enter: properties of the selection, or of the folder itself when nothing is selected.</summary>
+    [RelayCommand]
+    private void Properties()
+    {
+        var tab = ActiveTab;
+        if (!OperatingSystem.IsWindows() || tab.IsRecycleBin)
+            return;
+        var paths = tab.SelectedPaths;
+        if (paths.Count == 0 && !tab.IsFileSystem)
+            return;
+        try
+        {
+            ShellDialogs.Properties(WindowHandle(), paths.Count > 0 ? paths : [tab.Path]);
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine($"Properties failed: {ex}");
+        }
+    }
+
+    public bool CanPaste => OperatingSystem.IsWindows() && FileClipboard.HasFiles;
+
+    /// <summary>
+    /// Explorer's own menu at a screen point: for the selection, or for the folder background.
+    /// Verbs Rift does better itself (inline rename, delete with undo, folders in a tab) are taken over.
+    /// </summary>
+    public void ShowShellMenu(bool forSelection, int screenX, int screenY, bool extended)
+    {
+        if (!OperatingSystem.IsWindows())
+            return;
+        var tab = ActiveTab;
+        var paths = tab.SelectedPaths;
+        // Recycle Bin rows are $R files: Explorer's menu for them would show nonsense names.
+        if (tab.IsRecycleBin || (!tab.IsFileSystem && (!forSelection || paths.Count == 0)))
+            return;
+        try
+        {
+            if (forSelection && paths.Count > 0)
+                ShellContextMenu.ShowForItems(WindowHandle(), paths, screenX, screenY, extended, verb => InterceptItemVerb(tab, verb));
+            else
+                ShellContextMenu.ShowForFolder(WindowHandle(), tab.Path, screenX, screenY, extended, InterceptFolderVerb);
+        }
+        catch (Exception ex)
+        {
+            // Shell extensions are third-party code; whatever they throw, Rift keeps running.
+            Trace.WriteLine($"Shell menu failed: {ex}");
+        }
+    }
+
+    private bool InterceptItemVerb(TabViewModel tab, string verb)
+    {
+        var single = tab.Selected.Count == 1 ? tab.Selected[0] : null;
+        switch (verb)
+        {
+            case "rename":
+                Rename();
+                return true;
+            case "delete":
+                DeleteCommand.Execute(null);
+                return true;
+            case "open" or "explore" when single is { IsDirectory: true }:
+                _ = tab.Open(single);
+                return true;
+            case "opennewwindow" or "opennewtab" when single is { IsDirectory: true }:
+                OpenInNewTab();
+                return true;
+            case "paste":
+                PasteCommand.Execute(null);
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private bool InterceptFolderVerb(string verb)
+    {
+        switch (verb)
+        {
+            case "paste":
+                PasteCommand.Execute(null);
+                return true;
+            case "refresh":
+                _ = ActiveTab.RefreshAsync();
+                return true;
+            case "newfolder":
+                NewFolderCommand.Execute(null);
+                return true;
+            default:
+                return false;
+        }
+    }
+}

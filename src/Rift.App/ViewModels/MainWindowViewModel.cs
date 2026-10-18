@@ -69,11 +69,39 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public PaneViewModel OtherPane => ActivePane == Left ? Right : Left;
 
+    /// <summary>The window comes to the front (another Rift.exe handed over its paths).</summary>
+    public event Action? ActivateRequested;
+
+    /// <summary>"Open in Rift" or a jump list item while Rift is already running: new tabs here.</summary>
+    public void OpenFromAnotherInstance(StartupArgs args)
+    {
+        foreach (var path in args.Left)
+            Left.OpenTab(path);
+        foreach (var path in args.Right)
+            Right.OpenTab(path);
+
+        if (args.Right.Count > 0)
+        {
+            IsSplit = true;
+            ActivePane = Right;
+        }
+        else if (args.Left.Count > 0)
+        {
+            ActivePane = Left;
+        }
+        ActivateRequested?.Invoke();
+    }
+
     [RelayCommand]
     private Task OpenSidebarItem(SidebarItem item) => ActivePane.SelectedTab.NavigateTo(item.Path);
 
     [RelayCommand]
     private void ToggleTheme() => IsDark = !IsDark;
+
+    public ViewOptions View => ViewOptions.Current;
+
+    [RelayCommand]
+    private void ToggleHidden() => View.ShowHidden = !View.ShowHidden;
 
     [RelayCommand]
     private void ShowSingle() => IsSplit = false;

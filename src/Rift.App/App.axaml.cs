@@ -2,6 +2,8 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using System.Globalization;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
+using Rift.App.Services;
 using Rift.App.ViewModels;
 using Rift.App.Views;
 using Rift.Core;
@@ -25,10 +27,12 @@ public partial class App : Application
             if (args.Language is { } lang && Strings.Supported.Contains(lang))
                 Strings.Culture = new CultureInfo(lang);
 
-            desktop.MainWindow = new MainWindow
-            {
-                DataContext = new MainWindowViewModel(args),
-            };
+            var vm = new MainWindowViewModel(args);
+            desktop.MainWindow = new MainWindow { DataContext = vm };
+
+            RecentPlaces.Initialize();
+            Program.Instance?.Listen(forwarded =>
+                Dispatcher.UIThread.Post(() => vm.OpenFromAnotherInstance(StartupArgs.Parse(forwarded))));
         }
 
         base.OnFrameworkInitializationCompleted();

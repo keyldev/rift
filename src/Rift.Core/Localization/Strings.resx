@@ -106,4 +106,41 @@
   <data name="DropCopy" xml:space="preserve"><value>Copy to {0}</value></data>
   <data name="DropHintMove" xml:space="preserve"><value>Hold Ctrl to copy</value></data>
   <data name="DropHintCopy" xml:space="preserve"><value>Hold Shift to move</value></data>
+  <data name="TipHidden" xml:space="preserve"><value>Show hidden files (Ctrl+H)</value></data>
+  <data name="JumpRecent" xml:space="preserve"><value>Recent folders</value></data>
+  <data name="JumpNewWindow" xml:space="preserve"><value>New window</value></data>
+  <data name="JumpNewWindowTip" xml:space="preserve"><value>Open another Rift window</value></data>
+  <data name="MenuOpen" xml:space="preserve"><value>Open</value></data>
+  <data name="MenuOpenNewTab" xml:space="preserve"><value>Open in new tab</value></data>
+  <data name="MenuOpenOtherPane" xml:space="preserve"><value>Open in other pane</value></data>
+  <data name="MenuOpenWith" xml:space="preserve"><value>Open with…</value></data>
+  <data name="MenuCut" xml:space="preserve"><value>Cut</value></data>
+  <data name="MenuCopy" xml:space="preserve"><value>Copy</value></data>
+  <data name="MenuPaste" xml:space="preserve"><value>Paste</value></data>
+  <data name="MenuCopyToOther" xml:space="preserve"><value>Copy to other pane</value></data>
+  <data name="MenuMoveToOther" xml:space="preserve"><value>Move to other pane</value></data>
+  <data name="MenuCopyPath" xml:space="preserve"><value>Copy path</value></data>
+  <data name="MenuRename" xml:space="preserve"><value>Rename</value></data>
+  <data name="MenuDelete" xml:space="preserve"><value>Delete</value></data>
+  <data name="MenuProperties" xml:space="preserve"><value>Properties</value></data>
+  <data name="MenuMoreOptions" xml:space="preserve"><value>More options</value></data>
+  <data name="MenuNewFolder" xml:space="preserve"><value>New folder</value></data>
+  <data name="MenuRefresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="MenuShowHidden" xml:space="preserve"><value>Show hidden files</value></data>
+  <data name="PlaceThisPc" xml:space="preserve"><value>This PC</value></data>
+  <data name="PlaceRecycleBin" xml:space="preserve"><value>Recycle Bin</value></data>
+  <data name="DriveNetwork" xml:space="preserve"><value>Network Drive</value></data>
+  <data name="DriveRemovable" xml:space="preserve"><value>Removable Disk</value></data>
+  <data name="DriveOptical" xml:space="preserve"><value>CD Drive</value></data>
+  <data name="DriveFreeShort" xml:space="preserve"><value>{0} free</value></data>
+  <data name="ColumnFree" xml:space="preserve"><value>Free</value></data>
+  <data name="ColumnDeleted" xml:space="preserve"><value>Deleted</value></data>
+  <data name="ColumnOriginalLocation" xml:space="preserve"><value>Original location</value></data>
+  <data name="MenuRestore" xml:space="preserve"><value>Restore</value></data>
+  <data name="MenuDeletePermanently" xml:space="preserve"><value>Delete permanently</value></data>
+  <data name="MenuEmptyBin" xml:space="preserve"><value>Empty Recycle Bin</value></data>
+  <data name="EmptyBinTitle" xml:space="preserve"><value>Empty the Recycle Bin?</value></data>
+  <data name="EmptyBinMessage" xml:space="preserve"><value>{0} will be deleted permanently.</value></data>
+  <data name="OpRestore" xml:space="preserve"><value>Restoring</value></data>
+  <data name="BinEmpty" xml:space="preserve"><value>The Recycle Bin is empty</value></data>
 </root>

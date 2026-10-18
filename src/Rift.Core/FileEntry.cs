@@ -14,6 +14,9 @@ public enum FileKind
     Other,
 }
 
+/// <param name="IsHidden">Hidden or system: listed only when "show hidden files" is on, and drawn dimmed.</param>
+/// <param name="DateNote">Replaces the Modified column (e.g. a drive's free space).</param>
+/// <param name="TypeNote">Replaces the Type column (e.g. where a deleted file came from).</param>
 public sealed record FileEntry(
     string Name,
     string FullPath,
@@ -21,7 +24,10 @@ public sealed record FileEntry(
     long? Size,
     DateTime Modified,
     FileKind Kind,
-    bool IsHidden)
+    bool IsHidden,
+    FileAttributes Attributes = 0,
+    string? DateNote = null,
+    string? TypeNote = null)
 {
     public static FileEntry From(FileSystemInfo info)
     {
@@ -33,6 +39,7 @@ public sealed record FileEntry(
             isDir ? null : ((FileInfo)info).Length,
             info.LastWriteTime,
             isDir ? FileKind.Folder : FileKinds.FromExtension(info.Extension),
-            info.Attributes.HasFlag(FileAttributes.Hidden));
+            (info.Attributes & (FileAttributes.Hidden | FileAttributes.System)) != 0,
+            info.Attributes);
     }
 }

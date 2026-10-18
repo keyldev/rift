@@ -26,11 +26,14 @@ public partial class PaneViewModel : ViewModelBase
     [ObservableProperty] private string _dropHint = "";
 
     [RelayCommand]
-    private void NewTab()
+    private void NewTab() => OpenTab(SelectedTab.Path);
+
+    public TabViewModel OpenTab(string path)
     {
-        var tab = new TabViewModel(SelectedTab.Path);
+        var tab = new TabViewModel(path);
         Tabs.Add(tab);
         SelectedTab = tab;
+        return tab;
     }
 
     [RelayCommand]
@@ -40,6 +43,7 @@ public partial class PaneViewModel : ViewModelBase
             return;
         var index = Tabs.IndexOf(tab);
         Tabs.Remove(tab);
+        tab.Dispose();
         if (SelectedTab == tab)
             SelectedTab = Tabs[Math.Min(index, Tabs.Count - 1)];
     }

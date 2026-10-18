@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Rift.App.ViewModels;
 
@@ -18,7 +19,9 @@ public partial class MainWindow : Window
             if (Vm is { } vm)
             {
                 vm.WindowHandle = () => TryGetPlatformHandle()?.Handle ?? 0;
+                vm.SetClipboardText = text => Clipboard?.SetTextAsync(text) ?? Task.CompletedTask;
                 vm.FocusFilesRequested += FocusActivePane;
+                vm.ActivateRequested += BringToFront;
             }
             LeftPane.FocusFiles();
         };
@@ -32,6 +35,14 @@ public partial class MainWindow : Window
         WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
 
     private void OnClose(object? sender, RoutedEventArgs e) => Close();
+
+    private void BringToFront()
+    {
+        if (WindowState == WindowState.Minimized)
+            WindowState = WindowState.Normal;
+        Activate();
+        FocusActivePane();
+    }
 
     private void FocusActivePane()
     {

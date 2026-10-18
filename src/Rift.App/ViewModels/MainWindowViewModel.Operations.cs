@@ -59,7 +59,7 @@ public partial class MainWindowViewModel
     private Task TransferToOtherAsync(TransferMode mode)
     {
         var sources = ActiveTab.SelectedPaths;
-        if (!IsSplit || sources.Count == 0)
+        if (!IsSplit || sources.Count == 0 || !ActiveTab.IsFileSystem || !OtherPane.SelectedTab.IsFileSystem)
             return Task.CompletedTask;
         return TransferAsync(mode, sources, OtherPane.SelectedTab.Path);
     }
@@ -91,8 +91,13 @@ public partial class MainWindowViewModel
     private async Task DeleteAsync(bool permanent)
     {
         var tab = ActiveTab;
+        if (tab.IsRecycleBin)
+        {
+            await DeleteFromBinAsync(tab.SelectedRecycled);
+            return;
+        }
         var paths = tab.SelectedPaths;
-        if (paths.Count == 0)
+        if (paths.Count == 0 || !tab.IsFileSystem)
             return;
         if (!OperatingSystem.IsWindows())
             permanent = true;
@@ -125,8 +130,11 @@ public partial class MainWindowViewModel
             }
             else if (OperatingSystem.IsWindows())
             {
+                // The bin's clock and ours can disagree by a moment; FindRecent matches by path too.
+                var since = DateTime.Now.AddSeconds(-5);
                 var completed = await RecycleBin.SendAsync(paths, WindowHandle());
                 op.Complete(canceled: !completed, []);
+                RememberRecycled(op.Title, paths, since);
             }
         }
         catch (OperationCanceledException)
@@ -138,7 +146,122 @@ public partial class MainWindowViewModel
             op.Complete(canceled: false, [new OperationError(paths[0], ex.Message)]);
         }
 
-        await RefreshAsync([tab.Path]);
+        await RefreshAsync([tab.Path, Locations.RecycleBin]);
+    }
+
+    /// <summary>Ctrl+Z after Del: find what just went to the bin, so undo can bring it back.</summary>
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private void RememberRecycled(string title, IReadOnlyList<string> paths, DateTime since)
+    {
+        try
+        {
+            var journal = new OperationJournal();
+            foreach (var item in RecycleBinStore.FindRecent(RecycleBin.Folders(), paths, since))
+                journal.AddRecycled(item);
+            Remember(title, journal);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Undo just won't cover this delete.
+        }
+    }
+
+    // ---------- Recycle Bin ----------
+
+    [RelayCommand(AllowConcurrentExecutions = true)]
+    private async Task Restore()
+    {
+        var items = ActiveTab.SelectedRecycled;
+        if (items.Count == 0)
+            return;
+
+        var op = Operations.Start($"{Strings.OpRestore} · {Describe(items.Select(i => i.OriginalPath).ToList())}", canPause: false);
+        var errors = new List<OperationError>();
+        var restored = await Task.Run(() =>
+        {
+            var targets = new List<string>();
+            foreach (var item in items)
+            {
+                try
+                {
+                    targets.Add(RecycleBinStore.Restore(item));
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    errors.Add(new OperationError(item.OriginalPath, ex.Message));
+                }
+            }
+            return targets;
+        });
+        op.Complete(canceled: false, errors);
+        if (OperatingSystem.IsWindows())
+            RecycleBin.NotifyChanged();
+        await RefreshAsync(restored.Select(Path.GetDirectoryName).Append(Locations.RecycleBin));
+    }
+
+    private async Task DeleteFromBinAsync(IReadOnlyList<RecycledItem> items)
+    {
+        if (items.Count == 0)
+            return;
+        var names = items.Select(i => i.OriginalPath).ToList();
+        var confirm = await ShowDialogAsync(new DialogViewModel
+        {
+            Title = Strings.DeletePermanentTitle,
+            Message = Describe(names),
+            Details = [Strings.DeletePermanentWarning],
+            Buttons =
+            [
+                new DialogButton(Strings.DeletePermanent, 1, IsPrimary: true, IsDanger: true),
+                new DialogButton(Strings.CommonCancel, 0),
+            ],
+        });
+        if (confirm.Button != 1)
+            return;
+
+        var op = Operations.Start($"{Strings.OpDelete} · {Describe(names)}", canPause: false);
+        var errors = new List<OperationError>();
+        await Task.Run(() =>
+        {
+            foreach (var item in items)
+            {
+                try
+                {
+                    RecycleBinStore.Delete(item);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    errors.Add(new OperationError(item.OriginalPath, ex.Message));
+                }
+            }
+        });
+        op.Complete(canceled: false, errors);
+        if (OperatingSystem.IsWindows())
+            RecycleBin.NotifyChanged();
+        await RefreshAsync([Locations.RecycleBin]);
+    }
+
+    [RelayCommand]
+    private async Task EmptyBin()
+    {
+        if (!OperatingSystem.IsWindows())
+            return;
+        var count = RecycleBinStore.Read(RecycleBin.Folders()).Count;
+        if (count == 0)
+            return;
+        var confirm = await ShowDialogAsync(new DialogViewModel
+        {
+            Title = Strings.EmptyBinTitle,
+            Message = Strings.EmptyBinMessage(Strings.ItemsCount(count)),
+            Buttons =
+            [
+                new DialogButton(Strings.MenuEmptyBin, 1, IsPrimary: true, IsDanger: true),
+                new DialogButton(Strings.CommonCancel, 0),
+            ],
+        });
+        if (confirm.Button != 1)
+            return;
+        RecycleBin.Empty(WindowHandle());
+        await RefreshAsync([Locations.RecycleBin]);
     }
 
     // ---------- rename / new folder ----------
@@ -171,6 +294,8 @@ public partial class MainWindowViewModel
     private async Task NewFolder()
     {
         var tab = ActiveTab;
+        if (!tab.IsFileSystem)
+            return;
         try
         {
             var (path, journal) = FileOps.CreateFolder(tab.Path, Strings.NewFolderName);
@@ -195,14 +320,14 @@ public partial class MainWindowViewModel
     private void SetClipboard(bool cut)
     {
         var paths = ActiveTab.SelectedPaths;
-        if (OperatingSystem.IsWindows() && paths.Count > 0)
+        if (OperatingSystem.IsWindows() && paths.Count > 0 && ActiveTab.IsFileSystem)
             FileClipboard.SetFiles(WindowHandle(), paths, cut);
     }
 
     [RelayCommand(AllowConcurrentExecutions = true)]
     private async Task Paste()
     {
-        if (!OperatingSystem.IsWindows() || FileClipboard.GetFiles(WindowHandle()) is not { } clip)
+        if (!OperatingSystem.IsWindows() || !ActiveTab.IsFileSystem || FileClipboard.GetFiles(WindowHandle()) is not { } clip)
             return;
 
         await TransferAsync(clip.Cut ? TransferMode.Move : TransferMode.Copy, clip.Paths, ActiveTab.Path);
@@ -236,6 +361,8 @@ public partial class MainWindowViewModel
             op.Complete(canceled: true, []);
         }
 
+        if (OperatingSystem.IsWindows())
+            RecycleBin.NotifyChanged();
         await Task.WhenAll(AllTabs.Select(t => t.RefreshAsync()));
     }
 
@@ -256,6 +383,8 @@ public partial class MainWindowViewModel
 
     private static string NormalizeDir(string path)
     {
+        if (Locations.IsVirtual(path))
+            return path;
         var full = Path.GetFullPath(path);
         return full.Length > 3 ? full.TrimEnd('\\') : full;
     }

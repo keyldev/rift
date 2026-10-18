@@ -6,6 +6,7 @@ namespace Rift.App.ViewModels;
 public sealed record SidebarItem(string Label, string Path, string Icon, double? Used = null, string? Meta = null)
 {
     public bool HasUsage => Used is not null;
+    public string Tip => Locations.IsVirtual(Path) ? Label : Path;
 
     public static IReadOnlyList<SidebarItem> QuickAccess()
     {
@@ -16,6 +17,8 @@ public sealed record SidebarItem(string Label, string Path, string Icon, double?
             new(Strings.PlaceDownloads, System.IO.Path.Combine(home, "Downloads"), "Icon.Download"),
             new(Strings.PlaceDocuments, Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Icon.Document"),
             new(Strings.PlaceHome, home, "Icon.Home"),
+            new(Strings.PlaceThisPc, Locations.ThisPc, "Icon.Pc"),
+            new(Strings.PlaceRecycleBin, Locations.RecycleBin, "Icon.Trash"),
         ];
     }
 

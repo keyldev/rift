@@ -44,6 +44,9 @@ public static class Converters
     public static readonly IValueConverter ThemeIcon =
         new FuncValueConverter<bool, Geometry?>(dark => Resource(dark ? "Icon.Sun" : "Icon.Moon"));
 
+    public static readonly IValueConverter HiddenIcon =
+        new FuncValueConverter<bool, Geometry?>(shown => Resource(shown ? "Icon.Eye" : "Icon.EyeOff"));
+
     public static readonly IValueConverter OperationIcon =
         new FuncValueConverter<OperationState, Geometry?>(s => Resource(s switch
         {

@@ -85,7 +85,7 @@
       <!-- Pane status -->
       <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource Rift.Line}" BorderThickness="0,1,0,0" Padding="12,5">
         <DockPanel>
-          <TextBlock DockPanel.Dock="Right" Classes="dim" FontSize="12" Text="{Binding SelectedTab.Path}"
+          <TextBlock DockPanel.Dock="Right" Classes="dim" FontSize="12" Text="{Binding SelectedTab.DisplayPath}"
                      TextTrimming="CharacterEllipsis" MaxWidth="320" />
           <TextBlock Classes="muted" FontSize="12" Text="{Binding SelectedTab.Status}" />
         </DockPanel>
@@ -100,8 +100,8 @@
           </Style>
         </Grid.Styles>
         <TextBlock Text="{x:Static l:Strings.ColumnName}" />
-        <TextBlock Grid.Column="1" Text="{x:Static l:Strings.ColumnModified}" />
-        <TextBlock Grid.Column="2" Text="{x:Static l:Strings.ColumnType}" />
+        <TextBlock Grid.Column="1" Text="{Binding SelectedTab.DateColumn}" />
+        <TextBlock Grid.Column="2" Text="{Binding SelectedTab.TypeColumn}" />
         <TextBlock Grid.Column="3" Text="{x:Static l:Strings.ColumnSize}" HorizontalAlignment="Right" />
       </Grid>
 
@@ -111,12 +111,16 @@
                  ItemsSource="{Binding SelectedTab.Items}">
           <ListBox.ItemTemplate>
             <DataTemplate x:DataType="vm:FileItem">
-              <Grid ColumnDefinitions="*,130,110,80" Background="Transparent">
+              <Grid ColumnDefinitions="*,130,110,80" Background="Transparent" Classes.hidden="{Binding IsHidden}">
                 <DockPanel>
-                  <c:Icon DockPanel.Dock="Left" Width="17" Height="17" Margin="0,0,9,0"
-                          Data="{Binding Kind, Converter={x:Static app:Converters.KindToIcon}}"
-                          Foreground="{Binding Kind, Converter={x:Static app:Converters.KindToBrush}}"
-                          Fill="{Binding Kind, Converter={x:Static app:Converters.KindToFill}}" />
+                  <Panel DockPanel.Dock="Left" Width="17" Height="17" Margin="0,0,9,0">
+                    <c:Icon IsVisible="{Binding !HasIcon}"
+                            Data="{Binding Kind, Converter={x:Static app:Converters.KindToIcon}}"
+                            Foreground="{Binding Kind, Converter={x:Static app:Converters.KindToBrush}}"
+                            Fill="{Binding Kind, Converter={x:Static app:Converters.KindToFill}}" />
+                    <Image Source="{Binding Icon}" IsVisible="{Binding HasIcon}" Width="16" Height="16"
+                           RenderOptions.BitmapInterpolationMode="HighQuality" />
+                  </Panel>
                   <Panel>
                     <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
                                IsVisible="{Binding !IsRenaming}" />
@@ -135,8 +139,8 @@
           </ListBox.ItemTemplate>
         </ListBox>
         <TextBlock Classes="muted" HorizontalAlignment="Center" VerticalAlignment="Center"
-                   Text="{Binding SelectedTab.Error}"
-                   IsVisible="{Binding SelectedTab.Error, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                   Text="{Binding SelectedTab.Notice}"
+                   IsVisible="{Binding SelectedTab.Notice, Converter={x:Static ObjectConverters.IsNotNull}}" />
 
         <!-- Drop zone while files are dragged over this pane -->
         <Border Classes="dropzone" Classes.copy="{Binding DropIsCopy}" IsVisible="{Binding IsDropTarget}"

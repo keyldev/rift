@@ -22,7 +22,7 @@
 
 </details>
 
-> Early stage. Rift already browses, copies and moves; next up are the right-click menu, system icons and search.
+> Early stage. Rift already browses, copies and moves, and fits into Windows like Explorer does; next up are views and search.
 > See [ROADMAP.md](ROADMAP.md).
 
 ## Features
@@ -31,11 +31,16 @@
 - Copy and move between panes: F5 / F6, drag-n-drop, or Ctrl+C / Ctrl+V
 - Drag files to and from Explorer, clipboard compatible with Explorer (including Cut)
 - Operations panel with progress, pause and cancel; conflict dialog with "do this for all"
-- Undo (Ctrl+Z) for copy, move, rename and new folder
-- Delete to the Recycle Bin or permanently
+- Undo (Ctrl+Z) for copy, move, rename, new folder and delete to the Recycle Bin
+- Delete to the Recycle Bin or permanently; browse the Recycle Bin, restore or empty it
+- Right-click menu with Rift's actions, plus Explorer's full menu (7-Zip, Git, "Send to", …) under "More options"
+- System file icons, Properties and "Open with" dialogs
+- Folders refresh by themselves when files change on disk
+- Hidden and system files on demand (Ctrl+H)
 - Inline rename, new folder
-- Breadcrumbs, back / forward / up, quick access and drives in the sidebar
+- Breadcrumbs, back / forward / up, quick access, This PC and drives in the sidebar
 - Dark and light themes, custom title bar
+- One window: "Open in Rift" and the taskbar jump list (recent folders) open tabs in the running Rift
 - "Open in Rift" in Explorer's context menu
 - English and Russian UI
 
@@ -54,7 +59,11 @@ Grab the latest build from the artifacts of the latest [CI run](https://github.c
 | Del / Shift+Del | Move to Recycle Bin / delete permanently |
 | F2 | Rename |
 | Ctrl+Shift+N | New folder |
-| Ctrl+Z | Undo |
+| Ctrl+Z | Undo (also brings files back from the Recycle Bin) |
+| Shift+F10, Menu key | Context menu; Shift+right-click opens Explorer's menu directly |
+| Alt+Enter | Properties |
+| Ctrl+Shift+C | Copy path |
+| Ctrl+H | Show / hide hidden files |
 | Ctrl+T / Ctrl+W | New tab / close tab |
 | Enter, double click | Open |
 | Backspace, Alt+↑ | Up |
@@ -70,6 +79,8 @@ Rift.exe C:\Projects --right D:\Backup
 ```
 
 - Every path opens as a tab; bare paths and `--left` go to the left pane, `--right` to the right one.
+- If Rift is already running, the paths open as new tabs in its window; `--new-window` starts a separate window instead.
+- `shell:MyComputerFolder` and `shell:RecycleBinFolder` open This PC and the Recycle Bin.
 - `--lang en` or `--lang ru` overrides the UI language (by default Rift follows Windows).
 - `--register-shell` / `--unregister-shell` add or remove "Open in Rift" in Explorer.
 
@@ -107,7 +118,7 @@ dotnet test
 ```
 src/Rift.App     UI: windows, views, themes, view models
 src/Rift.Core    logic without UI: folders, paths, history, file operations, undo, localization
-src/Rift.Shell   Windows integration: Recycle Bin, clipboard, Explorer menu
+src/Rift.Shell   Windows integration: shell menus and dialogs, icons, Recycle Bin, clipboard, jump list, Explorer menu
 tests/           Rift.Core tests
 design/          interactive design mockup (React), open design/preview.html
 scripts/         icon and demo files for screenshots

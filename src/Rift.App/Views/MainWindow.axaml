@@ -33,6 +33,9 @@
     <KeyBinding Gesture="Alt+Left" Command="{Binding ActivePane.SelectedTab.BackCommand}" />
     <KeyBinding Gesture="Alt+Right" Command="{Binding ActivePane.SelectedTab.ForwardCommand}" />
     <KeyBinding Gesture="Alt+Up" Command="{Binding ActivePane.SelectedTab.UpCommand}" />
+    <KeyBinding Gesture="Ctrl+H" Command="{Binding ToggleHiddenCommand}" />
+    <KeyBinding Gesture="Alt+Enter" Command="{Binding PropertiesCommand}" />
+    <KeyBinding Gesture="Ctrl+Shift+C" Command="{Binding CopyPathCommand}" />
   </Window.KeyBindings>
 
   <Grid RowDefinitions="44,*,28">
@@ -97,6 +100,9 @@
             <c:Icon Data="{StaticResource Icon.Split}" />
           </Button>
           <Border Width="1" Height="18" Margin="6,0" Background="{DynamicResource Rift.Line}" />
+          <Button Classes="flat" Classes.on="{Binding View.ShowHidden}" Command="{Binding ToggleHiddenCommand}" ToolTip.Tip="{x:Static l:Strings.TipHidden}">
+            <c:Icon Data="{Binding View.ShowHidden, Converter={x:Static app:Converters.HiddenIcon}}" />
+          </Button>
           <Button Classes="flat" Command="{Binding ToggleThemeCommand}" ToolTip.Tip="{x:Static l:Strings.TipTheme}">
             <c:Icon Data="{Binding IsDark, Converter={x:Static app:Converters.ThemeIcon}}" />
           </Button>
@@ -126,7 +132,7 @@
                 <DataTemplate x:DataType="vm:SidebarItem">
                   <Button Classes="flat nav"
                           Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenSidebarItemCommand}"
-                          CommandParameter="{Binding}" ToolTip.Tip="{Binding Path}">
+                          CommandParameter="{Binding}" ToolTip.Tip="{Binding Tip}">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                       <c:Icon Data="{Binding Icon, Converter={x:Static app:Converters.ResourceToGeometry}}" />
                       <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />

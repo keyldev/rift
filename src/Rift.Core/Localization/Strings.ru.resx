@@ -106,4 +106,41 @@
   <data name="DropCopy" xml:space="preserve"><value>Копировать в {0}</value></data>
   <data name="DropHintMove" xml:space="preserve"><value>Ctrl — копировать</value></data>
   <data name="DropHintCopy" xml:space="preserve"><value>Shift — переместить</value></data>
+  <data name="TipHidden" xml:space="preserve"><value>Показывать скрытые файлы (Ctrl+H)</value></data>
+  <data name="JumpRecent" xml:space="preserve"><value>Недавние папки</value></data>
+  <data name="JumpNewWindow" xml:space="preserve"><value>Новое окно</value></data>
+  <data name="JumpNewWindowTip" xml:space="preserve"><value>Открыть ещё одно окно Rift</value></data>
+  <data name="MenuOpen" xml:space="preserve"><value>Открыть</value></data>
+  <data name="MenuOpenNewTab" xml:space="preserve"><value>Открыть в новой вкладке</value></data>
+  <data name="MenuOpenOtherPane" xml:space="preserve"><value>Открыть в другой панели</value></data>
+  <data name="MenuOpenWith" xml:space="preserve"><value>Открыть с помощью…</value></data>
+  <data name="MenuCut" xml:space="preserve"><value>Вырезать</value></data>
+  <data name="MenuCopy" xml:space="preserve"><value>Копировать</value></data>
+  <data name="MenuPaste" xml:space="preserve"><value>Вставить</value></data>
+  <data name="MenuCopyToOther" xml:space="preserve"><value>Копировать в другую панель</value></data>
+  <data name="MenuMoveToOther" xml:space="preserve"><value>Переместить в другую панель</value></data>
+  <data name="MenuCopyPath" xml:space="preserve"><value>Копировать путь</value></data>
+  <data name="MenuRename" xml:space="preserve"><value>Переименовать</value></data>
+  <data name="MenuDelete" xml:space="preserve"><value>Удалить</value></data>
+  <data name="MenuProperties" xml:space="preserve"><value>Свойства</value></data>
+  <data name="MenuMoreOptions" xml:space="preserve"><value>Другие параметры</value></data>
+  <data name="MenuNewFolder" xml:space="preserve"><value>Новая папка</value></data>
+  <data name="MenuRefresh" xml:space="preserve"><value>Обновить</value></data>
+  <data name="MenuShowHidden" xml:space="preserve"><value>Показывать скрытые файлы</value></data>
+  <data name="PlaceThisPc" xml:space="preserve"><value>Этот компьютер</value></data>
+  <data name="PlaceRecycleBin" xml:space="preserve"><value>Корзина</value></data>
+  <data name="DriveNetwork" xml:space="preserve"><value>Сетевой диск</value></data>
+  <data name="DriveRemovable" xml:space="preserve"><value>Съёмный диск</value></data>
+  <data name="DriveOptical" xml:space="preserve"><value>CD-дисковод</value></data>
+  <data name="DriveFreeShort" xml:space="preserve"><value>{0} свободно</value></data>
+  <data name="ColumnFree" xml:space="preserve"><value>Свободно</value></data>
+  <data name="ColumnDeleted" xml:space="preserve"><value>Удалён</value></data>
+  <data name="ColumnOriginalLocation" xml:space="preserve"><value>Исходное расположение</value></data>
+  <data name="MenuRestore" xml:space="preserve"><value>Восстановить</value></data>
+  <data name="MenuDeletePermanently" xml:space="preserve"><value>Удалить навсегда</value></data>
+  <data name="MenuEmptyBin" xml:space="preserve"><value>Очистить корзину</value></data>
+  <data name="EmptyBinTitle" xml:space="preserve"><value>Очистить корзину?</value></data>
+  <data name="EmptyBinMessage" xml:space="preserve"><value>{0} будут удалены навсегда.</value></data>
+  <data name="OpRestore" xml:space="preserve"><value>Восстановление</value></data>
+  <data name="BinEmpty" xml:space="preserve"><value>Корзина пуста</value></data>
 </root>

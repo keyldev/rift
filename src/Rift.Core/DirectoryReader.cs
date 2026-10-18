@@ -6,11 +6,11 @@ public static class DirectoryReader
     {
         IgnoreInaccessible = true,
         RecurseSubdirectories = false,
-        AttributesToSkip = FileAttributes.System,
+        AttributesToSkip = 0,
         ReturnSpecialDirectories = false,
     };
 
-    /// <summary>Reads a folder: folders first, then files, both by name.</summary>
+    /// <summary>Reads a folder: folders first, then files, both by name. Hidden and system items only on request.</summary>
     public static IReadOnlyList<FileEntry> Read(string path, bool includeHidden = false)
     {
         var entries = new List<FileEntry>();

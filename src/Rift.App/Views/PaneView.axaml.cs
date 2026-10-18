@@ -3,9 +3,12 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
+using Avalonia.Threading;
 using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
 using Rift.App.Controls;
+using Rift.App.Services;
 using Rift.App.ViewModels;
 using Rift.Core;
 using Rift.Core.Localization;
@@ -39,6 +42,13 @@ public partial class PaneView : UserControl
         Files.DoubleTapped += OnDoubleTapped;
         Files.KeyDown += OnFilesKeyDown;
         Files.SelectionChanged += (_, _) => SyncSelection();
+        // Icons load lazily, for the rows that actually get on screen.
+        Files.ContainerPrepared += (_, e) =>
+        {
+            // ItemFromContainer isn't wired up yet at this point; the DataContext is.
+            if (e.Container.DataContext is FileItem item)
+                FileIcons.Request(item);
+        };
 
         // Inline rename: Enter commits, Esc cancels, clicking away commits.
         Files.AddHandler(KeyDownEvent, OnRenameKey, RoutingStrategies.Tunnel);
@@ -48,6 +58,10 @@ public partial class PaneView : UserControl
         Files.AddHandler(PointerPressedEvent, OnRowPressed, RoutingStrategies.Tunnel);
         Files.AddHandler(PointerMovedEvent, OnRowMoved, RoutingStrategies.Tunnel, handledEventsToo: true);
         Files.AddHandler(PointerReleasedEvent, OnRowReleased, RoutingStrategies.Tunnel, handledEventsToo: true);
+
+        // Right-click menu: Rift's actions first, Explorer's full menu one click away.
+        Files.AddHandler(PointerPressedEvent, OnRightPressed, RoutingStrategies.Tunnel, handledEventsToo: true);
+        Files.ContextRequested += OnContextRequested;
 
         // Dropping files in, from Rift or from Explorer.
         DragDrop.SetAllowDrop(this, true);
@@ -183,6 +197,172 @@ public partial class PaneView : UserControl
     private static bool IsInsideRenameBox(object? source) =>
         source is Visual v && v.FindAncestorOfType<RenameBox>(includeSelf: true) is not null;
 
+    // ---------- context menu ----------
+
+    private bool _shiftRightClick;
+
+    private void OnRightPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (e.GetCurrentPoint(Files).Properties.IsRightButtonPressed)
+            _shiftRightClick = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
+    }
+
+    private void OnContextRequested(object? sender, ContextRequestedEventArgs e)
+    {
+        if (Main is not { } main || _tab is not { } tab || IsInsideRenameBox(e.Source))
+            return;
+        e.Handled = true;
+        Activate();
+
+        // Right-click on a row selects it, unless it's part of the current selection; on empty space, clears it.
+        var row = RowItem(e.Source);
+        if (row is not null && Files.SelectedItems?.Contains(row) != true)
+        {
+            Files.SelectedItems?.Clear();
+            Files.SelectedItems?.Add(row);
+        }
+        else if (row is null && e.TryGetPosition(Files, out _))
+        {
+            Files.SelectedItems?.Clear();
+        }
+        var forSelection = tab.Selected.Count > 0;
+
+        // Where the menu goes: the pointer, or the focused row when opened from the keyboard (Shift+F10, Menu key).
+        Control anchor = Files;
+        if (!e.TryGetPosition(Files, out var point))
+        {
+            anchor = (forSelection ? Files.ContainerFromItem(tab.Selected[0]) : null) ?? Files;
+            point = anchor.TranslatePoint(new Point(24, anchor.Bounds.Height), Files) ?? default;
+        }
+        var screen = Files.PointToScreen(point);
+
+        // Shift+right-click goes straight to Explorer's menu with extended verbs, as in Explorer.
+        if (_shiftRightClick && OperatingSystem.IsWindows())
+        {
+            _shiftRightClick = false;
+            main.ShowShellMenu(forSelection, screen.X, screen.Y, extended: true);
+            return;
+        }
+
+        var menu = new ContextMenu
+        {
+            ItemsSource = tab.Location switch
+            {
+                LocationKind.RecycleBin => RecycleBinMenu(main, forSelection),
+                _ when forSelection => SelectionMenu(main, tab, screen),
+                LocationKind.ThisPc => [Item(Strings.MenuRefresh, "Icon.Refresh", "Ctrl+R", tab.RefreshCommand)],
+                _ => FolderMenu(main, screen),
+            },
+            Placement = anchor == Files && e.TryGetPosition(Files, out _) ? PlacementMode.Pointer : PlacementMode.BottomEdgeAlignedLeft,
+        };
+        menu.Closed += (_, _) => FocusFiles();
+        menu.Open(anchor);
+    }
+
+    private List<Control> SelectionMenu(MainWindowViewModel main, TabViewModel tab, PixelPoint screen)
+    {
+        var folders = tab.Selected.Count(i => i.IsDirectory);
+        var files = tab.Selected.Count - folders;
+        var items = new List<Control>
+        {
+            Item(Strings.MenuOpen, null, null, main.OpenItemCommand, isDefault: true),
+        };
+        if (folders > 0)
+        {
+            items.Add(Item(Strings.MenuOpenNewTab, "Icon.Plus", null, main.OpenInNewTabCommand));
+            items.Add(Item(Strings.MenuOpenOtherPane, "Icon.Split", null, main.OpenInOtherPaneCommand));
+        }
+        if (files == 1 && folders == 0 && OperatingSystem.IsWindows())
+            items.Add(Item(Strings.MenuOpenWith, "Icon.OpenWith", null, main.OpenWithCommand));
+
+        // This PC: drives can be opened and inspected, not cut, renamed or deleted.
+        if (!tab.IsFileSystem)
+        {
+            items.Add(new Separator());
+            items.Add(Item(Strings.MenuCopyPath, "Icon.Link", "Ctrl+Shift+C", main.CopyPathCommand));
+            AddShellItems(items, main, forSelection: true, screen);
+            return items;
+        }
+
+        items.Add(new Separator());
+        items.Add(Item(Strings.MenuCut, "Icon.Cut", "Ctrl+X", main.CutToClipboardCommand));
+        items.Add(Item(Strings.MenuCopy, "Icon.Copy", "Ctrl+C", main.CopyToClipboardCommand));
+        if (main.IsSplit)
+        {
+            items.Add(Item(Strings.MenuCopyToOther, "Icon.Copy", "F5", main.CopyToOtherCommand));
+            items.Add(Item(Strings.MenuMoveToOther, "Icon.Move", "F6", main.MoveToOtherCommand));
+        }
+        items.Add(Item(Strings.MenuCopyPath, "Icon.Link", "Ctrl+Shift+C", main.CopyPathCommand));
+
+        items.Add(new Separator());
+        items.Add(Item(Strings.MenuRename, "Icon.Rename", "F2", main.RenameCommand, enabled: tab.Selected.Count == 1));
+        items.Add(Item(Strings.MenuDelete, "Icon.Trash", "Delete", main.DeleteCommand));
+
+        AddShellItems(items, main, forSelection: true, screen);
+        return items;
+    }
+
+    private List<Control> FolderMenu(MainWindowViewModel main, PixelPoint screen)
+    {
+        var hidden = Item(Strings.MenuShowHidden, null, "Ctrl+H", main.ToggleHiddenCommand);
+        hidden.ToggleType = MenuItemToggleType.CheckBox;
+        hidden.IsChecked = main.View.ShowHidden;
+
+        var items = new List<Control>
+        {
+            Item(Strings.MenuNewFolder, "Icon.Folder", "Ctrl+Shift+N", main.NewFolderCommand),
+            Item(Strings.MenuPaste, "Icon.Paste", "Ctrl+V", main.PasteCommand, enabled: main.CanPaste),
+            new Separator(),
+            Item(Strings.MenuRefresh, "Icon.Refresh", "Ctrl+R", _tab!.RefreshCommand),
+            hidden,
+            Item(Strings.MenuCopyPath, "Icon.Link", "Ctrl+Shift+C", main.CopyPathCommand),
+        };
+        AddShellItems(items, main, forSelection: false, screen);
+        return items;
+    }
+
+    private static List<Control> RecycleBinMenu(MainWindowViewModel main, bool forSelection)
+    {
+        var items = new List<Control>();
+        if (forSelection)
+        {
+            items.Add(Item(Strings.MenuRestore, "Icon.Restore", null, main.RestoreCommand, isDefault: true));
+            items.Add(Item(Strings.MenuDeletePermanently, "Icon.Trash", "Delete", main.DeleteCommand));
+            items.Add(Item(Strings.MenuCopyPath, "Icon.Link", "Ctrl+Shift+C", main.CopyPathCommand));
+            items.Add(new Separator());
+        }
+        items.Add(Item(Strings.MenuEmptyBin, "Icon.Trash", null, main.EmptyBinCommand));
+        return items;
+    }
+
+    private static void AddShellItems(List<Control> items, MainWindowViewModel main, bool forSelection, PixelPoint screen)
+    {
+        if (!OperatingSystem.IsWindows())
+            return;
+        items.Add(new Separator());
+        items.Add(Item(Strings.MenuProperties, "Icon.Info", null, main.PropertiesCommand));
+        var more = Item(Strings.MenuMoreOptions, "Icon.More", null, null);
+        // Let our menu close first: Explorer's menu runs its own modal loop.
+        more.Click += (_, _) => Dispatcher.UIThread.Post(() => main.ShowShellMenu(forSelection, screen.X, screen.Y, extended: false));
+        items.Add(more);
+    }
+
+    private static MenuItem Item(string header, string? icon, string? gesture, System.Windows.Input.ICommand? command,
+        bool enabled = true, bool isDefault = false)
+    {
+        var item = new MenuItem
+        {
+            Header = header,
+            Command = command,
+            IsEnabled = enabled,
+            InputGesture = gesture is null ? null : KeyGesture.Parse(gesture),
+            FontWeight = isDefault ? FontWeight.SemiBold : FontWeight.Normal,
+        };
+        if (icon is not null && Application.Current?.TryFindResource(icon, out var geometry) == true)
+            item.Icon = new Icon { Data = geometry as Geometry, Width = 16, Height = 16 };
+        return item;
+    }
+
     // ---------- drag out ----------
 
     private void OnRowPressed(object? sender, PointerPressedEventArgs e)
@@ -223,7 +403,8 @@ public partial class PaneView : UserControl
         _pressed = null;
         _selectOnRelease = null;
         var paths = tab.SelectedPaths;
-        if (paths.Count == 0)
+        // Drives and deleted files don't travel; the Recycle Bin's own Restore puts files back.
+        if (paths.Count == 0 || !tab.IsFileSystem)
             return;
 
         var data = new DataTransfer();
@@ -267,7 +448,7 @@ public partial class PaneView : UserControl
 
     private DropPlan? Plan(DragEventArgs e)
     {
-        if (_tab is not { } tab)
+        if (_tab is not { IsFileSystem: true } tab)
             return null;
 
         IReadOnlyList<string> paths = e.DataTransfer.TryGetValue(RiftFormat) is { } own

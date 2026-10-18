@@ -1,4 +1,5 @@
 using Avalonia;
+using Rift.Core;
 using Rift.Core.Localization;
 using Rift.Shell;
 
@@ -26,8 +27,33 @@ sealed class Program
             }
         }
 
-        return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+        var parsed = StartupArgs.Parse(args);
+        if (!parsed.NewWindow)
+        {
+            Instance = InstanceChannel.TryClaim(InstanceChannel.DefaultName);
+            if (Instance is null)
+            {
+                if (OperatingSystem.IsWindows())
+                    Foreground.AllowAny();
+                // If the running window doesn't answer (hung, closing), open our own instead.
+                if (InstanceChannel.SendAsync(InstanceChannel.DefaultName, parsed.ToForwardedArgs(), TimeSpan.FromSeconds(3))
+                    .GetAwaiter().GetResult())
+                    return 0;
+            }
+        }
+
+        try
+        {
+            return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+        }
+        finally
+        {
+            Instance?.Dispose();
+        }
     }
+
+    /// <summary>Set when this process owns the single Rift window; later launches send their paths here.</summary>
+    public static InstanceChannel? Instance { get; private set; }
 
     // Avalonia configuration, don't remove; also used by visual designer.
     public static AppBuilder BuildAvaloniaApp()

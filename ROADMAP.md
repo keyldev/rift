@@ -30,29 +30,38 @@ The main feature: throw files from one pane to the other.
 Decided against `IFileOperation`: Rift has its own copy engine so it can show its own progress,
 pause, conflicts and undo. The Recycle Bin still goes through the shell.
 
-## 0.3 — Windows integration
+## Done — 0.3: Windows integration
 
-- [ ] Right-click context menu: Rift's quick actions + "More…" with the native menu (`IContextMenu`: 7-Zip, Git, …)
-- [ ] System file icons and thumbnails (`IShellItemImageFactory`), loaded async and cached
-- [ ] File properties dialog (`SHObjectProperties`), "Open with"
-- [ ] Special folders: This PC, Recycle Bin, Network, libraries
-- [ ] Auto-refresh when files change on disk (`FileSystemWatcher`)
-- [ ] Show hidden and system files toggle
-- [ ] Single instance: "Open in Rift" opens a new tab in the running window
-- [ ] Top-level "Open in Rift" in the Windows 11 menu (`IExplorerCommand` + sparse package)
-- [ ] Taskbar jump list with recent folders
-- [ ] Restore from the Recycle Bin with Ctrl+Z
+- [x] Right-click menu: Rift's actions + "More options" with Explorer's own menu (`IContextMenu`: 7-Zip, Git, "Send to", …);
+      Shift+right-click opens Explorer's menu directly, with extended verbs
+- [x] System file icons from the system image list, loaded lazily off the UI thread and cached per file type
+- [x] Properties (`SHObjectProperties`, `SHMultiFileProperties`) and "Open with" (`SHOpenWithDialog`)
+- [x] This PC (drives with free space) and the Recycle Bin (restore, delete permanently, empty)
+- [x] Auto-refresh when files change on disk (`FileSystemWatcher`), edited in place so scroll and selection stay
+- [x] Show hidden and system files (Ctrl+H), starting from Explorer's own setting
+- [x] Single instance: "Open in Rift" and jump list items open new tabs in the running window (`--new-window` to opt out)
+- [x] Taskbar jump list with recent folders and a "New window" task
+- [x] Undo a delete to the Recycle Bin with Ctrl+Z
+
+The Recycle Bin is read straight from `$Recycle.Bin` (`$I` metadata + `$R` data files), the way Explorer stores it:
+it's fast, needs no shell UI and lets Ctrl+Z find exactly what Del just sent there.
+
+Moved to later stages:
+
+- Thumbnails (`IShellItemImageFactory`) → 0.4, together with the thumbnail view
+- Network and libraries in the sidebar → 0.4, with favorites
+- Top-level "Open in Rift" in the Windows 11 menu (`IExplorerCommand` + sparse package) → Distribution: it needs a signed package
 
 ## 0.4 — Views and search
 
 - [ ] Sort by column, resize and pick columns
-- [ ] View modes: details, tiles, thumbnails
+- [ ] View modes: details, tiles, thumbnails (`IShellItemImageFactory`)
 - [ ] Preview pane: images, text, video, PDF
 - [ ] Type-to-filter in the current folder
 - [ ] Command palette (Ctrl+K): commands, folders, recent places
 - [ ] Recursive search with results in their own tab
 - [ ] Editable address bar (click the path → type), autocomplete
-- [ ] Favorites and tags in the sidebar
+- [ ] Favorites and tags in the sidebar; Network and libraries
 
 ## 0.5 — Layouts and tabs
 
@@ -86,6 +95,7 @@ Done along the way, but with measurements.
 - [ ] Installer with auto-update (Velopack or MSIX)
 - [ ] winget package
 - [ ] Signed binaries
+- [ ] Top-level "Open in Rift" in the Windows 11 menu (`IExplorerCommand` + signed sparse package)
 
 ## Quality
 
