@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rift mockup</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>html,body{margin:0}</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
+</head><body><div id="root"></div>
+<script type="text/babel">
+// Rift — интерактивный макет дизайна (React, только для прототипа UI).
+// Реальное приложение будет на Avalonia; здесь — раскладка, цвета и поведение.
+// Попробуй: перетащить файлы из одной панели в другую (Ctrl — копировать),
+// перетащить вкладку в другую группу, двойной клик по папке, переключить раскладку.
+
+const { useState, useEffect } = React;
+
+const TYPES = {
+  folder:  { icon: 'ti-folder',        color: '#E8B04A', label: 'Папка' },
+  image:   { icon: 'ti-photo',         color: '#5EB6F0', label: 'Изображение' },
+  video:   { icon: 'ti-movie',         color: '#C08CFF', label: 'Видео' },
+  audio:   { icon: 'ti-music',         color: '#F07AA8', label: 'Аудио' },
+  archive: { icon: 'ti-file-zip',      color: '#F0A35E', label: 'Архив' },
+  code:    { icon: 'ti-file-code',     color: '#6FD39B', label: 'Исходник' },
+  doc:     { icon: 'ti-file-text',     color: '#9AA7B8', label: 'Текст' },
+  pdf:     { icon: 'ti-file-type-pdf', color: '#F06A6A', label: 'PDF' },
+  exe:     { icon: 'ti-app-window',    color: '#8C9BFF', label: 'Приложение' },
+};
+
+const f = (name, type, size = null, date = '18.10.2026') => ({ name, type, size, date });
+
+const HOME = 'C:\\Users\\keyl';
+const INITIAL_FS = {
+  [HOME + '\\Downloads']: [
+    f('installers', 'folder', null, '14.10.2026'),
+    f('screenshots', 'folder', null, '17.10.2026'),
+    f('avalonia-docs.pdf', 'pdf', 4.2e6, '16.10.2026'),
+    f('wallpaper-4k.png', 'image', 8.7e6, '15.10.2026'),
+    f('demo-reel.mp4', 'video', 412e6, '12.10.2026'),
+    f('dotnet-sdk-10.exe', 'exe', 212e6, '11.10.2026'),
+    f('fonts.zip', 'archive', 23e6, '09.10.2026'),
+    f('notes.md', 'doc', 4.1e3),
+    f('track-01.flac', 'audio', 38e6, '03.10.2026'),
+  ],
+  [HOME + '\\Downloads\\screenshots']: [
+    f('rift-v0.png', 'image', 1.2e6), f('rift-v1.png', 'image', 1.4e6), f('explorer-vs-rift.png', 'image', 2.1e6),
+  ],
+  [HOME + '\\Projects\\rift']: [
+    f('src', 'folder'), f('tests', 'folder'), f('.github', 'folder'),
+    f('Rift.sln', 'code', 2.1e3), f('Directory.Build.props', 'code', 900),
+    f('README.md', 'doc', 3.4e3), f('LICENSE', 'doc', 1.1e3),
+  ],
+  [HOME + '\\Projects\\rift\\src']: [
+    f('Rift.App', 'folder'), f('Rift.Core', 'folder'), f('Rift.Shell', 'folder'),
+  ],
+  [HOME + '\\Desktop']: [f('todo.txt', 'doc', 812), f('rift-logo.svg', 'image', 3.2e3)],
+  [HOME + '\\Documents']: [f('invoices', 'folder'), f('cv.pdf', 'pdf', 320e3)],
+  'D:\\Backup': [
+    f('2026-09', 'folder', null, '30.09.2026'), f('2026-10', 'folder'), f('photos', 'folder', null, '01.08.2026'),
+    f('system-image.zip', 'archive', 18.4e9, '01.10.2026'), f('keys-backup.txt', 'doc', 2e3, '01.10.2026'),
+  ],
+  '\\\\nas\\media': [
+    f('movies', 'folder'), f('music', 'folder'), f('series', 'folder'), f('trailer.mkv', 'video', 1.4e9, '10.10.2026'),
+  ],
+};
+
+const fmtSize = (b) => {
+  if (b == null) return '';
+  const u = ['Б', 'КБ', 'МБ', 'ГБ', 'ТБ'];
+  let i = 0;
+  while (b >= 1024 && i < u.length - 1) { b /= 1024; i++; }
+  return (i === 0 ? b : b.toFixed(b < 10 ? 1 : 0)) + ' ' + u[i];
+};
+
+const baseName = (p) => p.split('\\').filter(Boolean).pop() || p;
+
+const crumbs = (path) => {
+  const unc = path.startsWith('\\\\');
+  const parts = (unc ? path.slice(2) : path).split('\\').filter(Boolean);
+  return parts.map((label, i) => ({
+    label,
+    path: (unc ? '\\\\' : '') + parts.slice(0, i + 1).join('\\'),
+  }));
+};
+
+const parentOf = (path) => {
+  const c = crumbs(path);
+  return c.length > 1 ? c[c.length - 2].path : path;
+};
+
+let uid = 0;
+const mkTab = (path) => ({ id: 't' + uid++, path, back: [], fwd: [] });
+
+const SIDEBAR = [
+  { title: 'Быстрый доступ', items: [
+    { icon: 'ti-device-desktop', label: 'Рабочий стол', path: HOME + '\\Desktop' },
+    { icon: 'ti-download', label: 'Загрузки', path: HOME + '\\Downloads' },
+    { icon: 'ti-file-description', label: 'Документы', path: HOME + '\\Documents' },
+    { icon: 'ti-code', label: 'rift', path: HOME + '\\Projects\\rift' },
+  ]},
+  { title: 'Диски', items: [
+    { icon: 'ti-device-laptop', label: 'Система (C:)', path: HOME + '\\Downloads', used: 0.62, meta: '182 ГБ своб.' },
+    { icon: 'ti-database', label: 'Данные (D:)', path: 'D:\\Backup', used: 0.81, meta: '340 ГБ своб.' },
+    { icon: 'ti-server-2', label: 'nas / media', path: '\\\\nas\\media', used: 0.47, meta: '2,1 ТБ своб.' },
+  ]},
+];
+
+const WORKSPACES = ['Разработка', 'Медиа', 'Бэкапы'];
+
+// У каждого акцента свой оттенок под тёмную и светлую тему, чтобы контраст был одинаковый.
+const ACCENTS = [
+  { id: 'azure', label: 'Лазурь', dark: '#4C8DFF', light: '#2563EB' },
+  { id: 'ember', label: 'Янтарь', dark: '#FF8A3D', light: '#E8590C' },
+  { id: 'mint',  label: 'Мята',   dark: '#34D3A0', light: '#0E9F6E' },
+  { id: 'iris',  label: 'Ирис',   dark: '#9B87FF', light: '#6D4AFF' },
+  { id: 'rose',  label: 'Роза',   dark: '#FF5C8A', light: '#E11D5C' },
+];
+
+function RiftMockup() {
+  const [fs, setFs] = useState(INITIAL_FS);
+  const [groups, setGroups] = useState(() => [
+    { id: 'A', tabs: [mkTab(HOME + '\\Downloads'), mkTab(HOME + '\\Projects\\rift')], active: 0, sel: [] },
+    { id: 'B', tabs: [mkTab('D:\\Backup'), mkTab('\\\\nas\\media')], active: 0, sel: [] },
+    { id: 'C', tabs: [mkTab(HOME + '\\Projects\\rift\\src')], active: 0, sel: [] },
+  ]);
+  const [layout, setLayout] = useState(2);
+  const [focus, setFocus] = useState('A');
+  const [drag, setDrag] = useState(null);       // { kind: 'files' | 'tab', from }
+  const [over, setOver] = useState(null);       // { group, copy }
+  const [ops, setOps] = useState([]);
+  const [workspace, setWorkspace] = useState(0);
+  const [theme, setTheme] = useState('dark');
+  const [accentId, setAccentId] = useState('azure');
+  const accent = ACCENTS.find((a) => a.id === accentId)[theme];
+
+  const visible = groups.slice(0, layout);
+
+  useEffect(() => {
+    if (!ops.some((o) => o.progress < 100)) return;
+    const t = setInterval(() => {
+      setOps((list) => list.map((o) => ({ ...o, progress: Math.min(100, o.progress + 7 + Math.random() * 9) })));
+    }, 180);
+    return () => clearInterval(t);
+  }, [ops]);
+
+  useEffect(() => {
+    const done = ops.filter((o) => o.progress >= 100);
+    if (!done.length) return;
+    const t = setTimeout(() => setOps((list) => list.filter((o) => o.progress < 100)), 1600);
+    return () => clearTimeout(t);
+  }, [ops]);
+
+  const updateGroup = (id, fn) => setGroups((gs) => gs.map((g) => (g.id === id ? fn(g) : g)));
+  const activeTab = (g) => g.tabs[g.active];
+
+  const navigate = (gid, path, mode = 'push') => updateGroup(gid, (g) => {
+    const tab = g.tabs[g.active];
+    if (tab.path === path && mode === 'push') return g;
+    let next;
+    if (mode === 'back') next = { ...tab, path: tab.back.at(-1), back: tab.back.slice(0, -1), fwd: [tab.path, ...tab.fwd] };
+    else if (mode === 'fwd') next = { ...tab, path: tab.fwd[0], fwd: tab.fwd.slice(1), back: [...tab.back, tab.path] };
+    else next = { ...tab, path, back: [...tab.back, tab.path], fwd: [] };
+    return { ...g, sel: [], tabs: g.tabs.map((t, i) => (i === g.active ? next : t)) };
+  });
+
+  const select = (gid, name, e) => {
+    setFocus(gid);
+    updateGroup(gid, (g) => {
+      if (e.ctrlKey || e.metaKey) {
+        return { ...g, sel: g.sel.includes(name) ? g.sel.filter((n) => n !== name) : [...g.sel, name] };
+      }
+      return { ...g, sel: [name] };
+    });
+  };
+
+  const moveFiles = (fromGid, toGid, copy) => {
+    const src = groups.find((g) => g.id === fromGid);
+    const dst = groups.find((g) => g.id === toGid);
+    const fromPath = activeTab(src).path;
+    const toPath = activeTab(dst).path;
+    if (fromPath === toPath || !src.sel.length) return;
+    const items = (fs[fromPath] || []).filter((x) => src.sel.includes(x.name));
+    setFs((cur) => {
+      const target = cur[toPath] || [];
+      const names = new Set(target.map((x) => x.name));
+      const added = items.filter((x) => !names.has(x.name)).map((x) => ({ ...x, date: '18.10.2026' }));
+      const next = { ...cur, [toPath]: [...target, ...added] };
+      if (!copy) next[fromPath] = cur[fromPath].filter((x) => !src.sel.includes(x.name));
+      return next;
+    });
+    const bytes = items.reduce((s, x) => s + (x.size || 0), 0);
+    setOps((list) => [...list, {
+      id: 'op' + uid++, copy, count: items.length, bytes, to: baseName(toPath), progress: 0,
+    }]);
+    updateGroup(toGid, (g) => ({ ...g, sel: items.map((x) => x.name) }));
+    if (!copy) updateGroup(fromGid, (g) => ({ ...g, sel: [] }));
+    setFocus(toGid);
+  };
+
+  const moveTab = (fromGid, tabId, toGid) => {
+    if (fromGid === toGid) return;
+    setGroups((gs) => {
+      const src = gs.find((g) => g.id === fromGid);
+      if (src.tabs.length < 2) return gs; // в группе должна остаться хотя бы одна вкладка
+      const tab = src.tabs.find((t) => t.id === tabId);
+      return gs.map((g) => {
+        if (g.id === fromGid) {
+          const tabs = g.tabs.filter((t) => t.id !== tabId);
+          return { ...g, tabs, active: Math.min(g.active, tabs.length - 1), sel: [] };
+        }
+        if (g.id === toGid) return { ...g, tabs: [...g.tabs, tab], active: g.tabs.length, sel: [] };
+        return g;
+      });
+    });
+    setFocus(toGid);
+  };
+
+  const onDragOver = (gid, e) => {
+    if (!drag) return;
+    e.preventDefault();
+    const copy = drag.kind === 'files' && e.ctrlKey;
+    e.dataTransfer.dropEffect = copy ? 'copy' : 'move';
+    if (!over || over.group !== gid || over.copy !== copy) setOver({ group: gid, copy });
+  };
+
+  const onDrop = (gid, e) => {
+    e.preventDefault();
+    if (drag?.kind === 'files') moveFiles(drag.from, gid, e.ctrlKey);
+    if (drag?.kind === 'tab') moveTab(drag.from, drag.tabId, gid);
+    setDrag(null);
+    setOver(null);
+  };
+
+  const focused = groups.find((g) => g.id === focus) || groups[0];
+
+  return (
+    <div className={'rift ' + theme} style={{ '--accent': accent }}>
+      <style>{CSS}</style>
+
+      <header className="titlebar">
+        <div className="brand">
+          <span className="logo"><i /><i /></span>
+          Rift
+        </div>
+        <div className="workspaces">
+          {WORKSPACES.map((w, i) => (
+            <button key={w} className={i === workspace ? 'on' : ''} onClick={() => setWorkspace(i)}>{w}</button>
+          ))}
+          <button className="ghost" aria-label="Новое рабочее пространство"><i className="ti ti-plus" /></button>
+        </div>
+        <div className="command">
+          <i className="ti ti-search" />
+          <span>Поиск файлов или команда…</span>
+          <kbd>Ctrl K</kbd>
+        </div>
+        <div className="layouts">
+          {[1, 2, 3].map((n) => (
+            <button key={n} className={layout === n ? 'on' : ''} onClick={() => setLayout(n)}
+              aria-label={`Панелей: ${n}`}>
+              <i className={'ti ' + (n === 1 ? 'ti-square' : n === 2 ? 'ti-columns-2' : 'ti-columns-3')} />
+            </button>
+          ))}
+        </div>
+        <div className="winctl">
+          <button aria-label="Сменить тему" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+            <i className={'ti ' + (theme === 'dark' ? 'ti-sun' : 'ti-moon')} />
+          </button>
+          <button aria-label="Настройки"><i className="ti ti-settings" /></button>
+          <button aria-label="Свернуть"><i className="ti ti-minus" /></button>
+          <button aria-label="Развернуть"><i className="ti ti-square" /></button>
+          <button className="close" aria-label="Закрыть"><i className="ti ti-x" /></button>
+        </div>
+      </header>
+
+      <div className="body">
+        <aside className="sidebar">
+          {SIDEBAR.map((sec) => (
+            <section key={sec.title}>
+              <h4>{sec.title}</h4>
+              {sec.items.map((it) => {
+                const current = activeTab(focused).path === it.path;
+                return (
+                  <button key={it.label} className={'nav' + (current ? ' on' : '')}
+                    onClick={() => navigate(focused.id, it.path)}>
+                    <i className={'ti ' + it.icon} />
+                    <span className="nav-label">
+                      {it.label}
+                      {it.used != null && (
+                        <>
+                          <span className="bar"><span style={{ width: it.used * 100 + '%' }} /></span>
+                          <span className="meta">{it.meta}</span>
+                        </>
+                      )}
+                    </span>
+                  </button>
+                );
+              })}
+            </section>
+          ))}
+          <section>
+            <h4>Теги</h4>
+            <div className="tags">
+              <span style={{ '--c': '#F06A6A' }}>Важно</span>
+              <span style={{ '--c': '#6FD39B' }}>Работа</span>
+              <span style={{ '--c': '#5EB6F0' }}>Фото</span>
+            </div>
+          </section>
+          <section className="appearance">
+            <h4>Оформление</h4>
+            <div className="seg">
+              <button className={theme === 'dark' ? 'on' : ''} onClick={() => setTheme('dark')}>
+                <i className="ti ti-moon" /> Тёмная
+              </button>
+              <button className={theme === 'light' ? 'on' : ''} onClick={() => setTheme('light')}>
+                <i className="ti ti-sun" /> Светлая
+              </button>
+            </div>
+            <div className="swatches">
+              {ACCENTS.map((a) => (
+                <button key={a.id} title={a.label} aria-label={'Акцент: ' + a.label}
+                  className={a.id === accentId ? 'on' : ''} style={{ '--c': a[theme] }}
+                  onClick={() => setAccentId(a.id)} />
+              ))}
+            </div>
+          </section>
+        </aside>
+
+        <main className="panes" style={{ gridTemplateColumns: visible.map(() => 'minmax(0,1fr)').join(' 6px ') }}>
+          {visible.map((g, gi) => (
+            <React.Fragment key={g.id}>
+              {gi > 0 && <div className="splitter"><span /></div>}
+              <Pane
+                group={g}
+                files={fs[activeTab(g).path] || []}
+                focused={focus === g.id}
+                over={over?.group === g.id ? over : null}
+                drag={drag}
+                targetName={baseName(activeTab(g).path)}
+                onFocus={() => setFocus(g.id)}
+                onTab={(i) => { setFocus(g.id); updateGroup(g.id, (x) => ({ ...x, active: i, sel: [] })); }}
+                onCloseTab={(i) => updateGroup(g.id, (x) => {
+                  if (x.tabs.length < 2) return x;
+                  const tabs = x.tabs.filter((_, j) => j !== i);
+                  return { ...x, tabs, active: Math.min(x.active, tabs.length - 1), sel: [] };
+                })}
+                onNewTab={() => updateGroup(g.id, (x) => ({
+                  ...x, tabs: [...x.tabs, mkTab(activeTab(x).path)], active: x.tabs.length, sel: [],
+                }))}
+                onNavigate={(p, mode) => navigate(g.id, p, mode)}
+                onSelect={(name, e) => select(g.id, name, e)}
+                onClearSel={() => updateGroup(g.id, (x) => ({ ...x, sel: [] }))}
+                onFileDragStart={(name) => {
+                  if (!g.sel.includes(name)) updateGroup(g.id, (x) => ({ ...x, sel: [name] }));
+                  setDrag({ kind: 'files', from: g.id });
+                }}
+                onTabDragStart={(tabId) => setDrag({ kind: 'tab', from: g.id, tabId })}
+                onDragEnd={() => { setDrag(null); setOver(null); }}
+                onDragOver={(e) => onDragOver(g.id, e)}
+                onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setOver(null); }}
+                onDrop={(e) => onDrop(g.id, e)}
+              />
+            </React.Fragment>
+          ))}
+        </main>
+      </div>
+
+      <footer className="statusbar">
+        <span><kbd>Tab</kbd> другая панель</span>
+        <span><kbd>F5</kbd> копировать</span>
+        <span><kbd>F6</kbd> переместить</span>
+        <span><kbd>Ctrl T</kbd> вкладка</span>
+        <span className="grow" />
+        <span className="muted">{ops.length ? `Операций: ${ops.length}` : 'Нет активных операций'}</span>
+      </footer>
+
+      {ops.length > 0 && (
+        <div className="ops">
+          {ops.map((o) => (
+            <div key={o.id} className="op">
+              <i className={'ti ' + (o.progress >= 100 ? 'ti-check' : o.copy ? 'ti-copy' : 'ti-arrows-right-left')} />
+              <div className="op-body">
+                <div className="op-title">
+                  {o.progress >= 100 ? 'Готово' : o.copy ? 'Копирование' : 'Перемещение'} · {o.count} шт. → {o.to}
+                </div>
+                <div className="bar"><span style={{ width: o.progress + '%' }} /></div>
+                <div className="op-meta">{Math.round(o.progress)}% · {fmtSize(o.bytes) || '0 Б'}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Pane(p) {
+  const { group: g, files, focused, over, drag } = p;
+  const tab = g.tabs[g.active];
+  const sorted = [...files].sort((a, b) =>
+    (a.type === 'folder') === (b.type === 'folder') ? a.name.localeCompare(b.name) : a.type === 'folder' ? -1 : 1);
+  const selFiles = files.filter((x) => g.sel.includes(x.name));
+  const selBytes = selFiles.reduce((s, x) => s + (x.size || 0), 0);
+  const isSource = drag?.kind === 'files' && drag.from === g.id;
+
+  return (
+    <section
+      className={'pane' + (focused ? ' focused' : '')}
+      onMouseDown={p.onFocus}
+      onDragOver={p.onDragOver}
+      onDragLeave={p.onDragLeave}
+      onDrop={p.onDrop}
+    >
+      <div className={'tabstrip' + (over && drag?.kind === 'tab' ? ' tab-drop' : '')}>
+        {g.tabs.map((t, i) => (
+          <div key={t.id} draggable
+            className={'tab' + (i === g.active ? ' on' : '')}
+            onClick={() => p.onTab(i)}
+            onDragStart={(e) => { e.dataTransfer.setData('text/plain', t.path); p.onTabDragStart(t.id); }}
+            onDragEnd={p.onDragEnd}
+            title={t.path}>
+            <i className={'ti ' + (t.path.startsWith('\\\\') ? 'ti-server-2' : 'ti-folder')} />
+            <span>{baseName(t.path)}</span>
+            {g.tabs.length > 1 && (
+              <button className="x" aria-label="Закрыть вкладку"
+                onClick={(e) => { e.stopPropagation(); p.onCloseTab(i); }}>
+                <i className="ti ti-x" />
+              </button>
+            )}
+          </div>
+        ))}
+        <button className="newtab" onClick={p.onNewTab} aria-label="Новая вкладка"><i className="ti ti-plus" /></button>
+      </div>
+
+      <div className="pathbar">
+        <button disabled={!tab.back.length} onClick={() => p.onNavigate(null, 'back')} aria-label="Назад">
+          <i className="ti ti-arrow-left" />
+        </button>
+        <button disabled={!tab.fwd.length} onClick={() => p.onNavigate(null, 'fwd')} aria-label="Вперёд">
+          <i className="ti ti-arrow-right" />
+        </button>
+        <button onClick={() => p.onNavigate(parentOf(tab.path))} aria-label="Вверх">
+          <i className="ti ti-arrow-up" />
+        </button>
+        <div className="crumbs">
+          {crumbs(tab.path).map((c, i, arr) => (
+            <React.Fragment key={c.path}>
+              <button className={i === arr.length - 1 ? 'last' : ''} onClick={() => p.onNavigate(c.path)}>{c.label}</button>
+              {i < arr.length - 1 && <i className="ti ti-chevron-right sep" />}
+            </React.Fragment>
+          ))}
+        </div>
+        <button aria-label="Поиск в папке"><i className="ti ti-search" /></button>
+      </div>
+
+      <div className="list" onClick={(e) => { if (e.target === e.currentTarget) p.onClearSel(); }}>
+        <div className="row head">
+          <span>Имя</span><span>Изменён</span><span>Тип</span><span className="r">Размер</span>
+        </div>
+        {sorted.map((x) => {
+          const t = TYPES[x.type];
+          const sel = g.sel.includes(x.name);
+          return (
+            <div key={x.name} draggable
+              className={'row' + (sel ? ' sel' : '') + (sel && isSource ? ' ghosted' : '')}
+              onClick={(e) => p.onSelect(x.name, e)}
+              onDoubleClick={() => x.type === 'folder' && p.onNavigate(tab.path + '\\' + x.name)}
+              onDragStart={(e) => { e.dataTransfer.setData('text/plain', x.name); p.onFileDragStart(x.name); }}
+              onDragEnd={p.onDragEnd}>
+              <span className="name">
+                <i className={'ti ' + t.icon} style={{ color: t.color }} />
+                {x.name}
+              </span>
+              <span className="muted">{x.date}</span>
+              <span className="muted">{t.label}</span>
+              <span className="muted r">{fmtSize(x.size)}</span>
+            </div>
+          );
+        })}
+        {!sorted.length && (
+          <div className="empty">
+            <i className="ti ti-folder-open" />
+            Папка пуста — перетащи сюда файлы
+          </div>
+        )}
+
+        {over && drag?.kind === 'files' && !isSource && (
+          <div className={'dropzone' + (over.copy ? ' copy' : '')}>
+            <i className={'ti ' + (over.copy ? 'ti-copy' : 'ti-arrows-right-left')} />
+            <div>
+              <b>{over.copy ? 'Копировать' : 'Переместить'} в {p.targetName}</b>
+              <span>{over.copy ? 'Отпусти Ctrl, чтобы переместить' : 'Зажми Ctrl, чтобы скопировать'}</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="panestatus">
+        <span>{files.length} элем.</span>
+        {g.sel.length > 0 && <span>выбрано {g.sel.length}{selBytes ? ' · ' + fmtSize(selBytes) : ''}</span>}
+        <span className="grow" />
+        <span className="muted">{tab.path}</span>
+      </div>
+    </section>
+  );
+}
+
+const CSS = `
+.rift{--accent-bg:color-mix(in srgb,var(--accent) 15%,transparent);--accent-bg-hover:color-mix(in srgb,var(--accent) 22%,transparent);--accent-line:color-mix(in srgb,var(--accent) 50%,transparent);
+  height:100vh;display:grid;grid-template-rows:44px 1fr 28px;background:var(--bg);color:var(--text);
+  font:13px/1.4 "Segoe UI Variable Text","Segoe UI",Inter,system-ui,sans-serif;user-select:none;overflow:hidden;position:relative}
+.rift.dark{--bg:#111113;--panel:#18181B;--raised:#1F1F23;--hover:#26262B;--line:#2C2C31;--text:#EDEDEF;--muted:#A1A1AA;--dim:#6E6E78;--sel-idle:rgba(255,255,255,.06);--overlay:rgba(17,17,19,.86);--shadow:0 8px 24px rgba(0,0,0,.45);--ok:#3DD68C;color-scheme:dark}
+.rift.light{--bg:#F3F3F1;--panel:#FFFFFF;--raised:#F8F8F6;--hover:#EEEEEB;--line:#E3E3DF;--text:#1C1C1F;--muted:#5F5F67;--dim:#8F8F97;--sel-idle:rgba(0,0,0,.05);--overlay:rgba(255,255,255,.9);--shadow:0 8px 24px rgba(0,0,0,.1);--ok:#16A34A;color-scheme:light}
+.rift.light .name i{filter:brightness(.82) saturate(1.25)}
+.rift *{box-sizing:border-box}
+.rift button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;border-radius:6px}
+.rift button:disabled{opacity:.35;cursor:default}
+.rift kbd{font:11px "Cascadia Mono",Consolas,monospace;padding:1px 5px;border:1px solid var(--line);border-radius:4px;color:var(--muted);background:var(--raised)}
+.muted{color:var(--muted)} .grow{flex:1} .r{text-align:right}
+.titlebar{display:flex;align-items:center;gap:14px;padding:0 0 0 14px;border-bottom:1px solid var(--line);background:var(--panel)}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;letter-spacing:.2px}
+.logo{display:flex;gap:3px;transform:skewX(-12deg)} .logo i{width:6px;height:16px;border-radius:2px;background:var(--accent)} .logo i+i{background:var(--text)}
+.workspaces{display:flex;gap:2px;padding:3px;background:var(--bg);border:1px solid var(--line);border-radius:8px}
+.workspaces button{padding:3px 10px;color:var(--muted)} .workspaces button.on{background:var(--raised);color:var(--text)}
+.workspaces button:hover{color:var(--text)}
+.command{flex:1;max-width:460px;margin:0 auto;display:flex;align-items:center;gap:8px;height:28px;padding:0 6px 0 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--dim)}
+.command span{flex:1}
+.layouts{display:flex;gap:2px} .layouts button{width:28px;height:28px;color:var(--muted)} .layouts button.on{background:var(--accent-bg);color:var(--accent)}
+.layouts button:hover,.winctl button:hover{background:var(--hover)}
+.winctl{display:flex;height:100%} .winctl button{width:44px;height:100%;border-radius:0;color:var(--muted)}
+.winctl button.close:hover{background:#C42B1C;color:#fff}
+.body{display:grid;grid-template-columns:220px 1fr;min-height:0}
+.sidebar{border-right:1px solid var(--line);background:var(--panel);padding:10px 8px;overflow:auto}
+.sidebar section{margin-bottom:16px} .sidebar h4{margin:0 8px 6px;font-size:11px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.6px}
+.nav{display:flex;align-items:flex-start;gap:10px;width:100%;padding:6px 8px;text-align:left;color:var(--muted)}
+.nav i{font-size:17px;margin-top:1px} .nav:hover{background:var(--hover);color:var(--text)} .nav.on{background:var(--accent-bg);color:var(--text)} .nav.on i{color:var(--accent)}
+.nav-label{display:flex;flex-direction:column;gap:4px;flex:1}
+.bar{display:block;height:4px;border-radius:2px;background:var(--line);overflow:hidden} .bar span{display:block;height:100%;background:var(--accent);border-radius:2px;transition:width .18s}
+.meta{font-size:11px;color:var(--dim)}
+.tags{display:flex;flex-wrap:wrap;gap:6px;padding:0 8px} .tags span{font-size:12px;padding:2px 8px 2px 18px;border-radius:10px;background:var(--raised);position:relative;color:var(--muted)}
+.tags span:before{content:"";position:absolute;left:7px;top:7px;width:6px;height:6px;border-radius:50%;background:var(--c)}
+.sidebar{display:flex;flex-direction:column} .appearance{margin-top:auto}
+.seg{display:flex;gap:2px;margin:0 8px 10px;padding:3px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.seg button{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:4px 0;color:var(--muted)} .seg button.on{background:var(--raised);color:var(--text)}
+.swatches{display:flex;gap:8px;padding:0 8px} .swatches button{width:20px;height:20px;border-radius:50%;background:var(--c);box-shadow:0 0 0 2px var(--panel),0 0 0 3px transparent}
+.swatches button.on{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--c)}
+.panes{display:grid;min-width:0;min-height:0;padding:8px;gap:0}
+.splitter{display:flex;align-items:center;justify-content:center;cursor:col-resize} .splitter span{width:2px;height:36px;border-radius:2px;background:var(--line)}
+.splitter:hover span{background:var(--accent);height:60px}
+.pane{display:flex;flex-direction:column;min-width:0;min-height:0;border:1px solid var(--line);border-radius:10px;background:var(--panel);overflow:hidden;transition:border-color .15s}
+.pane.focused{border-color:var(--accent-line)}
+.tabstrip{display:flex;align-items:flex-end;gap:2px;padding:6px 6px 0;background:var(--bg);border-bottom:1px solid var(--line);min-height:38px;overflow:hidden}
+.tabstrip.tab-drop{box-shadow:inset 0 -2px 0 var(--accent)}
+.tab{display:flex;align-items:center;gap:7px;max-width:180px;padding:6px 6px 7px 10px;border-radius:8px 8px 0 0;color:var(--muted);cursor:pointer;border:1px solid transparent;border-bottom:0;margin-bottom:-1px}
+.tab span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .tab:hover{color:var(--text);background:var(--raised)}
+.tab.on{background:var(--panel);border-color:var(--line);color:var(--text)} .pane.focused .tab.on i:first-child{color:var(--accent)}
+.tab .x{width:18px;height:18px;display:grid;place-items:center;font-size:12px;opacity:0} .tab:hover .x,.tab.on .x{opacity:.7} .tab .x:hover{background:var(--hover);opacity:1}
+.newtab{width:26px;height:26px;margin:0 0 4px 2px;color:var(--muted)} .newtab:hover{background:var(--raised)}
+.pathbar{display:flex;align-items:center;gap:2px;padding:6px;border-bottom:1px solid var(--line)}
+.pathbar>button{width:28px;height:28px;color:var(--muted)} .pathbar>button:not(:disabled):hover{background:var(--hover);color:var(--text)}
+.crumbs{flex:1;display:flex;align-items:center;gap:0;height:28px;margin:0 4px;padding:0 4px;border-radius:6px;background:var(--bg);overflow:hidden;white-space:nowrap}
+.crumbs button{padding:2px 6px;color:var(--muted)} .crumbs button:hover{background:var(--hover);color:var(--text)} .crumbs button.last{color:var(--text)}
+.sep{font-size:12px;color:var(--dim)}
+.list{flex:1;overflow:auto;padding:4px 6px;position:relative}
+.row{display:grid;grid-template-columns:minmax(0,2.4fr) 92px minmax(0,1fr) 72px;gap:10px;align-items:center;height:30px;padding:0 8px;border-radius:6px;cursor:default}
+.row.head{height:26px;font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;position:sticky;top:0;background:var(--panel);z-index:1}
+.row:not(.head):hover{background:var(--hover)} .row.sel{background:var(--accent-bg)} .row.sel:hover{background:var(--accent-bg-hover)}
+.pane:not(.focused) .row.sel{background:var(--sel-idle)}
+.row.ghosted{opacity:.45}
+.row span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.name{display:flex;align-items:center;gap:9px} .name i{font-size:17px;flex-shrink:0}
+.empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:48px 0;color:var(--dim)} .empty i{font-size:32px}
+.dropzone{position:absolute;inset:6px;border:2px dashed var(--accent);border-radius:10px;background:var(--overlay);display:flex;align-items:center;justify-content:center;gap:14px;pointer-events:none}
+.dropzone i{font-size:28px;color:var(--accent)} .dropzone div{display:flex;flex-direction:column;gap:2px} .dropzone b{font-size:15px;font-weight:600} .dropzone span{color:var(--muted)}
+.dropzone.copy{border-color:var(--ok)} .dropzone.copy i{color:var(--ok)}
+.panestatus{display:flex;gap:14px;padding:5px 12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.panestatus .muted{color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:50%}
+.statusbar{display:flex;align-items:center;gap:16px;padding:0 12px;border-top:1px solid var(--line);background:var(--panel);font-size:12px;color:var(--muted)}
+.ops{position:absolute;right:14px;bottom:40px;width:300px;display:flex;flex-direction:column;gap:8px}
+.op{display:flex;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--raised);box-shadow:var(--shadow)}
+.op>i{font-size:18px;color:var(--accent);margin-top:1px} .op-body{flex:1;display:flex;flex-direction:column;gap:6px}
+.op-title{font-weight:500} .op-meta{font-size:11px;color:var(--dim)}
+`;
+ReactDOM.createRoot(document.getElementById('root')).render(<RiftMockup />);
+</script></body></html>

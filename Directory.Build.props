@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Authors>Vasiliy Zalatov</Authors>
+    <Product>Rift</Product>
+  </PropertyGroup>
+</Project>

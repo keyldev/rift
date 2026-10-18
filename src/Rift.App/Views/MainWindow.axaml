@@ -1,0 +1,172 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Rift.App.ViewModels"
+        xmlns:v="using:Rift.App.Views"
+        xmlns:c="using:Rift.App.Controls"
+        xmlns:app="using:Rift.App"
+        xmlns:chrome="using:Avalonia.Controls.Chrome"
+        x:Class="Rift.App.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="Rift"
+        Icon="/Assets/rift.ico"
+        Width="1280" Height="800" MinWidth="760" MinHeight="420"
+        WindowStartupLocation="CenterScreen"
+        WindowDecorations="BorderOnly"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="44">
+
+  <Window.KeyBindings>
+    <KeyBinding Gesture="Ctrl+T" Command="{Binding ActivePane.NewTabCommand}" />
+    <KeyBinding Gesture="Ctrl+W" Command="{Binding ActivePane.CloseTabCommand}" CommandParameter="{Binding ActivePane.SelectedTab}" />
+    <KeyBinding Gesture="F5" Command="{Binding ActivePane.SelectedTab.RefreshCommand}" />
+    <KeyBinding Gesture="Alt+Left" Command="{Binding ActivePane.SelectedTab.BackCommand}" />
+    <KeyBinding Gesture="Alt+Right" Command="{Binding ActivePane.SelectedTab.ForwardCommand}" />
+    <KeyBinding Gesture="Alt+Up" Command="{Binding ActivePane.SelectedTab.UpCommand}" />
+  </Window.KeyBindings>
+
+  <Grid RowDefinitions="44,*,28">
+
+    <!-- Титлбар целиком свой: перетаскивание через роль TitleBar, интерактивные элементы помечены User. -->
+    <Border x:Name="TitleBar" Background="{DynamicResource Rift.Panel}"
+            BorderBrush="{DynamicResource Rift.Line}" BorderThickness="0,0,0,1"
+            chrome:WindowDecorationProperties.ElementRole="TitleBar">
+      <DockPanel Margin="14,0,0,0">
+        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"
+                    IsHitTestVisible="False">
+          <StackPanel Orientation="Horizontal" Spacing="3">
+            <StackPanel.RenderTransform>
+              <SkewTransform AngleX="-12" />
+            </StackPanel.RenderTransform>
+            <Border Width="6" Height="16" CornerRadius="2" Background="{DynamicResource Rift.Accent}" />
+            <Border Width="6" Height="16" CornerRadius="2" Background="{DynamicResource Rift.Text}" />
+          </StackPanel>
+          <TextBlock Text="Rift" FontWeight="SemiBold" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Height="44">
+          <StackPanel.Styles>
+            <Style Selector="Button.caption">
+              <Setter Property="chrome:WindowDecorationProperties.ElementRole" Value="User" />
+              <Setter Property="Width" Value="46" />
+              <Setter Property="Height" Value="44" />
+              <Setter Property="CornerRadius" Value="0" />
+              <Setter Property="HorizontalContentAlignment" Value="Center" />
+            </Style>
+            <Style Selector="Button.caption c|Icon">
+              <Setter Property="Width" Value="15" />
+              <Setter Property="Height" Value="15" />
+              <Setter Property="StrokeThickness" Value="1.5" />
+            </Style>
+            <Style Selector="Button.caption.close:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+              <Setter Property="Background" Value="#C42B1C" />
+              <Setter Property="Foreground" Value="White" />
+            </Style>
+          </StackPanel.Styles>
+          <Button Classes="flat caption" Click="OnMinimize" ToolTip.Tip="Свернуть">
+            <c:Icon Data="{StaticResource Icon.Minimize}" />
+          </Button>
+          <Button Classes="flat caption" Click="OnMaximize" ToolTip.Tip="Развернуть">
+            <c:Icon Data="{StaticResource Icon.Single}" />
+          </Button>
+          <Button Classes="flat caption close" Click="OnClose" ToolTip.Tip="Закрыть">
+            <c:Icon Data="{StaticResource Icon.Close}" />
+          </Button>
+        </StackPanel>
+
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center" Margin="0,0,10,0">
+          <StackPanel.Styles>
+            <Style Selector="Button">
+              <Setter Property="chrome:WindowDecorationProperties.ElementRole" Value="User" />
+            </Style>
+          </StackPanel.Styles>
+          <Button Classes="flat" Classes.on="{Binding !IsSplit}" Command="{Binding ShowSingleCommand}" ToolTip.Tip="Одна панель">
+            <c:Icon Data="{StaticResource Icon.Single}" />
+          </Button>
+          <Button Classes="flat" Classes.on="{Binding IsSplit}" Command="{Binding ShowSplitCommand}" ToolTip.Tip="Две панели">
+            <c:Icon Data="{StaticResource Icon.Split}" />
+          </Button>
+          <Border Width="1" Height="18" Margin="6,0" Background="{DynamicResource Rift.Line}" />
+          <Button Classes="flat" Command="{Binding ToggleThemeCommand}" ToolTip.Tip="Сменить тему">
+            <c:Icon Data="{Binding IsDark, Converter={x:Static app:Converters.ThemeIcon}}" />
+          </Button>
+        </StackPanel>
+
+        <Panel />
+      </DockPanel>
+    </Border>
+
+    <Grid Grid.Row="1" ColumnDefinitions="220,*">
+
+      <!-- Сайдбар -->
+      <Border Background="{DynamicResource Rift.Panel}" BorderBrush="{DynamicResource Rift.Line}" BorderThickness="0,0,1,0">
+        <ScrollViewer>
+          <StackPanel Margin="8,12" Spacing="2">
+            <TextBlock Classes="section" Text="БЫСТРЫЙ ДОСТУП" />
+            <ItemsControl ItemsSource="{Binding QuickAccess}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:SidebarItem">
+                  <Button Classes="flat nav"
+                          Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenSidebarItemCommand}"
+                          CommandParameter="{Binding}" ToolTip.Tip="{Binding Path}">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                      <c:Icon Data="{Binding Icon, Converter={x:Static app:Converters.ResourceToGeometry}}" />
+                      <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
+                    </StackPanel>
+                  </Button>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <TextBlock Classes="section" Text="ДИСКИ" Margin="8,16,0,6" />
+            <ItemsControl ItemsSource="{Binding Drives}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:SidebarItem">
+                  <Button Classes="flat nav"
+                          Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenSidebarItemCommand}"
+                          CommandParameter="{Binding}">
+                    <DockPanel>
+                      <c:Icon DockPanel.Dock="Left" Margin="0,1,10,0" VerticalAlignment="Top"
+                              Data="{Binding Icon, Converter={x:Static app:Converters.ResourceToGeometry}}" />
+                      <StackPanel Spacing="4">
+                        <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+                        <ProgressBar Classes="usage" Minimum="0" Maximum="100"
+                                     Value="{Binding Used, Converter={x:Static app:Converters.FractionToPercent}}" />
+                        <TextBlock Classes="dim" FontSize="11" Text="{Binding Meta}" />
+                      </StackPanel>
+                    </DockPanel>
+                  </Button>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </ScrollViewer>
+      </Border>
+
+      <!-- Панели -->
+      <Grid Grid.Column="1" Margin="8" ColumnDefinitions="*,8,*">
+        <v:PaneView x:Name="LeftPane" DataContext="{Binding Left}"
+                    Grid.ColumnSpan="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsSplit, Converter={x:Static app:Converters.SplitToSpan}}" />
+        <GridSplitter Grid.Column="1" ResizeDirection="Columns" IsVisible="{Binding IsSplit}" />
+        <v:PaneView x:Name="RightPane" Grid.Column="2" DataContext="{Binding Right}"
+                    IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsSplit}" />
+      </Grid>
+    </Grid>
+
+    <!-- Статусбар -->
+    <Border Grid.Row="2" Background="{DynamicResource Rift.Panel}" BorderBrush="{DynamicResource Rift.Line}" BorderThickness="0,1,0,0">
+      <StackPanel Orientation="Horizontal" Spacing="18" Margin="12,0" VerticalAlignment="Center">
+        <StackPanel.Styles>
+          <Style Selector="TextBlock">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource Rift.Muted}" />
+          </Style>
+        </StackPanel.Styles>
+        <TextBlock Text="Tab — другая панель" />
+        <TextBlock Text="Ctrl+T — вкладка" />
+        <TextBlock Text="Ctrl+W — закрыть" />
+        <TextBlock Text="Enter — открыть" />
+        <TextBlock Text="Backspace — вверх" />
+      </StackPanel>
+    </Border>
+  </Grid>
+</Window>

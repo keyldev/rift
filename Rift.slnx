@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Rift.App/Rift.App.csproj" />
+    <Project Path="src/Rift.Core/Rift.Core.csproj" />
+    <Project Path="src/Rift.Shell/Rift.Shell.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Rift.Core.Tests/Rift.Core.Tests.csproj" />
+  </Folder>
+</Solution>
