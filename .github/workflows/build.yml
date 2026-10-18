@@ -3,6 +3,7 @@ name: Build
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
@@ -29,6 +30,12 @@ jobs:
           cache: true
           cache-dependency-path: '**/*.csproj'
 
+      # A v1.2.3 tag builds version 1.2.3; other builds keep the version from Directory.Build.props.
+      - name: Version
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: echo "VERSION_ARG=-p:Version=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
       - name: Restore
         run: dotnet restore Rift.slnx
 
@@ -38,12 +45,9 @@ jobs:
       - name: Test
         run: dotnet test Rift.slnx -c Release --no-build --logger "trx;LogFileName=results.trx"
 
+      # Native AOT (PublishAot in Rift.App.csproj): Rift.exe plus Skia's and HarfBuzz's native DLLs.
       - name: Publish win-x64
-        run: >
-          dotnet publish src/Rift.App -c Release -r win-x64 --self-contained
-          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
-          -p:EnableCompressionInSingleFile=true
-          -o publish/win-x64
+        run: dotnet publish src/Rift.App -c Release -r win-x64 $env:VERSION_ARG -o publish/win-x64
 
       - uses: actions/upload-artifact@v4
         with:
@@ -59,3 +63,28 @@ jobs:
           name: test-results
           path: '**/TestResults/*.trx'
           if-no-files-found: ignore
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: rift-win-x64
+          path: rift
+
+      # Notes come from .github/release-notes/<tag>.md when it exists, otherwise GitHub writes them.
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          zip_name="rift-${GITHUB_REF_NAME#v}-win-x64.zip"
+          (cd rift && zip -r "../$zip_name" .)
+          notes=".github/release-notes/$GITHUB_REF_NAME.md"
+          if [ -f "$notes" ]; then set -- --notes-file "$notes"; else set -- --generate-notes; fi
+          gh release create "$GITHUB_REF_NAME" "$zip_name" --title "Rift ${GITHUB_REF_NAME#v}" --verify-tag "$@"

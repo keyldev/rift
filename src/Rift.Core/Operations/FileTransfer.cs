@@ -29,7 +29,7 @@ public sealed class TransferResult
 
 /// <summary>
 /// Copies or moves files and folders into a folder.
-/// Same-volume moves are renames (instant); everything else is a buffered copy with progress,
+/// Same-volume moves are renames (instant); everything else is a copy with progress (CopyFile2 on Windows),
 /// followed by deleting the source for moves. Folders merge into existing ones, file name
 /// clashes go to the <see cref="IConflictResolver"/>.
 /// </summary>
@@ -56,6 +56,9 @@ public sealed class FileTransfer(
 
     /// <summary>Tests use this to exercise the copy+delete path without a second drive.</summary>
     internal bool ForceCrossVolume { get; init; }
+
+    /// <summary>Copy through .NET streams instead of <c>CopyFile2</c>; tests cover both.</summary>
+    internal bool UseStreamCopy { get; init; }
 
     /// <summary>Progress is throttled so the UI isn't flooded; tests set 0.</summary>
     internal int ReportIntervalMs { get; init; } = 100;
@@ -285,6 +288,41 @@ public sealed class FileTransfer(
 
     private async Task CopyFileAsync(string source, string target, bool overwrite)
     {
+        if (OperatingSystem.IsWindows() && !UseStreamCopy)
+        {
+            await pause.WaitWhilePausedAsync(ct);
+            var name = Path.GetFileName(source);
+            var size = new FileInfo(source).Length;
+            long copied = 0;
+            try
+            {
+                NativeCopy.Copy(NativeCopy.LongPath(source), NativeCopy.LongPath(target), overwrite, bytes =>
+                {
+                    // Alternate streams count in the system's total but not in ours.
+                    bytes = Math.Min(bytes, size - copied);
+                    copied += bytes;
+                    _bytesDone += bytes;
+                    Report(name);
+                    pause.WaitWhilePausedAsync(ct).GetAwaiter().GetResult();
+                    return !ct.IsCancellationRequested;
+                });
+            }
+            catch (Exception ex)
+            {
+                // The caller counts the whole file as done when it fails.
+                _bytesDone -= copied;
+                // Never leave a half-written file behind; a file that was already there (and made us fail) stays.
+                if (ex is not IOException { HResult: NativeCopy.ErrorFileExists or NativeCopy.ErrorAlreadyExists } && File.Exists(target))
+                {
+                    try { File.Delete(target); }
+                    catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
+                }
+                throw;
+            }
+            _bytesDone += size - copied;
+            return;
+        }
+
         var info = new FileInfo(source);
         var opened = false;
         var buffer = ArrayPool<byte>.Shared.Rent(BufferSize);

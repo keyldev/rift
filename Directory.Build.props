@@ -5,6 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Authors>Vasiliy Zalatov</Authors>
     <Product>Rift</Product>
+    <!-- CI overrides this with the tag on release builds (v0.7.0 -> 0.7.0). -->
+    <Version>0.7.0</Version>
     <!-- Keep only satellite assemblies for languages Rift is translated to. -->
     <SatelliteResourceLanguages>ru</SatelliteResourceLanguages>
   </PropertyGroup>

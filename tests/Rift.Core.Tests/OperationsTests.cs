@@ -156,8 +156,10 @@ public class FileTransferTests : TempFolderTest
         Assert.False(Directory.Exists(P("a", "b", "a")));
     }
 
-    [Fact]
-    public async Task Cancellation_removes_the_partial_file()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Cancellation_removes_the_partial_file(bool streamCopy)
     {
         var big = P("big.bin");
         await File.WriteAllBytesAsync(big, new byte[8 << 20]);
@@ -170,11 +172,77 @@ public class FileTransferTests : TempFolderTest
         });
 
         var transfer = new FileTransfer(TransferMode.Copy, P("dest"), new FixedConflictResolver(ConflictAction.Skip),
-            progress, ct: cts.Token) { ReportIntervalMs = 0 };
+            progress, ct: cts.Token) { ReportIntervalMs = 0, UseStreamCopy = streamCopy };
         var result = await transfer.RunAsync([big]);
 
         Assert.True(result.Canceled);
         Assert.False(File.Exists(P("dest", "big.bin")));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Copies_keep_attributes_and_replace_read_only_files(bool streamCopy)
+    {
+        var source = Write("src/a.txt", "new", new DateTime(2023, 1, 2, 3, 4, 5));
+        File.SetAttributes(source, FileAttributes.ReadOnly | FileAttributes.Hidden);
+        var old = Write("dest/a.txt", "old");
+        File.SetAttributes(old, FileAttributes.ReadOnly);
+
+        var transfer = new FileTransfer(TransferMode.Copy, P("dest"), new FixedConflictResolver(ConflictAction.Replace))
+        {
+            UseStreamCopy = streamCopy,
+        };
+        var result = await transfer.RunAsync([source]);
+
+        Assert.Empty(result.Errors);
+        Assert.Equal("new", Read(old));
+        Assert.Equal(FileAttributes.ReadOnly | FileAttributes.Hidden, File.GetAttributes(old) & (FileAttributes.ReadOnly | FileAttributes.Hidden));
+        Assert.Equal(new DateTime(2023, 1, 2, 3, 4, 5), File.GetLastWriteTime(old));
+    }
+
+    [Fact]
+    public async Task Copies_paths_longer_than_max_path()
+    {
+        var deep = string.Join('/', Enumerable.Repeat(new string('d', 60), 5));
+        var source = Write(deep + "/file.txt", "deep");
+        Assert.True(source.Length > 300);
+
+        var result = await Run(TransferMode.Copy, Dir("dest"), ConflictAction.Skip, P(new string('d', 60)));
+
+        Assert.Empty(result.Errors);
+        Assert.Equal("deep", Read(P(["dest", .. deep.Split('/'), "file.txt"])));
+    }
+
+    [Fact]
+    public async Task Pause_holds_the_copy_until_resumed()
+    {
+        var big = P("big.bin");
+        await File.WriteAllBytesAsync(big, new byte[8 << 20]);
+        Dir("dest");
+        var pause = new PauseTokenSource();
+        var paused = new TaskCompletionSource();
+        var progress = new CallbackProgress(p =>
+        {
+            if (p.BytesDone > 0 && !pause.IsPaused && !paused.Task.IsCompleted)
+            {
+                pause.Pause();
+                paused.TrySetResult();
+            }
+        });
+
+        var transfer = new FileTransfer(TransferMode.Copy, P("dest"), new FixedConflictResolver(ConflictAction.Skip),
+            progress, pause.Token) { ReportIntervalMs = 0 };
+        var running = transfer.RunAsync([big]);
+        await paused.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        await Task.Delay(200);
+        Assert.False(running.IsCompleted);
+
+        pause.Resume();
+        var result = await running.WaitAsync(TimeSpan.FromSeconds(10));
+
+        Assert.Empty(result.Errors);
+        Assert.Equal(8 << 20, new FileInfo(P("dest", "big.bin")).Length);
     }
 
     [Fact]

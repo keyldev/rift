@@ -7,6 +7,8 @@
     <ApplicationIcon>Assets\rift.ico</ApplicationIcon>
     <AssemblyName>Rift</AssemblyName>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!-- Native AOT: one Rift.exe, no JIT at startup. Needs the "Desktop development with C++" workload to publish. -->
+    <PublishAot>true</PublishAot>
   </PropertyGroup>
 
   <ItemGroup>

@@ -121,7 +121,8 @@ On Windows 11 it's under "Show more options". The menu points to the `Rift.exe` 
 
 ## Building
 
-Needs the .NET 10 SDK.
+Needs the .NET 10 SDK. `dotnet publish` makes a Native AOT build and also needs Visual Studio's
+"Desktop development with C++" workload; CI publishes it on every push.
 
 ```bash
 dotnet run --project src/Rift.App

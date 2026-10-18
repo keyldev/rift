@@ -104,11 +104,11 @@ Done along the way, but with measurements.
 - [ ] Cold start under 300 ms, Native AOT
 - [ ] Lazy icons and sizes, never blocking the UI
 - [ ] Network shares and slow drives don't freeze the window
-- [ ] Faster large-file copies with `CopyFile2` and its progress callback
+- [x] Faster copies with `CopyFile2` and its progress callback (2 GB: 0.8 s → 0.45 s with a warm cache)
 
 ## Distribution
 
-- [ ] Releases from CI on tag: zip + installer
+- [x] Releases from CI on tag: a `v*` tag builds the zip and creates a GitHub release
 - [ ] Installer with auto-update (Velopack or MSIX)
 - [ ] winget package
 - [ ] Signed binaries

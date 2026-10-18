@@ -121,7 +121,8 @@ Rift.exe --register-shell
 
 ## Сборка
 
-Нужен .NET 10 SDK.
+Нужен .NET 10 SDK. `dotnet publish` собирает Native AOT, для этого ещё нужен workload Visual Studio
+«Desktop development with C++»; CI публикует такую сборку на каждый пуш.
 
 ```bash
 dotnet run --project src/Rift.App
