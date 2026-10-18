@@ -536,7 +536,7 @@ public partial class PaneView : UserControl
         if (files == 1 && folders == 0 && OperatingSystem.IsWindows())
             items.Add(Item(Strings.MenuOpenWith, "Icon.OpenWith", null, main.OpenWithCommand));
 
-        if (tab.IsSearch)
+        if (tab.IsSearch || tab.Location == LocationKind.Tag)
             items.Add(Item(Strings.MenuOpenLocation, "Icon.Folder", null, main.OpenLocationCommand));
 
         if (folders == 1 && files == 0 && main.CanPin(tab.Selected[0].FullPath))
@@ -560,6 +560,7 @@ public partial class PaneView : UserControl
             items.Add(Item(Strings.MenuMoveToOther, "Icon.Move", "F6", main.MoveToOtherCommand));
         }
         items.Add(Item(Strings.MenuCopyPath, "Icon.Link", "Ctrl+Shift+C", main.CopyPathCommand));
+        items.Add(TagsMenu(main, tab));
 
         items.Add(new Separator());
         items.Add(Item(Strings.MenuRename, "Icon.Rename", "F2", main.RenameCommand, enabled: tab.Selected.Count == 1));
@@ -588,6 +589,31 @@ public partial class PaneView : UserControl
             items.Add(Item(Strings.MenuPin, "Icon.Pin", null, main.PinCommand, parameter: _tab.Path));
         AddShellItems(items, main, forSelection: false, screen);
         return items;
+    }
+
+    /// <summary>Tags ▸ every tag as a check (checked when all selected items have it), then "New tag…".</summary>
+    private static MenuItem TagsMenu(MainWindowViewModel main, TabViewModel tab)
+    {
+        var paths = tab.SelectedPaths;
+        var entries = new List<Control>();
+        foreach (var tag in AppSettings.Current.Tags)
+        {
+            var item = new MenuItem
+            {
+                Header = tag.Name,
+                ToggleType = MenuItemToggleType.CheckBox,
+                IsChecked = paths.Count > 0 && paths.All(p => AppSettings.Tags.Has(p, tag.Id)),
+                Icon = new Avalonia.Controls.Shapes.Ellipse { Width = 8, Height = 8, Fill = new SolidColorBrush(Color.Parse(tag.Color)) },
+            };
+            item.Click += (_, _) => main.ToggleTag(tag.Id);
+            entries.Add(item);
+        }
+        if (entries.Count > 0)
+            entries.Add(new Separator());
+        entries.Add(Item(Strings.TagNewMenu, "Icon.Plus", null, main.NewTagCommand));
+        var menu = Item(Strings.MenuTags, "Icon.Tag", null, null);
+        menu.ItemsSource = entries;
+        return menu;
     }
 
     private static List<Control> RecycleBinMenu(MainWindowViewModel main, bool forSelection)

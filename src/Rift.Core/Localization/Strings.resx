@@ -222,4 +222,44 @@
   <data name="MenuTabMoveOther" xml:space="preserve"><value>Move to other pane</value></data>
   <data name="MenuTabSplitRight" xml:space="preserve"><value>Split right</value></data>
   <data name="MenuTabSplitDown" xml:space="preserve"><value>Split down</value></data>
+  <data name="CmdPalette" xml:space="preserve"><value>Command palette</value></data>
+  <data name="CmdSettings" xml:space="preserve"><value>Settings</value></data>
+  <data name="ThemeDark" xml:space="preserve"><value>Dark</value></data>
+  <data name="ThemeLight" xml:space="preserve"><value>Light</value></data>
+  <data name="ThemeSystem" xml:space="preserve"><value>As in Windows</value></data>
+  <data name="BackdropSolid" xml:space="preserve"><value>Solid</value></data>
+  <data name="BackdropMica" xml:space="preserve"><value>Mica</value></data>
+  <data name="BackdropAcrylic" xml:space="preserve"><value>Acrylic</value></data>
+  <data name="BackdropNote" xml:space="preserve"><value>Mica needs Windows 11; on Windows 10 the window stays solid.</value></data>
+  <data name="LanguageSystem" xml:space="preserve"><value>As in Windows</value></data>
+  <data name="HotkeyPress" xml:space="preserve"><value>Press keys…</value></data>
+  <data name="HotkeyNone" xml:space="preserve"><value>—</value></data>
+  <data name="HotkeyMoved" xml:space="preserve"><value>{0} was taken from “{1}”.</value></data>
+  <data name="TagUnnamed" xml:space="preserve"><value>Tag</value></data>
+  <data name="TagNew" xml:space="preserve"><value>Tag {0}</value></data>
+  <data name="SettingsTitle" xml:space="preserve"><value>Settings</value></data>
+  <data name="SectionAppearance" xml:space="preserve"><value>Appearance</value></data>
+  <data name="LabelTheme" xml:space="preserve"><value>Theme</value></data>
+  <data name="LabelAccent" xml:space="preserve"><value>Accent color</value></data>
+  <data name="LabelBackdrop" xml:space="preserve"><value>Window background</value></data>
+  <data name="SectionLanguage" xml:space="preserve"><value>Language</value></data>
+  <data name="LabelLanguage" xml:space="preserve"><value>Interface language</value></data>
+  <data name="RestartToApply" xml:space="preserve"><value>Restart Rift to switch the language; tabs come back as they are.</value></data>
+  <data name="RestartNow" xml:space="preserve"><value>Restart now</value></data>
+  <data name="SectionFiles" xml:space="preserve"><value>Files and folders</value></data>
+  <data name="LabelRememberViews" xml:space="preserve"><value>Remember the view and sort of each folder</value></data>
+  <data name="SectionTags" xml:space="preserve"><value>Tags</value></data>
+  <data name="TagsHint" xml:space="preserve"><value>Tag files and folders from their right-click menu. Tags show up in the sidebar.</value></data>
+  <data name="AddTag" xml:space="preserve"><value>New tag</value></data>
+  <data name="TipTagColor" xml:space="preserve"><value>Change color</value></data>
+  <data name="TipDeleteTag" xml:space="preserve"><value>Delete tag</value></data>
+  <data name="SectionHotkeys" xml:space="preserve"><value>Keyboard shortcuts</value></data>
+  <data name="HotkeysHint" xml:space="preserve"><value>Click a shortcut and press new keys. Esc cancels, Backspace removes the shortcut.</value></data>
+  <data name="ResetAll" xml:space="preserve"><value>Reset all</value></data>
+  <data name="TipResetKey" xml:space="preserve"><value>Back to default</value></data>
+  <data name="TipSettings" xml:space="preserve"><value>Settings (Ctrl+,)</value></data>
+  <data name="TagNewTitle" xml:space="preserve"><value>New tag</value></data>
+  <data name="TagNewMenu" xml:space="preserve"><value>New tag…</value></data>
+  <data name="MenuTags" xml:space="preserve"><value>Tags</value></data>
+  <data name="SidebarTags" xml:space="preserve"><value>TAGS</value></data>
 </root>

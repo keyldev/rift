@@ -46,12 +46,16 @@ public partial class TabViewModel : ViewModelBase, IDisposable
     {
         _history = new NavigationHistory(path);
         ViewOptions.Current.PropertyChanged += OnViewOptionsChanged;
+        AppSettings.Tags.Changed += OnTagsChanged;
+        AppSettings.Changed += OnTagsChanged;
         _ = LoadAsync(path);
     }
 
     public void Dispose()
     {
         ViewOptions.Current.PropertyChanged -= OnViewOptionsChanged;
+        AppSettings.Tags.Changed -= OnTagsChanged;
+        AppSettings.Changed -= OnTagsChanged;
         _loading?.Cancel();
         StopWatching();
     }
@@ -78,7 +82,7 @@ public partial class TabViewModel : ViewModelBase, IDisposable
     public bool IsRecycleBin => Location == LocationKind.RecycleBin;
     public bool IsSearch => Location == LocationKind.Search;
     /// <summary>The rows are real files that can be copied, moved, renamed, deleted: a folder, search results, a library.</summary>
-    public bool CanEditItems => Location is LocationKind.Folder or LocationKind.Search or LocationKind.Library;
+    public bool CanEditItems => Location is LocationKind.Folder or LocationKind.Search or LocationKind.Library or LocationKind.Tag;
     /// <summary>The rows are places to open (drives, computers, shares, libraries), not files.</summary>
     public bool IsPlaceList => Location is LocationKind.ThisPc or LocationKind.Network or LocationKind.Server or LocationKind.Libraries;
     /// <summary>Where Ctrl+F searches from this tab: the folder itself, or the root of the current search.</summary>
@@ -124,6 +128,25 @@ public partial class TabViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private void SetView(ViewMode mode) => ViewMode = mode;
 
+    partial void OnViewModeChanged(ViewMode value) => RememberView();
+
+    /// <summary>Settings → "remember view and sort": a folder keeps how it was last shown.</summary>
+    private void RememberView()
+    {
+        if (IsFileSystem && _loadedPath is not null && AppSettings.Current.RememberFolderViews)
+            AppSettings.FolderViews.Set(Path, new FolderView(ViewMode.ToString(), SortColumn, SortDescending));
+    }
+
+    private void RecallView(string path)
+    {
+        if (!AppSettings.Current.RememberFolderViews || AppSettings.FolderViews.Get(path) is not { } view)
+            return;
+        if (Enum.TryParse<ViewMode>(view.View, out var mode))
+            ViewMode = mode;
+        SortColumn = view.Sort;
+        SortDescending = view.Descending;
+    }
+
     /// <summary>Ctrl+wheel: details → tiles → thumbnails and back.</summary>
     public void StepView(int delta) => ViewMode = (ViewMode)Math.Clamp((int)ViewMode + delta, 0, 2);
 
@@ -141,7 +164,7 @@ public partial class TabViewModel : ViewModelBase, IDisposable
     public string TypeColumn => Location switch
     {
         LocationKind.RecycleBin => Strings.ColumnOriginalLocation,
-        LocationKind.Search => Strings.ColumnLocation,
+        LocationKind.Search or LocationKind.Tag => Strings.ColumnLocation,
         _ => Strings.ColumnType,
     };
 
@@ -185,6 +208,7 @@ public partial class TabViewModel : ViewModelBase, IDisposable
             SortColumn = column;
             SortDescending = column is SortColumn.Modified or SortColumn.Created or SortColumn.Size;
         }
+        RememberView();
         ShowEntries(inPlace: false, Selected.Select(i => i.FullPath).ToList());
     }
 
@@ -335,6 +359,8 @@ public partial class TabViewModel : ViewModelBase, IDisposable
             Filter = ""; // a filter belongs to the folder it was typed in
             if (Locations.KindOf(path) != Locations.KindOf(Path))
                 ResetSort(Locations.KindOf(path));
+            if (Locations.KindOf(path) == LocationKind.Folder)
+                RecallView(path);
         }
         _loading?.Cancel();
         var cts = _loading = new CancellationTokenSource();
@@ -358,7 +384,7 @@ public partial class TabViewModel : ViewModelBase, IDisposable
             {
                 LocationKind.ThisPc => await Task.Run(Locations.ReadDrives, cts.Token),
                 LocationKind.RecycleBin => await Task.Run(ReadRecycleBin, cts.Token),
-                LocationKind.Network or LocationKind.Server or LocationKind.Libraries or LocationKind.Library
+                LocationKind.Network or LocationKind.Server or LocationKind.Libraries or LocationKind.Library or LocationKind.Tag
                     => await Places.ReadAsync(path, ViewOptions.Current.ShowHidden, cts.Token),
                 _ => await DirectoryReader.ReadAsync(path, ViewOptions.Current.ShowHidden, cts.Token),
             };
@@ -570,6 +596,15 @@ public partial class TabViewModel : ViewModelBase, IDisposable
             return;
         }
         _ = RefreshAsync();
+    }
+
+    /// <summary>Tags or their colors changed: dots update; a tag's own tab reloads its list.</summary>
+    private void OnTagsChanged()
+    {
+        foreach (var item in Items)
+            item.RefreshTags();
+        if (Location == LocationKind.Tag)
+            _ = RefreshAsync();
     }
 
     private void OnViewOptionsChanged(object? sender, PropertyChangedEventArgs e)

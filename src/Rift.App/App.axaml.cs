@@ -23,8 +23,12 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var args = StartupArgs.Parse(desktop.Args ?? []);
-            // Must be set before any view is built: XAML reads strings once, at load.
-            if (args.Language is { } lang && Strings.Supported.Contains(lang))
+            AppSettings.Load();
+            AppSettings.ApplyLook();
+
+            // Must be set before any view is built: XAML reads strings once, at load. --lang beats the setting.
+            var lang = args.Language ?? AppSettings.Current.Language;
+            if (Strings.Supported.Contains(lang))
                 Strings.Culture = new CultureInfo(lang);
 
             // Started plainly (Start menu, taskbar): bring back the last session. Started with paths: open exactly those.
@@ -34,6 +38,7 @@ public partial class App : Application
             window.RestorePlacement(session?.Window);
             desktop.MainWindow = window;
 
+            desktop.Exit += (_, _) => AppSettings.SaveNow();
             RecentPlaces.Initialize();
             Program.Instance?.Listen(forwarded =>
                 Dispatcher.UIThread.Post(() => vm.OpenFromAnotherInstance(StartupArgs.Parse(forwarded))));

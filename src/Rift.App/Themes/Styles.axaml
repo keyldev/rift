@@ -3,7 +3,7 @@
         xmlns:c="using:Rift.App.Controls">
 
   <Style Selector="Window">
-    <Setter Property="Background" Value="{DynamicResource Rift.Bg}" />
+    <Setter Property="Background" Value="{DynamicResource Rift.WindowBg}" />
     <Setter Property="Foreground" Value="{DynamicResource Rift.Text}" />
     <Setter Property="FontFamily" Value="{StaticResource Rift.Font}" />
     <Setter Property="FontSize" Value="13" />
@@ -200,6 +200,17 @@
     <Setter Property="BorderThickness" Value="0,1,0,0" />
     <Setter Property="Background" Value="{DynamicResource Rift.AccentBg}" />
     <Setter Property="Padding" Value="12,3,8,3" />
+  </Style>
+
+  <!-- Tag chips in the sidebar -->
+  <Style Selector="Button.tagchip">
+    <Setter Property="Background" Value="{DynamicResource Rift.Raised}" />
+    <Setter Property="Foreground" Value="{DynamicResource Rift.Muted}" />
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="Padding" Value="8,2" />
+    <Setter Property="Margin" Value="0,0,6,6" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="BorderThickness" Value="0" />
   </Style>
 
   <!-- Dragging a tab over a pane -->

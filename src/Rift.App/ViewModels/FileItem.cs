@@ -12,6 +12,7 @@ public sealed partial class FileItem : ObservableObject
     public FileItem(FileEntry entry)
     {
         _entry = entry;
+        RefreshTags();
     }
 
     [ObservableProperty]
@@ -42,6 +43,23 @@ public sealed partial class FileItem : ObservableObject
     private IImage? _thumbnail;
 
     public bool HasThumbnail => Thumbnail is not null;
+
+    /// <summary>Colored dots for the file's tags, after its name.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasTags))]
+    private IReadOnlyList<IBrush> _tagDots = [];
+
+    public bool HasTags => TagDots.Count > 0;
+
+    /// <summary>Looks the file's tags up again (after tagging, or when a tag's color changed).</summary>
+    public void RefreshTags()
+    {
+        var ids = Services.AppSettings.Tags.TagsOf(FullPath);
+        if (ids.Count == 0 && TagDots.Count == 0)
+            return;
+        TagDots = Services.AppSettings.Current.Tags.Where(t => ids.Contains(t.Id))
+            .Select(t => (IBrush)new SolidColorBrush(Color.Parse(t.Color))).ToList();
+    }
 
     /// <summary>F2: the name turns into a text box.</summary>
     [ObservableProperty] private bool _isRenaming;

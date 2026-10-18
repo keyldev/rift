@@ -67,6 +67,36 @@ Add-DemoDir  "Backup\photos"  "01.08.2026 12:00"
 Add-DemoFile "Media\movies\trailer.mkv"  (15 * $MB)  "10.10.2026 21:30"
 Add-DemoFile "Media\music\album.flac"    (11 * $MB)  "05.09.2026 18:00"
 Add-DemoFile "Media\cover.jpg"           (640 * $KB) "05.09.2026 18:02"
+# Real pictures, so the thumbnail view and the preview pane have something to show.
+Add-Type -AssemblyName System.Drawing
+function Add-DemoPhoto([string]$Path, [int]$W, [int]$H, [string]$From, [string]$To, [string]$Date) {
+    $full = Join-Path $Root $Path
+    New-Item -ItemType Directory -Force -Path (Split-Path $full) | Out-Null
+    $bmp = New-Object System.Drawing.Bitmap $W, $H
+    $g = [System.Drawing.Graphics]::FromImage($bmp)
+    $g.SmoothingMode = 'AntiAlias'
+    $rect = New-Object System.Drawing.Rectangle 0, 0, $W, $H
+    $brush = New-Object System.Drawing.Drawing2D.LinearGradientBrush $rect, ([System.Drawing.ColorTranslator]::FromHtml($From)), ([System.Drawing.ColorTranslator]::FromHtml($To)), 90
+    $g.FillRectangle($brush, $rect)
+    $pen = New-Object System.Drawing.Pen ([System.Drawing.Color]::FromArgb(200, 255, 255, 255)), ([Math]::Max(3, $W / 250))
+    for ($i = 0; $i -lt 5; $i++) {
+        $r = [int]([Math]::Min($W, $H) * (0.08 + 0.04 * $i))
+        $g.DrawEllipse($pen, [int]($W * (0.2 + 0.15 * $i)) - $r, [int]($H * (0.3 + 0.1 * [Math]::Sin($i))) - $r, 2 * $r, 2 * $r)
+    }
+    $g.Dispose()
+    $bmp.Save($full, [System.Drawing.Imaging.ImageFormat]::Jpeg)
+    $bmp.Dispose()
+    (Get-Item $full).LastWriteTime = [datetime]::ParseExact($Date, "dd.MM.yyyy HH:mm", $null)
+}
+
+Add-DemoPhoto "Media\photos\coast.jpg"    1600 1000 "#FF7850" "#50289F" "02.10.2026 19:40"
+Add-DemoPhoto "Media\photos\lagoon.jpg"   900  1200 "#28B4DC" "#0A285A" "03.10.2026 08:12"
+Add-DemoPhoto "Media\photos\dunes.jpg"    1600 1000 "#FAC83C" "#C83C28" "04.10.2026 17:05"
+Add-DemoPhoto "Media\photos\forest.jpg"   900  1200 "#5AC878" "#14463C" "06.10.2026 10:30"
+Add-DemoPhoto "Media\photos\bloom.jpg"    1600 1000 "#E65AA0" "#3C1E6E" "07.10.2026 21:15"
+Add-DemoPhoto "Media\photos\night.jpg"    900  1200 "#788CFF" "#14143C" "09.10.2026 23:50"
+Add-DemoDir  "Media\photos" "09.10.2026 23:50"
+
 Add-DemoDir  "Media\movies" "10.10.2026 21:30"
 Add-DemoDir  "Media\music"  "05.09.2026 18:00"
 Add-DemoDir  "Media\series" "22.08.2026 19:45"

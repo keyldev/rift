@@ -114,3 +114,88 @@ public class SessionStoreTests : TempFolderTest
         Assert.EndsWith(".json", file);
     }
 }
+
+public class SettingsStoreTests : TempFolderTest
+{
+    [Fact]
+    public void Round_trips_and_falls_back_to_defaults()
+    {
+        var file = P("settings.json");
+        Assert.Equal("azure", SettingsStore.Load(file).Accent); // nothing saved yet
+
+        var state = new SettingsState { Theme = "system", Accent = "mint", Language = "ru", ShowHidden = true };
+        state.Hotkeys["file.rename"] = "Shift+F6";
+        state.Tags.Add(new TagDefinition("t1", "Work", "#6FD39B"));
+        state.Columns.TypeWidth = 140;
+        SettingsStore.Save(state, file);
+
+        var loaded = SettingsStore.Load(file);
+        Assert.Equal(("system", "mint", "ru", true), (loaded.Theme, loaded.Accent, loaded.Language, loaded.ShowHidden));
+        Assert.Equal("Shift+F6", loaded.Hotkeys["file.rename"]);
+        Assert.Equal(state.Tags, loaded.Tags);
+        Assert.Equal(140, loaded.Columns.TypeWidth);
+
+        File.WriteAllText(file, "][");
+        Assert.Equal("dark", SettingsStore.Load(file).Theme);
+    }
+
+    [Fact]
+    public void Unknown_accent_falls_back_to_the_first()
+    {
+        Assert.Equal("azure", Accents.Find("plaid").Id);
+        Assert.Equal("#FF5C8A", Accents.Find("rose").Dark);
+    }
+}
+
+public class TagStoreTests : TempFolderTest
+{
+    [Fact]
+    public void Toggles_and_survives_a_restart()
+    {
+        var file = P("tags.json");
+        var tags = new TagStore(file);
+        tags.Toggle([@"C:\a.txt", @"C:\b.txt"], "red");
+        Assert.True(tags.Has(@"c:\A.TXT", "red"));
+
+        tags.Toggle([@"C:\a.txt"], "red");          // all selected have it: toggling removes
+        Assert.False(tags.Has(@"C:\a.txt", "red"));
+        tags.Toggle([@"C:\a.txt", @"C:\b.txt"], "red"); // only some have it: toggling adds to all
+        Assert.Equal(2, tags.PathsWith("red").Count);
+
+        var reloaded = new TagStore(file);
+        Assert.Equal(["red"], reloaded.TagsOf(@"C:\b.txt"));
+    }
+
+    [Fact]
+    public void Tags_follow_renames_and_folder_moves()
+    {
+        var tags = new TagStore(null);
+        tags.Toggle([@"C:\docs\a.txt", @"C:\docs", @"C:\docsx\b.txt"], "blue");
+
+        tags.Move(@"C:\docs", @"D:\archive\docs");
+
+        Assert.True(tags.Has(@"D:\archive\docs", "blue"));
+        Assert.True(tags.Has(@"D:\archive\docs\a.txt", "blue"));
+        Assert.True(tags.Has(@"C:\docsx\b.txt", "blue")); // a similar name isn't inside
+        Assert.False(tags.Has(@"C:\docs\a.txt", "blue"));
+
+        tags.Forget("blue");
+        Assert.Empty(tags.PathsWith("blue"));
+    }
+}
+
+public class FolderViewStoreTests : TempFolderTest
+{
+    [Fact]
+    public void Remembers_per_folder_and_saves()
+    {
+        var file = P("views.json");
+        var views = new FolderViewStore(file);
+        views.Set(@"C:\Photos", new FolderView("Thumbnails", SortColumn.Modified, true));
+        views.Save();
+
+        var loaded = new FolderViewStore(file);
+        Assert.Equal(new FolderView("Thumbnails", SortColumn.Modified, true), loaded.Get(@"c:\photos"));
+        Assert.Null(loaded.Get(@"C:\Other"));
+    }
+}

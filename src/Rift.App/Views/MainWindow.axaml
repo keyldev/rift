@@ -16,48 +16,12 @@
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaTitleBarHeightHint="44">
 
-  <Window.KeyBindings>
-    <KeyBinding Gesture="Ctrl+T" Command="{Binding ActivePane.NewTabCommand}" />
-    <KeyBinding Gesture="Ctrl+W" Command="{Binding ActivePane.CloseTabCommand}" CommandParameter="{Binding ActivePane.SelectedTab}" />
-    <KeyBinding Gesture="Ctrl+R" Command="{Binding ActivePane.SelectedTab.RefreshCommand}" />
-    <KeyBinding Gesture="F5" Command="{Binding CopyToOtherCommand}" />
-    <KeyBinding Gesture="F6" Command="{Binding MoveToOtherCommand}" />
-    <KeyBinding Gesture="F2" Command="{Binding RenameCommand}" />
-    <KeyBinding Gesture="Delete" Command="{Binding DeleteCommand}" />
-    <KeyBinding Gesture="Shift+Delete" Command="{Binding DeletePermanentlyCommand}" />
-    <KeyBinding Gesture="Ctrl+Shift+N" Command="{Binding NewFolderCommand}" />
-    <KeyBinding Gesture="Ctrl+Z" Command="{Binding UndoCommand}" />
-    <KeyBinding Gesture="Ctrl+C" Command="{Binding CopyToClipboardCommand}" />
-    <KeyBinding Gesture="Ctrl+X" Command="{Binding CutToClipboardCommand}" />
-    <KeyBinding Gesture="Ctrl+V" Command="{Binding PasteCommand}" />
-    <KeyBinding Gesture="Alt+Left" Command="{Binding ActivePane.SelectedTab.BackCommand}" />
-    <KeyBinding Gesture="Alt+Right" Command="{Binding ActivePane.SelectedTab.ForwardCommand}" />
-    <KeyBinding Gesture="Alt+Up" Command="{Binding ActivePane.SelectedTab.UpCommand}" />
-    <KeyBinding Gesture="Ctrl+H" Command="{Binding ToggleHiddenCommand}" />
-    <KeyBinding Gesture="Ctrl+F" Command="{Binding FocusSearchCommand}" />
-    <KeyBinding Gesture="Ctrl+Shift+D1" Command="{Binding ActivePane.SelectedTab.SetViewCommand}" CommandParameter="{x:Static vm:ViewMode.Details}" />
-    <KeyBinding Gesture="Ctrl+Shift+D2" Command="{Binding ActivePane.SelectedTab.SetViewCommand}" CommandParameter="{x:Static vm:ViewMode.Tiles}" />
-    <KeyBinding Gesture="Ctrl+Shift+D3" Command="{Binding ActivePane.SelectedTab.SetViewCommand}" CommandParameter="{x:Static vm:ViewMode.Thumbnails}" />
-    <KeyBinding Gesture="Alt+P" Command="{Binding ActivePane.TogglePreviewCommand}" />
-    <KeyBinding Gesture="Ctrl+OemPipe" Command="{Binding SplitRightCommand}" />
-    <KeyBinding Gesture="Ctrl+Shift+OemPipe" Command="{Binding SplitDownCommand}" />
-    <KeyBinding Gesture="Ctrl+Shift+Enter" Command="{Binding ToggleZoomCommand}" />
-    <KeyBinding Gesture="Ctrl+Shift+W" Command="{Binding CloseActivePaneCommand}" />
-    <KeyBinding Gesture="Ctrl+Shift+T" Command="{Binding ReopenTabCommand}" />
-    <KeyBinding Gesture="Ctrl+K" Command="{Binding OpenPaletteCommand}" />
-    <KeyBinding Gesture="Ctrl+Shift+P" Command="{Binding OpenPaletteCommand}" />
-    <KeyBinding Gesture="Ctrl+E" Command="{Binding FocusSearchCommand}" />
-    <KeyBinding Gesture="Ctrl+L" Command="{Binding ActivePane.SelectedTab.EditAddressCommand}" />
-    <KeyBinding Gesture="Alt+D" Command="{Binding ActivePane.SelectedTab.EditAddressCommand}" />
-    <KeyBinding Gesture="F4" Command="{Binding ActivePane.SelectedTab.EditAddressCommand}" />
-    <KeyBinding Gesture="Alt+Enter" Command="{Binding PropertiesCommand}" />
-    <KeyBinding Gesture="Ctrl+Shift+C" Command="{Binding CopyPathCommand}" />
-  </Window.KeyBindings>
+  <!-- Key bindings come from ViewModels/AppCommands.cs (and the user's changes), see MainWindow.ApplyHotkeys. -->
 
   <Grid RowDefinitions="44,*,28">
 
     <!-- Fully custom title bar: dragging via the TitleBar role, interactive elements are marked User. -->
-    <Border x:Name="TitleBar" Background="{DynamicResource Rift.Panel}"
+    <Border x:Name="TitleBar" Background="{DynamicResource Rift.Chrome}"
             BorderBrush="{DynamicResource Rift.Line}" BorderThickness="0,0,0,1"
             chrome:WindowDecorationProperties.ElementRole="TitleBar">
       <DockPanel Margin="14,0,0,0">
@@ -123,6 +87,9 @@
           <Button Classes="flat" Classes.on="{Binding View.ShowHidden}" Command="{Binding ToggleHiddenCommand}" ToolTip.Tip="{x:Static l:Strings.TipHidden}">
             <c:Icon Data="{Binding View.ShowHidden, Converter={x:Static app:Converters.HiddenIcon}}" />
           </Button>
+          <Button Classes="flat" Command="{Binding OpenSettingsCommand}" ToolTip.Tip="{x:Static l:Strings.TipSettings}">
+            <c:Icon Data="{StaticResource Icon.Settings}" />
+          </Button>
           <Button Classes="flat" Command="{Binding ToggleThemeCommand}" ToolTip.Tip="{x:Static l:Strings.TipTheme}">
             <c:Icon Data="{Binding IsDark, Converter={x:Static app:Converters.ThemeIcon}}" />
           </Button>
@@ -135,15 +102,8 @@
     <Grid Grid.Row="1" ColumnDefinitions="220,*">
 
       <!-- Sidebar -->
-      <Border Background="{DynamicResource Rift.Panel}" BorderBrush="{DynamicResource Rift.Line}" BorderThickness="0,0,1,0">
+      <Border Background="{DynamicResource Rift.Chrome}" BorderBrush="{DynamicResource Rift.Line}" BorderThickness="0,0,1,0">
         <DockPanel>
-          <StackPanel DockPanel.Dock="Bottom" Margin="8,0,8,12" Spacing="6"
-                      IsVisible="{Binding IsExplorerMenuSupported}">
-            <TextBlock Classes="section" Text="{x:Static l:Strings.SectionExplorer}" />
-            <CheckBox Margin="8,0,0,0" FontSize="12" IsChecked="{Binding IsExplorerMenuEnabled}"
-                      Content="{x:Static l:Strings.ExplorerMenuToggle}"
-                      ToolTip.Tip="{x:Static l:Strings.ExplorerMenuToggleTip}" />
-          </StackPanel>
         <ScrollViewer>
           <StackPanel Margin="8,12" Spacing="2">
             <StackPanel Spacing="2" Margin="0,0,0,16" IsVisible="{Binding HasPinned}">
@@ -164,6 +124,23 @@
                       <StackPanel Orientation="Horizontal" Spacing="10">
                         <c:Icon Data="{StaticResource Icon.Folder}" />
                         <TextBlock Text="{Binding Label}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                      </StackPanel>
+                    </Button>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+            <StackPanel Spacing="6" Margin="0,0,0,16" IsVisible="{Binding HasTags}">
+              <TextBlock Classes="section" Text="{x:Static l:Strings.SidebarTags}" />
+              <ItemsControl ItemsSource="{Binding Tags}" Margin="6,0,0,0">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:SidebarTag">
+                    <Button Classes="tagchip" Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenTagCommand}"
+                            CommandParameter="{Binding}">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Ellipse Width="7" Height="7" Fill="{Binding Brush}" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding Name}" FontSize="12" />
                       </StackPanel>
                     </Button>
                   </DataTemplate>
@@ -267,7 +244,7 @@
     </Grid>
 
     <!-- Status bar -->
-    <Border Grid.Row="2" Background="{DynamicResource Rift.Panel}" BorderBrush="{DynamicResource Rift.Line}" BorderThickness="0,1,0,0">
+    <Border Grid.Row="2" Background="{DynamicResource Rift.Chrome}" BorderBrush="{DynamicResource Rift.Line}" BorderThickness="0,1,0,0">
       <StackPanel Orientation="Horizontal" Spacing="18" Margin="12,0" VerticalAlignment="Center">
         <StackPanel.Styles>
           <Style Selector="TextBlock">
@@ -320,6 +297,9 @@
         </DockPanel>
       </Border>
     </Border>
+
+    <!-- Settings (Ctrl+,) -->
+    <v:SettingsView Grid.RowSpan="3" DataContext="{Binding Settings}" IsVisible="{Binding IsOpen}" />
 
     <!-- Modal dialog: conflicts, delete confirmation, errors -->
     <Border Grid.RowSpan="3" Background="{DynamicResource Rift.Scrim}"

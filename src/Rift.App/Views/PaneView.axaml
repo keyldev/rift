@@ -39,6 +39,13 @@
                     <Image Source="{Binding Icon}" IsVisible="{Binding HasIcon}" Width="16" Height="16"
                            RenderOptions.BitmapInterpolationMode="HighQuality" />
                   </Panel>
+                  <ItemsControl DockPanel.Dock="Right" ItemsSource="{Binding TagDots}" IsVisible="{Binding HasTags}"
+                                VerticalAlignment="Center" Margin="0,0,10,0">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="3" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="IBrush"><Ellipse Width="7" Height="7" Fill="{Binding}" /></DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
                   <Panel>
                     <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
                                IsVisible="{Binding !IsRenaming}" Margin="0,0,10,0" />

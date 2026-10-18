@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using Rift.App.Services;
 using Rift.Core;
@@ -94,53 +93,21 @@ public partial class MainWindowViewModel
 
     private IEnumerable<PaletteItem> Commands()
     {
-        PaletteItem Cmd(string title, string icon, string? gesture, ICommand command, object? parameter = null) =>
-            new(title, null, icon, PaletteKind.Command, () =>
+        foreach (var command in AppCommands.All)
+        {
+            yield return new PaletteItem(command.Title, null, command.Icon, PaletteKind.Command, () =>
             {
-                if (command.CanExecute(parameter))
-                    command.Execute(parameter);
+                command.Run(this);
                 return Task.CompletedTask;
-            }, gesture);
+            }, command.KeyText);
+        }
 
-        var tab = ActiveTab;
-        yield return Cmd(Strings.CmdNewTab, "Icon.Plus", "Ctrl+T", ActivePane.NewTabCommand);
-        yield return Cmd(Strings.CmdCloseTab, "Icon.Close", "Ctrl+W", ActivePane.CloseTabCommand, tab);
-        yield return Cmd(Strings.MenuNewFolder, "Icon.Folder", "Ctrl+Shift+N", NewFolderCommand);
-        yield return Cmd(Strings.MenuCopyToOther, "Icon.Copy", "F5", CopyToOtherCommand);
-        yield return Cmd(Strings.MenuMoveToOther, "Icon.Move", "F6", MoveToOtherCommand);
-        yield return Cmd(Strings.MenuRename, "Icon.Rename", "F2", RenameCommand);
-        yield return Cmd(Strings.MenuDelete, "Icon.Trash", "Del", DeleteCommand);
-        yield return Cmd(Strings.MenuDeletePermanently, "Icon.Trash", "Shift+Del", DeletePermanentlyCommand);
-        yield return Cmd(Strings.CmdUndo, "Icon.Restore", "Ctrl+Z", UndoCommand);
-        yield return Cmd(Strings.MenuCut, "Icon.Cut", "Ctrl+X", CutToClipboardCommand);
-        yield return Cmd(Strings.MenuCopy, "Icon.Copy", "Ctrl+C", CopyToClipboardCommand);
-        yield return Cmd(Strings.MenuPaste, "Icon.Paste", "Ctrl+V", PasteCommand);
-        yield return Cmd(Strings.MenuCopyPath, "Icon.Link", "Ctrl+Shift+C", CopyPathCommand);
-        yield return Cmd(Strings.MenuProperties, "Icon.Info", "Alt+Enter", PropertiesCommand);
-        yield return Cmd(Strings.MenuRefresh, "Icon.Refresh", "Ctrl+R", tab.RefreshCommand);
-        yield return Cmd(Strings.CmdSearch, "Icon.Search", "Ctrl+F", FocusSearchCommand);
-        yield return Cmd(Strings.CmdEditAddress, "Icon.Link", "Ctrl+L", tab.EditAddressCommand);
-        yield return Cmd(Strings.CmdGoUp, "Icon.Up", "Alt+↑", tab.UpCommand);
-        yield return Cmd(Strings.CmdBack, "Icon.Back", "Alt+←", tab.BackCommand);
-        yield return Cmd(Strings.CmdForward, "Icon.Forward", "Alt+→", tab.ForwardCommand);
-        yield return Cmd(Strings.CmdPinFolder, "Icon.Pin", null, PinCommand);
-        yield return Cmd(Strings.CmdPreview, "Icon.Preview", "Alt+P", ActivePane.TogglePreviewCommand);
-        yield return Cmd(Strings.CmdViewDetails, "Icon.ViewDetails", "Ctrl+Shift+1", tab.SetViewCommand, ViewMode.Details);
-        yield return Cmd(Strings.CmdViewTiles, "Icon.ViewTiles", "Ctrl+Shift+2", tab.SetViewCommand, ViewMode.Tiles);
-        yield return Cmd(Strings.CmdViewThumbnails, "Icon.ViewGrid", "Ctrl+Shift+3", tab.SetViewCommand, ViewMode.Thumbnails);
-        yield return Cmd(Strings.MenuShowHidden, View.ShowHidden ? "Icon.Eye" : "Icon.EyeOff", "Ctrl+H", ToggleHiddenCommand);
-        yield return Cmd(Strings.TipTheme, IsDark ? "Icon.Sun" : "Icon.Moon", null, ToggleThemeCommand);
-        yield return Cmd(Strings.CmdSplitRight, "Icon.Split", "Ctrl+\\", SplitRightCommand);
-        yield return Cmd(Strings.CmdSplitDown, "Icon.SplitDown", "Ctrl+Shift+\\", SplitDownCommand);
-        yield return Cmd(Strings.CmdZoom, "Icon.Single", "Ctrl+Shift+Enter", ToggleZoomCommand);
-        yield return Cmd(Strings.CmdClosePane, "Icon.Close", "Ctrl+Shift+W", CloseActivePaneCommand);
-        yield return Cmd(Strings.CmdSwitchPane, "Icon.Split", "Tab", SwitchPaneCommand);
-        yield return Cmd(Strings.CmdReopenTab, "Icon.Restore", "Ctrl+Shift+T", ReopenTabCommand);
-        yield return Cmd(Strings.CmdDuplicateTab, "Icon.Copy", null, DuplicateTabCommand);
-        yield return Cmd(Strings.CmdPinTab, "Icon.PinTab", null, TogglePinTabCommand);
-        yield return Cmd(Strings.CmdCloseOtherTabs, "Icon.Close", null, CloseOtherTabsCommand);
-        yield return Cmd(Strings.CmdSaveWorkspace, "Icon.Plus", null, SaveWorkspaceCommand);
-        yield return Cmd(Strings.MenuEmptyBin, "Icon.Trash", null, EmptyBinCommand);
+        // Fixed keys, not in Settings: Tab belongs to focus handling.
+        yield return new PaletteItem(Strings.CmdSwitchPane, null, "Icon.Split", PaletteKind.Command, () =>
+        {
+            SwitchPane();
+            return Task.CompletedTask;
+        }, "Tab");
         yield return new PaletteItem(Strings.JumpNewWindow, null, "Icon.Plus", PaletteKind.Command, () =>
         {
             if (Environment.ProcessPath is { } exe)

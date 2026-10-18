@@ -1,0 +1,198 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Rift.App.ViewModels"
+             xmlns:c="using:Rift.App.Controls"
+             xmlns:app="using:Rift.App"
+             xmlns:l="using:Rift.Core.Localization"
+             x:Class="Rift.App.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="TextBlock.h">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Margin" Value="0,18,0,8" />
+    </Style>
+    <Style Selector="TextBlock.label">
+      <Setter Property="Width" Value="170" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Foreground" Value="{DynamicResource Rift.Muted}" />
+    </Style>
+    <Style Selector="TextBlock.hint">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Foreground" Value="{DynamicResource Rift.Dim}" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <Style Selector="ListBox.segments">
+      <Setter Property="Background" Value="{DynamicResource Rift.Bg}" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="3" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="ListBox.segments ListBoxItem">
+      <Setter Property="Padding" Value="12,5" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="MinWidth" Value="80" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="ListBox.segments ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Rift.AccentBg}" />
+      <Setter Property="Foreground" Value="{DynamicResource Rift.Text}" />
+    </Style>
+    <Style Selector="Button.swatch">
+      <Setter Property="Width" Value="28" />
+      <Setter Property="Height" Value="28" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="CornerRadius" Value="14" />
+      <Setter Property="BorderThickness" Value="2" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.swatch.on">
+      <Setter Property="BorderBrush" Value="{DynamicResource Rift.Text}" />
+    </Style>
+    <Style Selector="Button.key">
+      <Setter Property="MinWidth" Value="150" />
+      <Setter Property="Padding" Value="10,4" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="FontFamily" Value="Cascadia Mono, Consolas, monospace" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Background" Value="{DynamicResource Rift.Raised}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Rift.Line}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="HorizontalContentAlignment" Value="Left" />
+    </Style>
+    <Style Selector="Button.key.recording">
+      <Setter Property="BorderBrush" Value="{DynamicResource Rift.Accent}" />
+      <Setter Property="Foreground" Value="{DynamicResource Rift.Accent}" />
+    </Style>
+  </UserControl.Styles>
+
+  <!-- Scrim; the card in the middle is the settings screen -->
+  <Border x:Name="Scrim" Background="{DynamicResource Rift.Scrim}">
+    <Border Classes="card" Width="720" Margin="0,48" HorizontalAlignment="Center" Background="{DynamicResource Rift.Panel}" CornerRadius="12">
+      <DockPanel>
+        <DockPanel DockPanel.Dock="Top" Margin="24,18,14,6">
+          <Button x:Name="CloseButton" DockPanel.Dock="Right" Classes="flat" Command="{Binding CloseCommand}" ToolTip.Tip="{x:Static l:Strings.TipClose}">
+            <c:Icon Data="{StaticResource Icon.Close}" />
+          </Button>
+          <TextBlock Text="{x:Static l:Strings.SettingsTitle}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" />
+        </DockPanel>
+
+        <ScrollViewer x:Name="Scroller" Padding="24,0,24,24">
+          <StackPanel Spacing="10">
+
+            <!-- Appearance -->
+            <TextBlock Classes="h" Text="{x:Static l:Strings.SectionAppearance}" />
+            <DockPanel>
+              <TextBlock Classes="label" Text="{x:Static l:Strings.LabelTheme}" />
+              <ListBox Classes="segments" ItemsSource="{Binding Themes}" SelectedItem="{Binding Theme}" HorizontalAlignment="Left">
+                <ListBox.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="2" /></ItemsPanelTemplate></ListBox.ItemsPanel>
+                <ListBox.ItemTemplate><DataTemplate x:DataType="vm:Choice"><TextBlock Text="{Binding Label}" /></DataTemplate></ListBox.ItemTemplate>
+              </ListBox>
+            </DockPanel>
+            <DockPanel>
+              <TextBlock Classes="label" Text="{x:Static l:Strings.LabelAccent}" />
+              <ItemsControl ItemsSource="{Binding Accents}">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="8" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:AccentChoice">
+                    <Button Classes="swatch" Classes.on="{Binding IsSelected}"
+                            Background="{Binding Brush}"
+                            Command="{Binding $parent[ItemsControl].((vm:SettingsViewModel)DataContext).PickAccentCommand}"
+                            CommandParameter="{Binding}" ToolTip.Tip="{Binding Accent.Id}" />
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </DockPanel>
+            <DockPanel>
+              <TextBlock Classes="label" Text="{x:Static l:Strings.LabelBackdrop}" />
+              <StackPanel Spacing="4">
+                <ListBox Classes="segments" ItemsSource="{Binding Backdrops}" SelectedItem="{Binding Backdrop}" HorizontalAlignment="Left"
+                         IsEnabled="{Binding MicaSupported}">
+                  <ListBox.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="2" /></ItemsPanelTemplate></ListBox.ItemsPanel>
+                  <ListBox.ItemTemplate><DataTemplate x:DataType="vm:Choice"><TextBlock Text="{Binding Label}" /></DataTemplate></ListBox.ItemTemplate>
+                </ListBox>
+                <TextBlock Classes="hint" Text="{x:Static l:Strings.BackdropNote}" />
+              </StackPanel>
+            </DockPanel>
+
+            <!-- Language -->
+            <TextBlock Classes="h" Text="{x:Static l:Strings.SectionLanguage}" />
+            <DockPanel>
+              <TextBlock Classes="label" Text="{x:Static l:Strings.LabelLanguage}" />
+              <StackPanel Spacing="6">
+                <ListBox Classes="segments" ItemsSource="{Binding Languages}" SelectedItem="{Binding Language}" HorizontalAlignment="Left">
+                  <ListBox.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="2" /></ItemsPanelTemplate></ListBox.ItemsPanel>
+                  <ListBox.ItemTemplate><DataTemplate x:DataType="vm:Choice"><TextBlock Text="{Binding Label}" /></DataTemplate></ListBox.ItemTemplate>
+                </ListBox>
+                <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding NeedsRestart}">
+                  <TextBlock Classes="hint" VerticalAlignment="Center" Text="{x:Static l:Strings.RestartToApply}" />
+                  <Button Classes="dialog primary" Content="{x:Static l:Strings.RestartNow}" Command="{Binding RestartCommand}" />
+                </StackPanel>
+              </StackPanel>
+            </DockPanel>
+
+            <!-- Files and folders -->
+            <TextBlock Classes="h" Text="{x:Static l:Strings.SectionFiles}" />
+            <CheckBox IsChecked="{Binding View.ShowHidden}" Content="{x:Static l:Strings.MenuShowHidden}" />
+            <CheckBox IsChecked="{Binding RememberFolderViews}" Content="{x:Static l:Strings.LabelRememberViews}" />
+            <CheckBox IsChecked="{Binding Main.IsExplorerMenuEnabled}" IsVisible="{Binding Main.IsExplorerMenuSupported}"
+                      Content="{x:Static l:Strings.ExplorerMenuToggle}" ToolTip.Tip="{x:Static l:Strings.ExplorerMenuToggleTip}" />
+
+            <!-- Tags -->
+            <TextBlock Classes="h" Text="{x:Static l:Strings.SectionTags}" />
+            <TextBlock Classes="hint" Text="{x:Static l:Strings.TagsHint}" />
+            <ItemsControl ItemsSource="{Binding Tags}">
+              <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Spacing="6" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:TagRow">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Classes="swatch" Width="22" Height="22" Background="{Binding Brush}" ToolTip.Tip="{x:Static l:Strings.TipTagColor}"
+                            Command="{Binding $parent[ItemsControl].((vm:SettingsViewModel)DataContext).CycleTagColorCommand}"
+                            CommandParameter="{Binding}" />
+                    <TextBox Text="{Binding Name}" Width="240" LostFocus="OnTagNameLostFocus" />
+                    <Button Classes="flat" ToolTip.Tip="{x:Static l:Strings.TipDeleteTag}"
+                            Command="{Binding $parent[ItemsControl].((vm:SettingsViewModel)DataContext).DeleteTagCommand}"
+                            CommandParameter="{Binding}">
+                      <c:Icon Data="{StaticResource Icon.Trash}" />
+                    </Button>
+                  </StackPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Button Classes="dialog" HorizontalAlignment="Left" Command="{Binding AddTagCommand}" Content="{x:Static l:Strings.AddTag}" />
+
+            <!-- Keyboard shortcuts -->
+            <DockPanel Margin="0,18,0,0">
+              <Button DockPanel.Dock="Right" Classes="dialog" Command="{Binding ResetAllKeysCommand}" Content="{x:Static l:Strings.ResetAll}" />
+              <TextBlock Classes="h" Margin="0" VerticalAlignment="Center" Text="{x:Static l:Strings.SectionHotkeys}" />
+            </DockPanel>
+            <TextBlock Classes="hint" Text="{x:Static l:Strings.HotkeysHint}" />
+            <TextBlock FontSize="12" Foreground="{DynamicResource Rift.Accent}" Text="{Binding HotkeyNotice}"
+                       IsVisible="{Binding HotkeyNotice, Converter={x:Static ObjectConverters.IsNotNull}}" />
+            <ItemsControl ItemsSource="{Binding Hotkeys}">
+              <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Spacing="2" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:HotkeyRow">
+                  <DockPanel Height="34">
+                    <Button DockPanel.Dock="Right" Classes="flat" IsVisible="{Binding IsCustomized}" ToolTip.Tip="{x:Static l:Strings.TipResetKey}"
+                            Command="{Binding $parent[ItemsControl].((vm:SettingsViewModel)DataContext).ResetKeysCommand}"
+                            CommandParameter="{Binding}">
+                      <c:Icon Data="{StaticResource Icon.Restore}" />
+                    </Button>
+                    <Button DockPanel.Dock="Right" Classes="key" Classes.recording="{Binding IsRecording}" Content="{Binding KeysText}"
+                            Command="{Binding $parent[ItemsControl].((vm:SettingsViewModel)DataContext).RecordCommand}"
+                            CommandParameter="{Binding}" />
+                    <c:Icon DockPanel.Dock="Left" Width="16" Height="16" Margin="0,0,12,0" Foreground="{DynamicResource Rift.Muted}"
+                            Data="{Binding Icon, Converter={x:Static app:Converters.ResourceToGeometry}}" />
+                    <TextBlock Text="{Binding Title}" VerticalAlignment="Center" />
+                  </DockPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </ScrollViewer>
+      </DockPanel>
+    </Border>
+  </Border>
+</UserControl>

@@ -20,6 +20,8 @@ public enum LocationKind
     Libraries,
     /// <summary>One library: the contents of all its folders together.</summary>
     Library,
+    /// <summary>Every file and folder carrying one tag.</summary>
+    Tag,
 }
 
 /// <summary>
@@ -34,6 +36,18 @@ public static class Locations
     public const string LibrariesFolder = "shell:Libraries";
     private const string SearchPrefix = "search:";
     private const string LibraryPrefix = "library:";
+    private const string TagPrefix = "tag:";
+
+    /// <summary>A tag tab's path: <c>tag:id|Name</c> (the name is only for the title).</summary>
+    public static string Tag(string id, string name) => $"{TagPrefix}{id}|{name}";
+
+    public static (string Id, string Name)? ParseTag(string path)
+    {
+        if (!path.StartsWith(TagPrefix, StringComparison.OrdinalIgnoreCase))
+            return null;
+        var bar = path.IndexOf('|');
+        return bar < 0 ? (path[TagPrefix.Length..], path[TagPrefix.Length..]) : (path[TagPrefix.Length..bar], path[(bar + 1)..]);
+    }
 
     /// <summary>A library tab's path: <c>library:Documents|C:\…\Documents.library-ms</c> (display name, then the file).</summary>
     public static string Library(string name, string file) => $"{LibraryPrefix}{name}|{file}";
@@ -72,6 +86,7 @@ public static class Locations
         _ when string.Equals(path, Network, StringComparison.OrdinalIgnoreCase) => LocationKind.Network,
         _ when string.Equals(path, LibrariesFolder, StringComparison.OrdinalIgnoreCase) => LocationKind.Libraries,
         _ when ParseLibrary(path) is not null => LocationKind.Library,
+        _ when ParseTag(path) is not null => LocationKind.Tag,
         _ when IsServer(path) => LocationKind.Server,
         _ => LocationKind.Folder,
     };
@@ -86,6 +101,7 @@ public static class Locations
         LocationKind.Network => Strings.PlaceNetwork,
         LocationKind.Libraries => Strings.PlaceLibraries,
         LocationKind.Library => ParseLibrary(path)!.Value.Name,
+        LocationKind.Tag => ParseTag(path)!.Value.Name,
         LocationKind.Server => path.TrimEnd('\\')[2..],
         _ => PathCrumbs.Title(path),
     };

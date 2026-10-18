@@ -31,6 +31,12 @@ sealed class Program
         if (!parsed.NewWindow)
         {
             Instance = InstanceChannel.TryClaim(InstanceChannel.DefaultName);
+            // Restarting (language change): the old window is closing, wait for it to let go.
+            for (var i = 0; parsed.Restart && Instance is null && i < 100; i++)
+            {
+                Thread.Sleep(100);
+                Instance = InstanceChannel.TryClaim(InstanceChannel.DefaultName);
+            }
             if (Instance is null)
             {
                 if (OperatingSystem.IsWindows())
@@ -59,6 +65,9 @@ sealed class Program
     public static AppBuilder BuildAvaloniaApp()
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
+            // Not WinUIComposition (Avalonia's default on Windows 10+): it deadlocks disposing the window on close
+            // while icons and thumbnails are still rendering, and the process lingers with no window.
+            .With(new Win32PlatformOptions { CompositionMode = [Win32CompositionMode.DirectComposition, Win32CompositionMode.RedirectionSurface] })
 #if DEBUG
             .WithDeveloperTools()
 #endif

@@ -23,7 +23,7 @@
 </details>
 
 > Early stage. Rift already browses, copies, moves, searches and previews, and fits into Windows like Explorer does;
-> next up are settings.
+> next up are speed work and installers.
 > See [ROADMAP.md](ROADMAP.md).
 
 ## Features
@@ -50,6 +50,8 @@
 - Dark and light themes, custom title bar
 - One window: "Open in Rift" and the taskbar jump list (recent folders) open tabs in the running Rift
 - "Open in Rift" in Explorer's context menu
+- Settings (Ctrl+,): theme (dark, light, as in Windows), accent color, Mica on Windows 11, language, shortcuts
+- Tags on files and folders, shown as dots and in the sidebar
 - English and Russian UI
 
 ## Download
@@ -78,6 +80,7 @@ Grab the latest build from the artifacts of the latest [CI run](https://github.c
 | Ctrl+Shift+C | Copy path |
 | Ctrl+H | Show / hide hidden files |
 | Ctrl+K, Ctrl+Shift+P | Command palette |
+| Ctrl+, | Settings (every shortcut here can be changed there) |
 | Ctrl+F, Ctrl+E | Search in this folder and below |
 | Ctrl+L, Alt+D, F4 | Edit the path |
 | Alt+P | Preview pane |
@@ -107,7 +110,7 @@ Rift.exe C:\Projects --right D:\Backup
 
 ## "Open in Rift" in Explorer
 
-Turn it on with the checkbox at the bottom of the sidebar, or run:
+Turn it on in Settings (Ctrl+,), or run:
 
 ```bash
 Rift.exe --register-shell

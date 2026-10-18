@@ -76,6 +76,7 @@ public partial class MainWindowViewModel
         var result = await transfer.RunAsync(sources);
 
         op.Complete(result.Canceled, result.Errors);
+        FollowMoves(result.Journal);
         Remember(title, result.Journal);
         await RefreshAsync(sources.Select(Path.GetDirectoryName).Append(destination), destination, result.Targets);
     }
@@ -281,6 +282,7 @@ public partial class MainWindowViewModel
         try
         {
             var (path, journal) = FileOps.Rename(item.FullPath, newName);
+            FollowMoves(journal);
             Remember($"{item.Name} → {Path.GetFileName(path)}", journal);
             if (tab.IsSearch)
                 tab.ReplaceEntry(item.FullPath, path);
@@ -355,6 +357,8 @@ public partial class MainWindowViewModel
         var op = Operations.Start(Strings.OpUndoTitle(entry.Title), canPause: false);
         try
         {
+            var moves = entry.Journal; // read before undo clears it
+            FollowMovesBack(moves);
             var errors = await entry.Journal.UndoAsync(op.Token);
             op.Complete(canceled: false, errors);
         }
@@ -367,6 +371,8 @@ public partial class MainWindowViewModel
             RecycleBin.NotifyChanged();
         await Task.WhenAll(AllTabs.Select(t => t.RefreshAsync()));
     }
+
+    private static void FollowMovesBack(OperationJournal journal) => FollowMoves(journal, undo: true);
 
     // ---------- helpers ----------
 

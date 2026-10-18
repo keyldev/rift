@@ -79,15 +79,22 @@ Moved to later stages:
 - [x] The session comes back after a restart: layout, tabs, views, sort, window size and place
 - [x] Pinned tabs, duplicate, close others / to the right, reopen closed tab (Ctrl+Shift+T), Ctrl+Tab between tabs
 
-## 0.6 — Settings
+## Done — 0.6: settings
 
-- [ ] Settings screen; stored in `%AppData%\Rift\settings.json`
-- [ ] Accent color (azure, amber, mint, iris, rose), "follow system" theme
-- [ ] Language picker
-- [ ] Tags on files and folders, shown in the sidebar
-- [ ] Remember column layout, view mode and sort per folder
-- [ ] Custom hotkeys
-- [ ] Mica / Acrylic background on Windows 11
+- [x] Settings screen (Ctrl+,), applied as you change them; stored in `%AppData%\Rift\settings.json`
+- [x] Accent color (azure, ember, mint, iris, rose) and theme: dark, light or as in Windows
+- [x] Language picker; Rift restarts itself and the tabs come back
+- [x] Tags on files and folders: dots in the list, chips in the sidebar, a tab with everything tagged;
+      tags follow renames and moves made in Rift
+- [x] Column layout remembered; view and sort remembered per folder
+- [x] Custom shortcuts for every command (record a key, reset one or all); the palette shows the same keys
+- [x] Mica background on Windows 11 (not verified on Windows 11 yet; Windows 10 keeps a solid window)
+
+Fixed along the way: closing the window could leave the process running without a window (Avalonia's
+WinUI composition deadlocked while icons were still rendering). Rift now uses DirectComposition.
+Acrylic was dropped for the same reason.
+
+Screenshots in the README were retaken on the demo files (`scripts/demo-fixture.ps1`, now with real pictures).
 
 ## Speed
 

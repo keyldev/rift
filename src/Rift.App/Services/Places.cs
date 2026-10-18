@@ -28,8 +28,22 @@ public static class Places
                 .Select(l => Place(l.Name, Locations.Library(l.Name, l.File), Strings.KindLibrary, Strings.LibraryFolders(l.Folders.Count)))
                 .ToList(), ct),
             LocationKind.Library => Task.Run(() => Load(path) is { } library ? Libraries.ReadContents(library, includeHidden) : [], ct),
+            LocationKind.Tag => Task.Run(() => ReadTag(Locations.ParseTag(path)!.Value.Id), ct),
             _ => Task.FromResult<IReadOnlyList<FileEntry>>([]),
         };
+    }
+
+    /// <summary>Everything with the tag that still exists; where it lives shows in the Location column.</summary>
+    private static IReadOnlyList<FileEntry> ReadTag(string id)
+    {
+        var entries = new List<FileEntry>();
+        foreach (var path in AppSettings.Tags.PathsWith(id))
+        {
+            FileSystemInfo info = Directory.Exists(path) ? new DirectoryInfo(path) : new FileInfo(path);
+            if (info.Exists)
+                entries.Add(FileEntry.From(info) with { TypeNote = Path.GetDirectoryName(path) });
+        }
+        return entries;
     }
 
     /// <summary>The real folders behind a library tab, to watch for changes.</summary>

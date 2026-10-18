@@ -23,6 +23,12 @@ public sealed class OperationJournal
         get { lock (_lock) return _entries.Count == 0; }
     }
 
+    /// <summary>Everything this operation moved or renamed, oldest first (tags follow these).</summary>
+    public IReadOnlyList<(string From, string To)> Moves
+    {
+        get { lock (_lock) return _entries.OfType<Moved>().Select(m => (m.From, m.To)).ToList(); }
+    }
+
     internal void AddCreated(string path, bool isDirectory) => Add(new Created(path, isDirectory));
     internal void AddMoved(string from, string to) => Add(new Moved(from, to));
     internal void AddRemovedEmptyDirectory(string path) => Add(new RemovedEmptyDirectory(path));

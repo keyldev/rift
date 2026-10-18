@@ -53,7 +53,6 @@ public partial class MainWindowViewModel
             pane.IsActive = false;
         ActivePane = active;
         active.IsActive = true;
-        IsDark = session.Dark;
         IsZoomed = session.Zoomed && panes.Count > 1;
         OnPropertyChanged(nameof(HasManyPanes));
         LayoutChanged?.Invoke();
@@ -107,7 +106,6 @@ public partial class MainWindowViewModel
     {
         if (SessionStore.Load(SessionStore.WorkspaceFile(name)) is not { } state)
             return;
-        state.Dark = IsDark; // the theme is the user's, not the workspace's
         ApplySession(state);
         FocusFilesRequested?.Invoke();
     }

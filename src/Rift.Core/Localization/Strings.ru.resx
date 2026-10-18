@@ -222,4 +222,44 @@
   <data name="MenuTabMoveOther" xml:space="preserve"><value>Переместить в другую панель</value></data>
   <data name="MenuTabSplitRight" xml:space="preserve"><value>Разделить вправо</value></data>
   <data name="MenuTabSplitDown" xml:space="preserve"><value>Разделить вниз</value></data>
+  <data name="CmdPalette" xml:space="preserve"><value>Палитра команд</value></data>
+  <data name="CmdSettings" xml:space="preserve"><value>Настройки</value></data>
+  <data name="ThemeDark" xml:space="preserve"><value>Тёмная</value></data>
+  <data name="ThemeLight" xml:space="preserve"><value>Светлая</value></data>
+  <data name="ThemeSystem" xml:space="preserve"><value>Как в Windows</value></data>
+  <data name="BackdropSolid" xml:space="preserve"><value>Сплошной</value></data>
+  <data name="BackdropMica" xml:space="preserve"><value>Mica</value></data>
+  <data name="BackdropAcrylic" xml:space="preserve"><value>Акрил</value></data>
+  <data name="BackdropNote" xml:space="preserve"><value>Mica работает в Windows 11; в Windows 10 фон остаётся сплошным.</value></data>
+  <data name="LanguageSystem" xml:space="preserve"><value>Как в Windows</value></data>
+  <data name="HotkeyPress" xml:space="preserve"><value>Нажмите клавиши…</value></data>
+  <data name="HotkeyNone" xml:space="preserve"><value>—</value></data>
+  <data name="HotkeyMoved" xml:space="preserve"><value>{0} снято с «{1}».</value></data>
+  <data name="TagUnnamed" xml:space="preserve"><value>Тег</value></data>
+  <data name="TagNew" xml:space="preserve"><value>Тег {0}</value></data>
+  <data name="SettingsTitle" xml:space="preserve"><value>Настройки</value></data>
+  <data name="SectionAppearance" xml:space="preserve"><value>Оформление</value></data>
+  <data name="LabelTheme" xml:space="preserve"><value>Тема</value></data>
+  <data name="LabelAccent" xml:space="preserve"><value>Акцентный цвет</value></data>
+  <data name="LabelBackdrop" xml:space="preserve"><value>Фон окна</value></data>
+  <data name="SectionLanguage" xml:space="preserve"><value>Язык</value></data>
+  <data name="LabelLanguage" xml:space="preserve"><value>Язык интерфейса</value></data>
+  <data name="RestartToApply" xml:space="preserve"><value>Перезапустите Rift, чтобы сменить язык; вкладки вернутся как есть.</value></data>
+  <data name="RestartNow" xml:space="preserve"><value>Перезапустить</value></data>
+  <data name="SectionFiles" xml:space="preserve"><value>Файлы и папки</value></data>
+  <data name="LabelRememberViews" xml:space="preserve"><value>Запоминать вид и сортировку для каждой папки</value></data>
+  <data name="SectionTags" xml:space="preserve"><value>Теги</value></data>
+  <data name="TagsHint" xml:space="preserve"><value>Теги ставятся из контекстного меню файлов и папок и появляются в сайдбаре.</value></data>
+  <data name="AddTag" xml:space="preserve"><value>Новый тег</value></data>
+  <data name="TipTagColor" xml:space="preserve"><value>Сменить цвет</value></data>
+  <data name="TipDeleteTag" xml:space="preserve"><value>Удалить тег</value></data>
+  <data name="SectionHotkeys" xml:space="preserve"><value>Сочетания клавиш</value></data>
+  <data name="HotkeysHint" xml:space="preserve"><value>Нажмите на сочетание и введите новое. Esc — отмена, Backspace — убрать сочетание.</value></data>
+  <data name="ResetAll" xml:space="preserve"><value>Сбросить все</value></data>
+  <data name="TipResetKey" xml:space="preserve"><value>Вернуть по умолчанию</value></data>
+  <data name="TipSettings" xml:space="preserve"><value>Настройки (Ctrl+,)</value></data>
+  <data name="TagNewTitle" xml:space="preserve"><value>Новый тег</value></data>
+  <data name="TagNewMenu" xml:space="preserve"><value>Новый тег…</value></data>
+  <data name="MenuTags" xml:space="preserve"><value>Теги</value></data>
+  <data name="SidebarTags" xml:space="preserve"><value>ТЕГИ</value></data>
 </root>

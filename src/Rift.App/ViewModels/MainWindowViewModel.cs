@@ -38,6 +38,9 @@ public partial class MainWindowViewModel : ViewModelBase
             _recent.AddRange([left, right]);
         }
         LoadPinned();
+        LoadTags();
+        Services.AppSettings.Changed += LoadTags;
+        TrackTheme();
     }
 
     /// <summary>The split layout; the view rebuilds itself from it on <see cref="LayoutChanged"/>.</summary>
@@ -73,6 +76,9 @@ public partial class MainWindowViewModel : ViewModelBase
         path ??= ActivePane.SelectedTab.Path;
         if (CanPin(path) && _pinnedFolders.Pin(path))
             LoadPinned();
+        LoadTags();
+        Services.AppSettings.Changed += LoadTags;
+        TrackTheme();
     }
 
     [RelayCommand]
@@ -80,6 +86,9 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (_pinnedFolders.Unpin(item.Path))
             LoadPinned();
+        LoadTags();
+        Services.AppSettings.Changed += LoadTags;
+        TrackTheme();
     }
 
     [ObservableProperty] private PaneViewModel _activePane = null!;
@@ -121,10 +130,13 @@ public partial class MainWindowViewModel : ViewModelBase
 
     partial void OnIsZoomedChanged(bool value) => LayoutChanged?.Invoke();
 
-    partial void OnIsDarkChanged(bool value)
+    /// <summary>Follows the theme actually on screen (with "follow system" it changes when Windows does).</summary>
+    private void TrackTheme()
     {
-        if (Application.Current is { } app)
-            app.RequestedThemeVariant = value ? ThemeVariant.Dark : ThemeVariant.Light;
+        if (Application.Current is not { } app)
+            return;
+        IsDark = app.ActualThemeVariant == ThemeVariant.Dark;
+        app.ActualThemeVariantChanged += (_, _) => IsDark = app.ActualThemeVariant == ThemeVariant.Dark;
     }
 
     /// <summary>Where F5/F6 send files: the pane that was active before this one.</summary>
@@ -272,6 +284,18 @@ public partial class MainWindowViewModel : ViewModelBase
             SplitWithTab(tab, from, from, TabDropZone.Right);
     }
 
+    private SettingsViewModel? _settings;
+
+    /// <summary>The Settings screen (Ctrl+,), drawn over the window.</summary>
+    public SettingsViewModel Settings => _settings ??= new SettingsViewModel(this);
+
+    [RelayCommand]
+    private void OpenSettings()
+    {
+        Palette.Close();
+        Settings.OpenCommand.Execute(null);
+    }
+
     // ---------- other windows and the sidebar ----------
 
     /// <summary>Ctrl+F: the active pane's search box takes focus.</summary>
@@ -313,7 +337,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private Task OpenSidebarItem(SidebarItem item) => ActivePane.SelectedTab.NavigateTo(item.Path);
 
     [RelayCommand]
-    private void ToggleTheme() => IsDark = !IsDark;
+    private void ToggleTheme() => Services.AppSettings.Update(s => s.Theme = IsDark ? "light" : "dark");
 
     public ViewOptions View => ViewOptions.Current;
 

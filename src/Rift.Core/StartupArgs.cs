@@ -5,7 +5,9 @@ namespace Rift.Core;
 /// Every path becomes a tab; bare paths go to the left pane.
 /// <c>--new-window</c> opens a separate window instead of handing the paths to the running one.
 /// </summary>
-public sealed record StartupArgs(IReadOnlyList<string> Left, IReadOnlyList<string> Right, string? Language = null, bool NewWindow = false)
+/// <c>--restart</c> (used by Settings) waits for the previous Rift to close and takes its place.
+public sealed record StartupArgs(IReadOnlyList<string> Left, IReadOnlyList<string> Right, string? Language = null, bool NewWindow = false,
+    bool Restart = false)
 {
     public bool HasPaths => Left.Count > 0 || Right.Count > 0;
 
@@ -19,6 +21,7 @@ public sealed record StartupArgs(IReadOnlyList<string> Left, IReadOnlyList<strin
         var right = new List<string>();
         string? language = null;
         var newWindow = false;
+        var restart = false;
         var target = left;
         var pendingSide = false;
         var pendingLanguage = false;
@@ -40,6 +43,9 @@ public sealed record StartupArgs(IReadOnlyList<string> Left, IReadOnlyList<strin
                     continue;
                 case "--new-window":
                     newWindow = true;
+                    continue;
+                case "--restart":
+                    restart = true;
                     continue;
             }
 
@@ -70,6 +76,6 @@ public sealed record StartupArgs(IReadOnlyList<string> Left, IReadOnlyList<strin
             pendingSide = false;
         }
 
-        return new StartupArgs(left, right, language, newWindow);
+        return new StartupArgs(left, right, language, newWindow, restart);
     }
 }
