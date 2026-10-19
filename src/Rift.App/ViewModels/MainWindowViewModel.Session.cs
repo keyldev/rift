@@ -67,7 +67,7 @@ public partial class MainWindowViewModel
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            Trace.WriteLine($"Saving the session failed: {ex.Message}");
+            Log.Warn("Saving the session failed", ex);
         }
     }
 
@@ -118,7 +118,7 @@ public partial class MainWindowViewModel
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            Trace.WriteLine($"Deleting workspace {name} failed: {ex.Message}");
+            Log.Warn($"Deleting workspace {name} failed", ex);
         }
     }
 }

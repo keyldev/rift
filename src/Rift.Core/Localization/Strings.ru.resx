@@ -275,4 +275,9 @@
   <data name="UpdateRestart" xml:space="preserve"><value>Перезапустить и обновить</value></data>
   <data name="UpdateButton" xml:space="preserve"><value>Обновить до {0}</value></data>
   <data name="UpdateButtonTip" xml:space="preserve"><value>Перезапустить Rift и установить новую версию; вкладки вернутся</value></data>
+  <data name="CrashNoticeTitle" xml:space="preserve"><value>В прошлый раз Rift неожиданно закрылся</value></data>
+  <data name="CrashNoticeText" xml:space="preserve"><value>Отчёт сохранён рядом с логами. Если отправить его на GitHub, ошибку проще исправить; перед отправкой видно всё, что уйдёт.</value></data>
+  <data name="CrashReport" xml:space="preserve"><value>Сообщить на GitHub</value></data>
+  <data name="OpenLogs" xml:space="preserve"><value>Открыть логи</value></data>
+  <data name="LogsHint" xml:space="preserve"><value>Логи и отчёты о сбоях, хранятся неделю.</value></data>
 </root>

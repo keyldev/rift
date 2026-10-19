@@ -24,6 +24,9 @@ public sealed class SettingsState
     /// <summary>Each folder opens with the view and sort it had last time.</summary>
     public bool RememberFolderViews { get; set; } = true;
 
+    /// <summary>The crash report the user already saw the notice for; older ones don't bring it back.</summary>
+    public DateTime? CrashNoticeSeen { get; set; }
+
     /// <summary>The installed Rift looks for a new version on GitHub after start and daily, and downloads it.</summary>
     public bool CheckForUpdates { get; set; } = true;
 

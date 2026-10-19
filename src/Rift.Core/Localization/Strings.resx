@@ -275,4 +275,9 @@
   <data name="UpdateRestart" xml:space="preserve"><value>Restart and update</value></data>
   <data name="UpdateButton" xml:space="preserve"><value>Update to {0}</value></data>
   <data name="UpdateButtonTip" xml:space="preserve"><value>Restart Rift to install the new version; tabs come back</value></data>
+  <data name="CrashNoticeTitle" xml:space="preserve"><value>Rift closed unexpectedly last time</value></data>
+  <data name="CrashNoticeText" xml:space="preserve"><value>A report was saved with the logs. Sending it on GitHub helps get this fixed; you see everything before it goes.</value></data>
+  <data name="CrashReport" xml:space="preserve"><value>Report on GitHub</value></data>
+  <data name="OpenLogs" xml:space="preserve"><value>Open logs</value></data>
+  <data name="LogsHint" xml:space="preserve"><value>Logs and crash reports, kept for a week.</value></data>
 </root>

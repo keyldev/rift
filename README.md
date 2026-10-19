@@ -145,6 +145,13 @@ and every UI-thread stall over 50 ms go to `%TEMP%\rift-perf.log`.
 powershell -File scripts/bench-fixture.ps1
 ```
 
+### Logs and crash reports
+
+Rift logs what goes wrong to `%AppData%\Rift\logs` (a file a day, kept for a week). When it crashes, a `crash-*.txt`
+lands there too, and the next start offers to open a GitHub issue with the version and the stack trace; exception
+messages and log lines stay out of it because they can name your files. `RIFT_TEST_CRASH=1` makes Rift crash on
+purpose once the window is up, to try that path.
+
 ### Releases
 
 A `v*` tag builds the AOT exe, packs it with [Velopack](https://velopack.io) (`dotnet vpk`, pinned in

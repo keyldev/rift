@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using Avalonia;
@@ -7,6 +6,7 @@ using Avalonia.Platform;
 using Avalonia.Threading;
 using Rift.App.ViewModels;
 using Rift.Shell;
+using Rift.Core;
 
 namespace Rift.App.Services;
 
@@ -93,7 +93,7 @@ public static class FileThumbnails
             }
             catch (Exception ex)
             {
-                Trace.WriteLine($"Thumbnail for {request.Item.FullPath} failed: {ex.Message}");
+                Log.Warn($"Thumbnail for {request.Item.FullPath} failed: {ex.Message}");
             }
             Dispatcher.UIThread.Post(() => Deliver(request, pixels));
         }

@@ -312,6 +312,10 @@ public partial class PaneView : UserControl
 
         switch (e.Key)
         {
+            case Key.PageUp or Key.PageDown when !tab.IsDetails && Files.ItemsPanelRoot is VirtualizingWrapPanel grid:
+                PageGrid(grid, e.Key == Key.PageDown);
+                e.Handled = true;
+                break;
             case Key.Up or Key.Down or Key.Left or Key.Right or Key.Home or Key.End or Key.PageUp or Key.PageDown:
                 DropBigSelection(); // the list then selects the next row as usual
                 break;
@@ -334,6 +338,20 @@ public partial class PaneView : UserControl
                 KeepFocusAfterFilter();
                 break;
         }
+    }
+
+    /// <summary>PageUp/PageDown in tiles and thumbnails: a screenful of rows, from the focused item.</summary>
+    private void PageGrid(VirtualizingWrapPanel grid, bool down)
+    {
+        var focused = TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() as Control;
+        var current = focused is not null && Files.IndexFromContainer(focused) is >= 0 and var index ? index : Files.SelectedIndex;
+        var target = grid.PageTarget(current, down);
+        if (target < 0)
+            return;
+        DropBigSelection();
+        Files.SelectedIndex = target;
+        Files.ScrollIntoView(target);
+        Files.ContainerFromIndex(target)?.Focus(NavigationMethod.Directional);
     }
 
     /// <summary>

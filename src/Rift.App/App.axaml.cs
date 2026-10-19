@@ -40,6 +40,9 @@ public partial class App : Application
 
             desktop.Exit += (_, _) => AppSettings.SaveNow();
             Perf.WatchUiThread();
+            // For checking crash reports end to end: RIFT_TEST_CRASH=1 throws on the UI thread once the window is up.
+            if (Environment.GetEnvironmentVariable("RIFT_TEST_CRASH") == "1")
+                Dispatcher.UIThread.Post(() => throw new InvalidOperationException("Test crash (RIFT_TEST_CRASH)"), DispatcherPriority.ApplicationIdle);
             RecentPlaces.Initialize();
             Program.Instance?.Listen(forwarded =>
                 Dispatcher.UIThread.Post(() => vm.OpenFromAnotherInstance(StartupArgs.Parse(forwarded))));

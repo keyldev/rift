@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Reflection;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -7,6 +5,7 @@ using Rift.App.Services;
 using Rift.Core.Localization;
 using Velopack;
 using Velopack.Sources;
+using Rift.Core;
 
 namespace Rift.App.ViewModels;
 
@@ -51,7 +50,7 @@ public sealed partial class UpdatesViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            Trace.WriteLine($"Updates are off: {ex.Message}");
+            Log.Warn("Updates are off", ex);
         }
 
         State = _manager is null ? UpdateState.NotInstalled : UpdateState.Idle;
@@ -63,10 +62,7 @@ public sealed partial class UpdatesViewModel : ObservableObject
         }
     }
 
-    /// <summary>The running version, without the commit hash the SDK appends.</summary>
-    public string Version { get; } =
-        (Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "?")
-        .Split('+')[0];
+    public string Version => AppInfo.Version;
 
     public string VersionText => Strings.UpdateVersion(Version);
 
@@ -145,7 +141,7 @@ public sealed partial class UpdatesViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            Trace.WriteLine($"Update check failed: {ex}");
+            Log.Warn("Update check failed", ex);
             State = UpdateState.Failed;
         }
     }

@@ -1,9 +1,11 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Rift.App.Services;
 using Rift.Core;
 using Rift.Core.Localization;
 using Rift.Shell;
@@ -55,6 +57,57 @@ public partial class MainWindowViewModel : ViewModelBase
     public IReadOnlyList<SidebarItem> QuickAccess { get; } = SidebarItem.QuickAccess();
 
     public UpdatesViewModel Updates { get; } = new();
+
+    /// <summary>The last run crashed and the user hasn't seen this report yet: a card offers to report it.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasCrashNotice))]
+    private CrashReport? _crashNotice = CrashReports.Latest(Services.AppSettings.Current.CrashNoticeSeen);
+
+    public bool HasCrashNotice => CrashNotice is not null;
+
+    /// <summary>Opens GitHub's "new issue" page with the report filled in; the user reviews it there and sends it.</summary>
+    [RelayCommand]
+    private async Task ReportCrash()
+    {
+        if (CrashNotice is not { } report)
+            return;
+        try
+        {
+            var url = CrashReports.IssueUrl(report);
+            await Task.Run(() => Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }));
+        }
+        catch (Exception ex) when (ex is IOException or System.ComponentModel.Win32Exception)
+        {
+            Log.Warn("Opening the issue page failed", ex);
+        }
+        DismissCrash();
+    }
+
+    [RelayCommand]
+    private void DismissCrash()
+    {
+        if (CrashNotice is { } report)
+            Services.AppSettings.Update(s => s.CrashNoticeSeen = report.Time);
+        CrashNotice = null;
+    }
+
+    /// <summary>The logs and crash reports: the tab that already shows them, or a new one in the active pane.</summary>
+    [RelayCommand]
+    private void OpenLogs()
+    {
+        Directory.CreateDirectory(Log.Folder);
+        Settings.IsOpen = false;
+        foreach (var pane in Panes)
+        {
+            if (pane.Tabs.FirstOrDefault(t => string.Equals(t.Path, Log.Folder, StringComparison.OrdinalIgnoreCase)) is { } tab)
+            {
+                pane.SelectedTab = tab;
+                ActivePane = pane;
+                return;
+            }
+        }
+        ActivePane.OpenTab(Log.Folder);
+    }
     /// <summary>Filled in the background (see <see cref="RefreshDrives"/>): one sleeping network drive shouldn't hold up the window.</summary>
     [ObservableProperty] private IReadOnlyList<SidebarItem> _drives = [];
     private int _drivesVersion;

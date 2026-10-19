@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Runtime.Versioning;
 using Rift.Core;
 using Rift.Core.Localization;
@@ -44,7 +43,7 @@ public static class RecentPlaces
         catch (Exception ex)
         {
             // The jump list is a nicety; never let it disturb the app.
-            Trace.WriteLine($"Jump list update failed: {ex}");
+            Log.Warn("Jump list update failed", ex);
         }
     }
 

@@ -157,6 +157,10 @@
             </DockPanel>
             <CheckBox IsChecked="{Binding CheckForUpdates}" IsVisible="{Binding Main.Updates.IsInstalled}"
                       Content="{x:Static l:Strings.UpdateAuto}" />
+            <DockPanel>
+              <Button DockPanel.Dock="Right" Classes="dialog" Command="{Binding Main.OpenLogsCommand}" Content="{x:Static l:Strings.OpenLogs}" />
+              <TextBlock Classes="hint" VerticalAlignment="Center" TextWrapping="Wrap" Text="{x:Static l:Strings.LogsHint}" />
+            </DockPanel>
 
             <!-- Tags -->
             <TextBlock Classes="h" Text="{x:Static l:Strings.SectionTags}" />

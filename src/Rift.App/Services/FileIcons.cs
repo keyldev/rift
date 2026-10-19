@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using Avalonia;
@@ -7,6 +6,7 @@ using Avalonia.Platform;
 using Avalonia.Threading;
 using Rift.App.ViewModels;
 using Rift.Shell;
+using Rift.Core;
 
 namespace Rift.App.Services;
 
@@ -60,7 +60,7 @@ public static class FileIcons
         if (load.IsCompletedSuccessfully && load.Result is { } pixels)
             bitmap = ToBitmap(pixels);
         else if (load.Exception is { } ex)
-            Trace.WriteLine($"Icon for {key} failed: {ex.InnerException?.Message}");
+            Log.Warn($"Icon for {key} failed", ex.InnerException ?? ex);
 
         if (Cache.Count >= MaxCached)
             Cache.Clear();

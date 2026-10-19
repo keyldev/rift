@@ -1,4 +1,6 @@
 using Avalonia;
+using Avalonia.Logging;
+using Rift.App.Services;
 using Rift.Core;
 using Rift.Core.Localization;
 using Rift.Shell;
@@ -14,6 +16,8 @@ sealed class Program
     [STAThread]
     public static int Main(string[] args)
     {
+        CrashReports.Install();
+
         // First thing: the installer and updater start Rift with their own arguments, handle them and exit here.
         // An update downloaded earlier and never applied gets applied now, before the window shows.
         if (OperatingSystem.IsWindows())
@@ -67,6 +71,12 @@ sealed class Program
         {
             return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
+        catch (Exception ex)
+        {
+            // An exception on the UI thread ends up here; the report is written before the process goes.
+            CrashReports.Write(ex);
+            throw;
+        }
         finally
         {
             Instance?.Dispose();
@@ -87,5 +97,6 @@ sealed class Program
             .WithDeveloperTools()
 #endif
             .WithInterFont()
-            .LogToTrace();
+            // Avalonia's own errors (not its binding warnings, which are many and harmless) go to Rift's log.
+            .LogToDelegate(message => Rift.Core.Log.Warn($"Avalonia: {message}"), LogEventLevel.Error);
 }

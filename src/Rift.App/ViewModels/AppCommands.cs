@@ -1,8 +1,8 @@
-using System.Diagnostics;
 using System.Windows.Input;
 using Avalonia.Input;
 using Rift.App.Services;
 using Rift.Core.Localization;
+using Rift.Core;
 
 namespace Rift.App.ViewModels;
 
@@ -31,7 +31,7 @@ public sealed record AppCommand(string Id, Func<string> Label, string Icon, stri
                 }
                 catch (Exception ex) when (ex is ArgumentException or FormatException)
                 {
-                    Trace.WriteLine($"Bad gesture '{part}' for {Id}: {ex.Message}");
+                    Log.Warn($"Bad gesture '{part}' for {Id}: {ex.Message}");
                 }
             }
             return keys;

@@ -292,4 +292,9 @@ public static class Strings
     public static string UpdateRestart => Get(nameof(UpdateRestart));
     public static string UpdateButton(object a0) => Format(nameof(UpdateButton), a0);
     public static string UpdateButtonTip => Get(nameof(UpdateButtonTip));
+    public static string CrashNoticeTitle => Get(nameof(CrashNoticeTitle));
+    public static string CrashNoticeText => Get(nameof(CrashNoticeText));
+    public static string CrashReport => Get(nameof(CrashReport));
+    public static string OpenLogs => Get(nameof(OpenLogs));
+    public static string LogsHint => Get(nameof(LogsHint));
 }

@@ -133,5 +133,8 @@ part is checked by the code paths and a unit test, not by hand.
 ## Quality
 
 - [ ] UI tests with Avalonia.Headless
-- [ ] Logs and crash reports
+- [x] Logs and crash reports (0.10): a log a day in `%AppData%\Rift\logs`, kept for a week; a crash writes
+      a report there (version, Windows, the exception, the last log lines), and the next start offers to report it
+      on GitHub with the stack trace filled in and the exception messages, which can name files, left out.
+      "Open logs" in Settings
 - [ ] Accessibility: full keyboard navigation, screen readers

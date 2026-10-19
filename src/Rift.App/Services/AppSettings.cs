@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Diagnostics;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Styling;
@@ -123,7 +122,7 @@ public static class AppSettings
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            Trace.WriteLine($"Saving settings failed: {ex.Message}");
+            Log.Warn("Saving settings failed", ex);
         }
     }
 

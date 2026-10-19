@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using CommunityToolkit.Mvvm.Input;
 using Rift.Core;
 using Rift.Shell;
@@ -107,7 +106,7 @@ public partial class MainWindowViewModel
         }
         catch (Exception ex)
         {
-            Trace.WriteLine($"Properties failed: {ex}");
+            Log.Warn("Properties failed", ex);
         }
     }
 
@@ -139,7 +138,7 @@ public partial class MainWindowViewModel
         catch (Exception ex)
         {
             // Shell extensions are third-party code; whatever they throw, Rift keeps running.
-            Trace.WriteLine($"Shell menu failed: {ex}");
+            Log.Warn("Shell menu failed", ex);
         }
     }
 

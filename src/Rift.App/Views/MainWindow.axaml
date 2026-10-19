@@ -196,9 +196,27 @@
       <!-- Panes, in the split layout (built in code from the layout tree) -->
       <c:LayoutHost x:Name="Panes" Grid.Column="1" Margin="8" />
 
-      <!-- Running operations, bottom right -->
-      <ItemsControl Grid.Column="1" ItemsSource="{Binding Operations.Items}" Width="320"
-                    HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,18,18">
+      <!-- Bottom right: the last run's crash, then running operations -->
+      <StackPanel Grid.Column="1" Width="320" Spacing="8" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,18,18">
+      <Border Classes="card" Padding="12,10" IsVisible="{Binding HasCrashNotice}">
+        <DockPanel>
+          <c:Icon DockPanel.Dock="Left" Width="18" Height="18" Margin="0,1,10,0" VerticalAlignment="Top"
+                  Foreground="{DynamicResource Rift.Danger}" Data="{StaticResource Icon.Alert}" />
+          <Button DockPanel.Dock="Right" Classes="flat" VerticalAlignment="Top" Margin="6,-4,-6,0"
+                  Command="{Binding DismissCrashCommand}" ToolTip.Tip="{x:Static l:Strings.TipDismiss}">
+            <c:Icon Data="{StaticResource Icon.Close}" />
+          </Button>
+          <StackPanel Spacing="6">
+            <TextBlock Text="{x:Static l:Strings.CrashNoticeTitle}" FontWeight="Medium" TextWrapping="Wrap" />
+            <TextBlock Classes="dim" FontSize="12" TextWrapping="Wrap" Text="{x:Static l:Strings.CrashNoticeText}" />
+            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+              <Button Classes="dialog primary" Command="{Binding ReportCrashCommand}" Content="{x:Static l:Strings.CrashReport}" />
+              <Button Classes="dialog" Command="{Binding OpenLogsCommand}" Content="{x:Static l:Strings.OpenLogs}" />
+            </StackPanel>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+      <ItemsControl ItemsSource="{Binding Operations.Items}">
         <ItemsControl.ItemsPanel>
           <ItemsPanelTemplate>
             <StackPanel Spacing="8" />
@@ -245,6 +263,7 @@
           </DataTemplate>
         </ItemsControl.ItemTemplate>
       </ItemsControl>
+      </StackPanel>
     </Grid>
 
     <!-- Status bar -->

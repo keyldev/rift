@@ -201,3 +201,56 @@ public class DirectoryReaderTests : IDisposable
         Assert.Equal(1, entries[2].Size);
     }
 }
+
+public class LogTests : IDisposable
+{
+    private readonly string _folder = Directory.CreateTempSubdirectory("rift-logs-").FullName;
+    private readonly string _previous = Log.Folder;
+
+    public LogTests() => Log.Folder = _folder;
+
+    public void Dispose()
+    {
+        Log.Folder = _previous;
+        Directory.Delete(_folder, recursive: true);
+    }
+
+    [Fact]
+    public void Writes_entries_with_the_exception_and_keeps_them_for_a_crash_report()
+    {
+        Log.Warn("Saving failed", new IOException("disk full"));
+
+        var text = File.ReadAllText(Log.CurrentFile);
+        Assert.Contains("[WRN] Saving failed", text);
+        Assert.Contains("System.IO.IOException: disk full", text);
+        Assert.Contains(Log.RecentEntries(), e => e.Contains("Saving failed"));
+    }
+
+    [Fact]
+    public void Exception_messages_are_dropped_from_public_traces()
+    {
+        Assert.Equal("System.IO.IOException", StackTraces.WithoutMessage(@"System.IO.IOException: The file 'C:\Users\me\secret.txt' is in use"));
+        Assert.Equal(" ---> System.UnauthorizedAccessException",
+            StackTraces.WithoutMessage(@" ---> System.UnauthorizedAccessException: Access to the path 'D:\x' is denied."));
+        Assert.Equal("   at Rift.Core.Log.Write(String level)", StackTraces.WithoutMessage("   at Rift.Core.Log.Write(String level)"));
+    }
+
+    [Fact]
+    public void An_issue_has_the_header_and_the_stack_but_no_messages_or_log_lines()
+    {
+        string[] report =
+        [
+            "Rift 0.10.0", "Microsoft Windows 10.0.19045 (X64)", "",
+            @"System.IO.IOException: 'C:\Users\me\diary.txt' is in use", "   at Rift.Core.FileOps.Delete(String path)", "",
+            "Last log entries:", @"2026-10-19 16:40:01.000 [WRN] Thumbnail for C:\Users\me\photo.jpg failed",
+        ];
+
+        var (title, body) = StackTraces.Issue(report, "crash-20261019-164001.txt");
+
+        Assert.Equal("Crash: System.IO.IOException", title);
+        Assert.Contains("Rift 0.10.0", body);
+        Assert.Contains("at Rift.Core.FileOps.Delete", body);
+        Assert.Contains("crash-20261019-164001.txt", body);
+        Assert.DoesNotContain(@"C:\Users\me", body);
+    }
+}

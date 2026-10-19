@@ -232,6 +232,19 @@ public sealed class VirtualizingWrapPanel : VirtualizingPanel
         return target;
     }
 
+    /// <summary>
+    /// The row a page above or below <paramref name="current"/>. ListBox scrolls on PageUp/PageDown by itself
+    /// instead of asking the panel, so the pane calls this directly.
+    /// </summary>
+    public int PageTarget(int current, bool down)
+    {
+        var count = Items.Count;
+        if (count == 0)
+            return -1;
+        var step = Math.Max(1, (int)(_viewport.Height / ItemHeight) - 1) * _columns;
+        return Math.Clamp(current < 0 ? 0 : down ? current + step : current - step, 0, count - 1);
+    }
+
     /// <summary>Arrow keys move through the grid: left/right by one, up/down by a row; Home/End, PageUp/PageDown.</summary>
     protected override IInputElement? GetControl(NavigationDirection direction, IInputElement? from, bool wrap)
     {
