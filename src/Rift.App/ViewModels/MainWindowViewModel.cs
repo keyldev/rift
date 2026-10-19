@@ -53,6 +53,8 @@ public partial class MainWindowViewModel : ViewModelBase
     public event Action? LayoutChanged;
 
     public IReadOnlyList<SidebarItem> QuickAccess { get; } = SidebarItem.QuickAccess();
+
+    public UpdatesViewModel Updates { get; } = new();
     /// <summary>Filled in the background (see <see cref="RefreshDrives"/>): one sleeping network drive shouldn't hold up the window.</summary>
     [ObservableProperty] private IReadOnlyList<SidebarItem> _drives = [];
     private int _drivesVersion;

@@ -262,4 +262,17 @@
   <data name="TagNewMenu" xml:space="preserve"><value>New tag…</value></data>
   <data name="MenuTags" xml:space="preserve"><value>Tags</value></data>
   <data name="SidebarTags" xml:space="preserve"><value>TAGS</value></data>
+  <data name="SectionUpdates" xml:space="preserve"><value>Updates</value></data>
+  <data name="UpdateVersion" xml:space="preserve"><value>Rift {0}</value></data>
+  <data name="UpdateCheckNow" xml:space="preserve"><value>Check now</value></data>
+  <data name="UpdateAuto" xml:space="preserve"><value>Check for updates automatically</value></data>
+  <data name="UpdateChecking" xml:space="preserve"><value>Checking for updates…</value></data>
+  <data name="UpdateUpToDate" xml:space="preserve"><value>This is the latest version.</value></data>
+  <data name="UpdateDownloading" xml:space="preserve"><value>Downloading {0}… {1}%</value></data>
+  <data name="UpdateReady" xml:space="preserve"><value>Version {0} is downloaded and installs when Rift restarts.</value></data>
+  <data name="UpdateFailed" xml:space="preserve"><value>Couldn't check for updates. Rift will try again later.</value></data>
+  <data name="UpdateNotInstalled" xml:space="preserve"><value>This copy wasn't installed with Rift's setup, so it doesn't update itself. The installer is on GitHub Releases.</value></data>
+  <data name="UpdateRestart" xml:space="preserve"><value>Restart and update</value></data>
+  <data name="UpdateButton" xml:space="preserve"><value>Update to {0}</value></data>
+  <data name="UpdateButtonTip" xml:space="preserve"><value>Restart Rift to install the new version; tabs come back</value></data>
 </root>

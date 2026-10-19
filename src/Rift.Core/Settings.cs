@@ -24,6 +24,9 @@ public sealed class SettingsState
     /// <summary>Each folder opens with the view and sort it had last time.</summary>
     public bool RememberFolderViews { get; set; } = true;
 
+    /// <summary>The installed Rift looks for a new version on GitHub after start and daily, and downloads it.</summary>
+    public bool CheckForUpdates { get; set; } = true;
+
     public ColumnsState Columns { get; set; } = new();
 
     /// <summary>Command id → gesture, only where the user changed the default. An empty gesture means "no key".</summary>

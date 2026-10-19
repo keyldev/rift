@@ -52,6 +52,8 @@ public partial class MainWindow : Window
                 AppSettings.Changed += () => Dispatcher.UIThread.Post(ApplyBackdrop, DispatcherPriority.Background);
                 vm.Placement = SavePlacement;
                 vm.Settings.RestartRequested += CloseLater;
+                vm.Updates.RestartRequested += CloseLater;
+                vm.Updates.Start();
                 vm.Settings.PropertyChanged += (_, e) =>
                 {
                     if (e.PropertyName == nameof(SettingsViewModel.IsOpen) && !vm.Settings.IsOpen)

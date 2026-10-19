@@ -57,6 +57,31 @@ jobs:
             !publish/win-x64/*.pdb
           if-no-files-found: error
 
+      # Tags also make the installer. Velopack packs the AOT build into Rift-win-Setup.exe, a self-updating
+      # portable zip and the packages installed copies update from; the previous release's package is
+      # downloaded first so the update can ship as a small delta.
+      - name: Package with Velopack
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          dotnet tool restore
+          dotnet vpk download github --repoUrl "https://github.com/$GITHUB_REPOSITORY" --token "$GH_TOKEN" -o releases \
+            || echo "No earlier release made with Velopack: full package only"
+          notes=".github/release-notes/$GITHUB_REF_NAME.md"
+          if [ -f "$notes" ]; then set -- --releaseNotes "$notes"; fi
+          dotnet vpk pack --packId Rift --packVersion "${GITHUB_REF_NAME#v}" --packDir publish/win-x64 --mainExe Rift.exe \
+            --packTitle Rift --packAuthors "Vasiliy Zalatov" --icon src/Rift.App/Assets/rift.ico \
+            --shortcuts StartMenuRoot -o releases "$@"
+
+      - uses: actions/upload-artifact@v4
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          name: rift-releases
+          path: releases
+          if-no-files-found: error
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -75,16 +100,19 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: rift-win-x64
-          path: rift
+          name: rift-releases
+          path: releases
 
       # Notes come from .github/release-notes/<tag>.md when it exists, otherwise GitHub writes them.
       - name: Create the release
         env:
           GH_TOKEN: ${{ github.token }}
+        # Everything Velopack made for this version: the setup, the portable zip, the full package and a delta,
+        # and the feeds (releases.win.json, RELEASES) that installed copies read. Packages of older versions,
+        # downloaded only to build the delta, stay on their own releases.
         run: |
-          zip_name="rift-${GITHUB_REF_NAME#v}-win-x64.zip"
-          (cd rift && zip -r "../$zip_name" .)
+          version="${GITHUB_REF_NAME#v}"
+          files=$(find releases -maxdepth 1 -type f \( ! -name '*.nupkg' -o -name "*-$version-*.nupkg" \))
           notes=".github/release-notes/$GITHUB_REF_NAME.md"
           if [ -f "$notes" ]; then set -- --notes-file "$notes"; else set -- --generate-notes; fi
-          gh release create "$GITHUB_REF_NAME" "$zip_name" --title "Rift ${GITHUB_REF_NAME#v}" --verify-tag "$@"
+          gh release create "$GITHUB_REF_NAME" $files --title "Rift $version" --verify-tag "$@"

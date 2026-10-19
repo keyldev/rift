@@ -23,7 +23,7 @@
 </details>
 
 > Early stage. Rift already browses, copies, moves, searches and previews, and fits into Windows like Explorer does;
-> next up are an installer with auto-update and a winget package.
+> next up are a winget package and signed binaries.
 > See [ROADMAP.md](ROADMAP.md).
 
 ## Features
@@ -56,8 +56,12 @@
 
 ## Download
 
-Grab `rift-<version>-win-x64.zip` from [Releases](https://github.com/keyldev/rift/releases), unzip it anywhere and run `Rift.exe`
-(no .NET install needed). Builds of every commit are in the artifacts of the [CI runs](https://github.com/keyldev/rift/actions/workflows/build.yml).
+Run `Rift-win-Setup.exe` from [Releases](https://github.com/keyldev/rift/releases): it installs Rift for your user
+(no admin rights, no .NET install needed), adds it to the Start menu, and Rift then keeps itself up to date: a new version
+downloads in the background and installs on restart (Settings → Updates). To uninstall, use "Apps" in Windows Settings.
+
+Rather not install? `Rift-win-Portable.zip` runs from any folder and updates itself the same way.
+Builds of every commit are in the artifacts of the [CI runs](https://github.com/keyldev/rift/actions/workflows/build.yml).
 
 The exe isn't signed yet, so SmartScreen may warn on the first start: "More info" → "Run anyway".
 
@@ -140,6 +144,14 @@ and every UI-thread stall over 50 ms go to `%TEMP%\rift-perf.log`.
 ```bash
 powershell -File scripts/bench-fixture.ps1
 ```
+
+### Releases
+
+A `v*` tag builds the AOT exe, packs it with [Velopack](https://velopack.io) (`dotnet vpk`, pinned in
+`dotnet-tools.json`) and creates the GitHub release with the setup, the portable zip and the update packages;
+notes come from `.github/release-notes/<tag>.md`. To try an update without a release, pack two versions into a folder
+with `dotnet vpk pack` and start the installed Rift with `RIFT_UPDATE_SOURCE` set to that folder.
+`scripts/winget-manifest.ps1 -Version <x.y.z>` writes the winget manifests for a published release.
 
 ### Stack
 

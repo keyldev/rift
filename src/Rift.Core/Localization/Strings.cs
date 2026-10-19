@@ -279,4 +279,17 @@ public static class Strings
     public static string TagNewMenu => Get(nameof(TagNewMenu));
     public static string MenuTags => Get(nameof(MenuTags));
     public static string SidebarTags => Get(nameof(SidebarTags));
+    public static string SectionUpdates => Get(nameof(SectionUpdates));
+    public static string UpdateVersion(object a0) => Format(nameof(UpdateVersion), a0);
+    public static string UpdateCheckNow => Get(nameof(UpdateCheckNow));
+    public static string UpdateAuto => Get(nameof(UpdateAuto));
+    public static string UpdateChecking => Get(nameof(UpdateChecking));
+    public static string UpdateUpToDate => Get(nameof(UpdateUpToDate));
+    public static string UpdateDownloading(object a0, object a1) => Format(nameof(UpdateDownloading), a0, a1);
+    public static string UpdateReady(object a0) => Format(nameof(UpdateReady), a0);
+    public static string UpdateFailed => Get(nameof(UpdateFailed));
+    public static string UpdateNotInstalled => Get(nameof(UpdateNotInstalled));
+    public static string UpdateRestart => Get(nameof(UpdateRestart));
+    public static string UpdateButton(object a0) => Format(nameof(UpdateButton), a0);
+    public static string UpdateButtonTip => Get(nameof(UpdateButtonTip));
 }

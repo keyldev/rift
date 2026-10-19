@@ -2,6 +2,7 @@ using Avalonia;
 using Rift.Core;
 using Rift.Core.Localization;
 using Rift.Shell;
+using Velopack;
 
 namespace Rift.App;
 
@@ -13,6 +14,20 @@ sealed class Program
     [STAThread]
     public static int Main(string[] args)
     {
+        // First thing: the installer and updater start Rift with their own arguments, handle them and exit here.
+        // An update downloaded earlier and never applied gets applied now, before the window shows.
+        if (OperatingSystem.IsWindows())
+        {
+            VelopackApp.Build()
+                .OnBeforeUninstallFastCallback(_ =>
+                {
+                    // Uninstalling: take "Open in Rift" out of Explorer's menu if it points at this soon deleted exe.
+                    if (OperatingSystem.IsWindows() && ExplorerIntegration.IsRegisteredTo(Environment.ProcessPath!))
+                        ExplorerIntegration.Unregister();
+                })
+                .Run();
+        }
+
         // For installers and manual setup: Rift.exe --register-shell / --unregister-shell
         if (OperatingSystem.IsWindows() && args is [var flag] && flag.StartsWith("--", StringComparison.Ordinal))
         {

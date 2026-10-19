@@ -32,6 +32,13 @@ public static class ExplorerIntegration
         return key?.GetValue(null) is string;
     }
 
+    /// <summary>The verb is there and starts this exe (not, say, a dev build elsewhere).</summary>
+    public static bool IsRegisteredTo(string exePath)
+    {
+        using var key = Registry.CurrentUser.OpenSubKey(VerbKey(Targets[0].ShellKey) + @"\command");
+        return key?.GetValue(null) is string command && command.Contains($"\"{exePath}\"", StringComparison.OrdinalIgnoreCase);
+    }
+
     /// <param name="menuText">Localized caption, e.g. "Open in Rift".</param>
     public static void Register(string exePath, string menuText)
     {

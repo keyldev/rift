@@ -480,3 +480,6 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# winget manifests written by scripts/winget-manifest.ps1
+winget/

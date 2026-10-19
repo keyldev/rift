@@ -139,6 +139,25 @@
             <CheckBox IsChecked="{Binding Main.IsExplorerMenuEnabled}" IsVisible="{Binding Main.IsExplorerMenuSupported}"
                       Content="{x:Static l:Strings.ExplorerMenuToggle}" ToolTip.Tip="{x:Static l:Strings.ExplorerMenuToggleTip}" />
 
+            <!-- Updates: only the installed Rift updates itself; the zip build points to GitHub -->
+            <TextBlock Classes="h" Text="{x:Static l:Strings.SectionUpdates}" />
+            <DockPanel>
+              <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"
+                          IsVisible="{Binding Main.Updates.IsInstalled}">
+                <Button Classes="dialog primary" IsVisible="{Binding Main.Updates.IsReady}"
+                        Command="{Binding Main.Updates.RestartCommand}" Content="{x:Static l:Strings.UpdateRestart}" />
+                <Button Classes="dialog" IsVisible="{Binding !Main.Updates.IsReady}"
+                        Command="{Binding Main.Updates.CheckCommand}" Content="{x:Static l:Strings.UpdateCheckNow}" />
+              </StackPanel>
+              <StackPanel Spacing="2" VerticalAlignment="Center">
+                <TextBlock Text="{Binding Main.Updates.VersionText}" />
+                <TextBlock Classes="hint" TextWrapping="Wrap" Text="{Binding Main.Updates.StatusText}"
+                           IsVisible="{Binding Main.Updates.HasStatus}" />
+              </StackPanel>
+            </DockPanel>
+            <CheckBox IsChecked="{Binding CheckForUpdates}" IsVisible="{Binding Main.Updates.IsInstalled}"
+                      Content="{x:Static l:Strings.UpdateAuto}" />
+
             <!-- Tags -->
             <TextBlock Classes="h" Text="{x:Static l:Strings.SectionTags}" />
             <TextBlock Classes="hint" Text="{x:Static l:Strings.TagsHint}" />

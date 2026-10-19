@@ -262,4 +262,17 @@
   <data name="TagNewMenu" xml:space="preserve"><value>Новый тег…</value></data>
   <data name="MenuTags" xml:space="preserve"><value>Теги</value></data>
   <data name="SidebarTags" xml:space="preserve"><value>ТЕГИ</value></data>
+  <data name="SectionUpdates" xml:space="preserve"><value>Обновления</value></data>
+  <data name="UpdateVersion" xml:space="preserve"><value>Rift {0}</value></data>
+  <data name="UpdateCheckNow" xml:space="preserve"><value>Проверить сейчас</value></data>
+  <data name="UpdateAuto" xml:space="preserve"><value>Проверять обновления автоматически</value></data>
+  <data name="UpdateChecking" xml:space="preserve"><value>Проверка обновлений…</value></data>
+  <data name="UpdateUpToDate" xml:space="preserve"><value>Это последняя версия.</value></data>
+  <data name="UpdateDownloading" xml:space="preserve"><value>Загрузка {0}… {1}%</value></data>
+  <data name="UpdateReady" xml:space="preserve"><value>Версия {0} загружена и установится при перезапуске Rift.</value></data>
+  <data name="UpdateFailed" xml:space="preserve"><value>Не удалось проверить обновления. Rift попробует позже.</value></data>
+  <data name="UpdateNotInstalled" xml:space="preserve"><value>Эта копия поставлена не установщиком Rift и сама не обновляется. Установщик — на GitHub Releases.</value></data>
+  <data name="UpdateRestart" xml:space="preserve"><value>Перезапустить и обновить</value></data>
+  <data name="UpdateButton" xml:space="preserve"><value>Обновить до {0}</value></data>
+  <data name="UpdateButtonTip" xml:space="preserve"><value>Перезапустить Rift и установить новую версию; вкладки вернутся</value></data>
 </root>

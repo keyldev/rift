@@ -73,6 +73,10 @@
               <Setter Property="chrome:WindowDecorationProperties.ElementRole" Value="User" />
             </Style>
           </StackPanel.Styles>
+          <!-- A new version is downloaded: one click restarts into it -->
+          <Button Classes="dialog primary" Margin="0,0,8,0" Padding="10,3" IsVisible="{Binding Updates.IsReady}"
+                  Command="{Binding Updates.RestartCommand}" Content="{Binding Updates.ButtonText}"
+                  ToolTip.Tip="{x:Static l:Strings.UpdateButtonTip}" />
           <Button Classes="flat" Classes.on="{Binding IsZoomed}" Command="{Binding ToggleZoomCommand}"
                   IsEnabled="{Binding HasManyPanes}" ToolTip.Tip="{x:Static l:Strings.TipZoom}">
             <c:Icon Data="{StaticResource Icon.Single}" />

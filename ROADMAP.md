@@ -121,9 +121,12 @@ part is checked by the code paths and a unit test, not by hand.
 
 ## Distribution
 
-- [x] Releases from CI on tag: a `v*` tag builds the zip and creates a GitHub release
-- [ ] Installer with auto-update (Velopack or MSIX)
-- [ ] winget package
+- [x] Releases from CI on tag: a `v*` tag builds the AOT exe and creates a GitHub release (0.7)
+- [x] Installer with auto-update, Velopack (0.9): per-user setup with no admin rights, a self-updating portable zip,
+      delta updates from GitHub Releases downloaded in the background and installed on restart; "Check for updates
+      automatically" in Settings; uninstalling takes "Open in Rift" out of Explorer's menu
+- [ ] winget package: `scripts/winget-manifest.ps1` writes the manifests for a release; the pull request to
+      microsoft/winget-pkgs is still to be made, once 0.9.0 is out
 - [ ] Signed binaries
 - [ ] Top-level "Open in Rift" in the Windows 11 menu (`IExplorerCommand` + signed sparse package)
 

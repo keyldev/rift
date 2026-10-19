@@ -120,6 +120,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private Choice? _backdrop;
     [ObservableProperty] private Choice? _language;
     [ObservableProperty] private bool _rememberFolderViews;
+    [ObservableProperty] private bool _checkForUpdates;
     [ObservableProperty] private string? _hotkeyNotice;
 
     public ViewOptions View => ViewOptions.Current;
@@ -138,6 +139,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         Backdrop = Backdrops.FirstOrDefault(b => b.Value == s.Backdrop) ?? Backdrops[0];
         Language = Languages.FirstOrDefault(l => l.Value == s.Language) ?? Languages[0];
         RememberFolderViews = s.RememberFolderViews;
+        CheckForUpdates = s.CheckForUpdates;
         foreach (var accent in Accents)
             accent.IsSelected = accent.Accent.Id == Rift.Core.Accents.Find(s.Accent).Id;
         Tags.Clear();
@@ -185,6 +187,12 @@ public sealed partial class SettingsViewModel : ObservableObject
     {
         if (!_loading)
             AppSettings.Update(s => s.RememberFolderViews = value);
+    }
+
+    partial void OnCheckForUpdatesChanged(bool value)
+    {
+        if (!_loading)
+            AppSettings.Update(s => s.CheckForUpdates = value);
     }
 
     private void ShowAccentsFor(bool dark)
