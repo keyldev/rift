@@ -23,7 +23,7 @@
 </details>
 
 > Early stage. Rift already browses, copies, moves, searches and previews, and fits into Windows like Explorer does;
-> next up are speed work and installers.
+> next up are an installer with auto-update and a winget package.
 > See [ROADMAP.md](ROADMAP.md).
 
 ## Features
@@ -132,6 +132,13 @@ dotnet run --project src/Rift.App
 
 ```bash
 dotnet test
+```
+
+To check speed on a big folder, make one with 100,000 files and start Rift with `RIFT_PERF=1`: folder loads
+and every UI-thread stall over 50 ms go to `%TEMP%\rift-perf.log`.
+
+```bash
+powershell -File scripts/bench-fixture.ps1
 ```
 
 ### Stack

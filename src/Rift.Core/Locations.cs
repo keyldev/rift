@@ -143,36 +143,29 @@ public static class Locations
     }
 
     /// <summary>Drives as rows: free space in the Modified column, the drive type in Type, capacity in Size.</summary>
+    /// <remarks>A drive that doesn't answer in time (a sleeping network share) is listed by its letter alone; Ctrl+R asks again.</remarks>
     public static IReadOnlyList<FileEntry> ReadDrives()
     {
         var entries = new List<FileEntry>();
-        foreach (var drive in DriveInfo.GetDrives())
+        foreach (var drive in DriveReader.Read(DriveReader.Patience))
         {
-            try
+            var type = drive.Type switch
             {
-                var letter = drive.Name.TrimEnd('\\');
-                var type = drive.DriveType switch
-                {
-                    DriveType.Network => Strings.DriveNetwork,
-                    DriveType.Removable => Strings.DriveRemovable,
-                    DriveType.CDRom => Strings.DriveOptical,
-                    _ => Strings.DriveLocal,
-                };
-                if (!drive.IsReady)
-                {
-                    entries.Add(new FileEntry(letter, drive.Name, true, null, default, FileKind.Folder, false,
-                        FileAttributes.Directory, DateNote: "", TypeNote: type));
-                    continue;
-                }
+                DriveType.Network => Strings.DriveNetwork,
+                DriveType.Removable => Strings.DriveRemovable,
+                DriveType.CDRom => Strings.DriveOptical,
+                _ => Strings.DriveLocal,
+            };
+            if (!drive.IsReady)
+            {
+                entries.Add(new FileEntry(drive.Letter, drive.Name, true, null, default, FileKind.Folder, false,
+                    FileAttributes.Directory, DateNote: "", TypeNote: type));
+                continue;
+            }
 
-                var label = string.IsNullOrWhiteSpace(drive.VolumeLabel) ? type : drive.VolumeLabel;
-                entries.Add(new FileEntry($"{label} ({letter})", drive.Name, true, drive.TotalSize, default, FileKind.Folder, false,
-                    FileAttributes.Directory, DateNote: Strings.DriveFreeShort(SizeFormatter.Format(drive.AvailableFreeSpace)), TypeNote: type));
-            }
-            catch (IOException)
-            {
-                // Unplugged while we were looking at it.
-            }
+            var label = string.IsNullOrWhiteSpace(drive.Label) ? type : drive.Label;
+            entries.Add(new FileEntry($"{label} ({drive.Letter})", drive.Name, true, drive.TotalSize, default, FileKind.Folder, false,
+                FileAttributes.Directory, DateNote: Strings.DriveFreeShort(SizeFormatter.Format(drive.FreeSpace)), TypeNote: type));
         }
         return entries;
     }

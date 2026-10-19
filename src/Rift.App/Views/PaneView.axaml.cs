@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Avalonia;
+using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
@@ -311,6 +312,9 @@ public partial class PaneView : UserControl
 
         switch (e.Key)
         {
+            case Key.Up or Key.Down or Key.Left or Key.Right or Key.Home or Key.End or Key.PageUp or Key.PageDown:
+                DropBigSelection(); // the list then selects the next row as usual
+                break;
             case Key.Enter:
                 OpenSelected();
                 e.Handled = true;
@@ -332,6 +336,17 @@ public partial class PaneView : UserControl
         }
     }
 
+    /// <summary>
+    /// Avalonia collapses a selection row by row, each one a search and a shift through its list of selected
+    /// items: after Ctrl+A in 100,000 files, the next click or arrow key froze the window for a second.
+    /// Handing it a new empty list skips that; call it right before the list collapses the selection itself.
+    /// </summary>
+    private void DropBigSelection()
+    {
+        if (Files.Selection.Count > 1000)
+            Files.SelectedItems = new AvaloniaList<object>();
+    }
+
     private void SyncSelection()
     {
         if (Pane?.SelectedTab is not { } tab)
@@ -340,8 +355,9 @@ public partial class PaneView : UserControl
         if (Files.SelectedItems is { } items)
         {
             // Right after a tab switch the list can still report the previous tab's selection.
-            var shown = tab.Items.ToHashSet();
-            foreach (var item in items.OfType<FileItem>().Where(shown.Contains))
+            // Checked only then: hashing 100,000 rows on every arrow key adds up.
+            var shown = ReferenceEquals(Files.ItemsSource, tab.Items) ? null : tab.Items.ToHashSet();
+            foreach (var item in items.OfType<FileItem>().Where(i => shown?.Contains(i) ?? true))
                 tab.Selected.Add(item);
         }
         tab.UpdateStatus();
@@ -807,6 +823,10 @@ public partial class PaneView : UserControl
         {
             _selectOnRelease = item;
             e.Handled = true;
+        }
+        else if (e.KeyModifiers == KeyModifiers.None)
+        {
+            DropBigSelection();
         }
     }
 

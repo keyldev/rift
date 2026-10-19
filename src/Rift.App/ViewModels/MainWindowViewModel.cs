@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using Avalonia;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Rift.Core;
@@ -41,6 +42,7 @@ public partial class MainWindowViewModel : ViewModelBase
         LoadTags();
         Services.AppSettings.Changed += LoadTags;
         TrackTheme();
+        RefreshDrives(devicesChanged: true);
     }
 
     /// <summary>The split layout; the view rebuilds itself from it on <see cref="LayoutChanged"/>.</summary>
@@ -51,7 +53,47 @@ public partial class MainWindowViewModel : ViewModelBase
     public event Action? LayoutChanged;
 
     public IReadOnlyList<SidebarItem> QuickAccess { get; } = SidebarItem.QuickAccess();
-    public IReadOnlyList<SidebarItem> Drives { get; } = SidebarItem.Drives();
+    /// <summary>Filled in the background (see <see cref="RefreshDrives"/>): one sleeping network drive shouldn't hold up the window.</summary>
+    [ObservableProperty] private IReadOnlyList<SidebarItem> _drives = [];
+    private int _drivesVersion;
+    private DateTime _drivesReadAt;
+
+    /// <summary>
+    /// Rereads the drives: at startup, when Windows reports a drive plugged in or removed, and when the window
+    /// is activated (a share mapped meanwhile; at most every few seconds). Drives that are slow to answer show
+    /// by their letter first and get their details when they finally reply. This PC tabs reload too.
+    /// </summary>
+    public void RefreshDrives(bool devicesChanged = false)
+    {
+        if (!devicesChanged && DateTime.UtcNow - _drivesReadAt < TimeSpan.FromSeconds(5))
+            return;
+        _drivesReadAt = DateTime.UtcNow;
+        var version = ++_drivesVersion;
+        _ = Task.Run(async () =>
+        {
+            var drives = DriveReader.Read(DriveReader.Patience);
+            await Dispatcher.UIThread.InvokeAsync(() => ShowDrives(version, drives, devicesChanged));
+            if (drives.Any(d => d.IsSlow))
+            {
+                var all = DriveReader.Read(TimeSpan.FromMinutes(1));
+                await Dispatcher.UIThread.InvokeAsync(() => ShowDrives(version, all, reloadTabs: false));
+            }
+        });
+    }
+
+    private void ShowDrives(int version, IReadOnlyList<DriveFacts> drives, bool reloadTabs)
+    {
+        if (version != _drivesVersion)
+            return;
+        var items = SidebarItem.Drives(drives);
+        if (!items.SequenceEqual(Drives))
+            Drives = items;
+        if (reloadTabs)
+        {
+            foreach (var tab in Panes.SelectMany(p => p.Tabs).Where(t => t.Location == LocationKind.ThisPc))
+                _ = tab.RefreshAsync();
+        }
+    }
 
     private readonly PinnedFolders _pinnedFolders = new(PinnedFolders.DefaultFile);
 

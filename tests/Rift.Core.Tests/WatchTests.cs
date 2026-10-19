@@ -55,6 +55,30 @@ public class SortedSyncTests
         Assert.NotSame(b, target[1]);
         Assert.Equal(1, target[1].Version);
     }
+
+    [Fact]
+    public void Gives_up_untouched_when_there_are_too_many_edits()
+    {
+        var target = Rows("a", "b", "c", "d");
+        var done = SortedSync.Apply(target, [("a", 0), ("x", 0), ("y", 0)], r => r.Key, e => e.Item1, e => new Row(e.Item1, e.Item2),
+            (r, e) => r.Version = e.Item2, maxEdits: 4);
+
+        Assert.False(done); // 3 removed + 2 added
+        Assert.Equal(["a", "b", "c", "d"], target.Select(r => r.Key));
+    }
+
+    [Fact]
+    public void Same_files_only_update()
+    {
+        var target = Rows("a", "B", "c");
+        var rows = target.ToList();
+        var done = SortedSync.Apply(target, [("A", 1), ("b", 2), ("c", 3)], r => r.Key, e => e.Item1, e => new Row(e.Item1, e.Item2),
+            (r, e) => r.Version = e.Item2, maxEdits: 0);
+
+        Assert.True(done);
+        Assert.Equal(rows, target);
+        Assert.Equal([1, 2, 3], target.Select(r => r.Version));
+    }
 }
 
 public class FolderWatcherTests : IDisposable
@@ -120,5 +144,30 @@ public class HiddenFilesTests : IDisposable
         var all = DirectoryReader.Read(_root, includeHidden: true);
         Assert.Equal(["hidden.txt", "plain.txt", "system.txt"], all.Select(e => e.Name));
         Assert.Equal([true, false, true], all.Select(e => e.IsHidden));
+    }
+}
+
+public class DriveReaderTests
+{
+    [Fact]
+    public void A_drive_that_hangs_does_not_hold_up_the_rest()
+    {
+        var fast = new DriveInfo("C");
+        var hanging = new DriveInfo("C");
+        using var release = new ManualResetEventSlim();
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+
+        var drives = DriveReader.Read([fast, hanging], TimeSpan.FromMilliseconds(200), d =>
+        {
+            if (ReferenceEquals(d, hanging))
+                release.Wait();
+            return new DriveFacts(d.Name, DriveType.Fixed, true, "Disk", 100, 40);
+        });
+        release.Set();
+
+        Assert.True(clock.Elapsed < TimeSpan.FromSeconds(2));
+        Assert.True(drives[0] is { IsReady: true, IsSlow: false, FreeSpace: 40 });
+        Assert.True(drives[1] is { IsReady: false, IsSlow: true, TotalSize: 0 });
+        Assert.Equal("C:", drives[1].Letter);
     }
 }

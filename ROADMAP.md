@@ -96,15 +96,28 @@ Acrylic was dropped for the same reason.
 
 Screenshots in the README were retaken on the demo files (`scripts/demo-fixture.ps1`, now with real pictures).
 
-## Speed
+## Done — 0.8: speed
 
-Done along the way, but with measurements.
+Measured with `scripts/bench-fixture.ps1` (100,500 items) and `RIFT_PERF=1`, which logs folder loads and every
+UI-thread stall over 50 ms to `%TEMP%\rift-perf.log`. Numbers are the longest stall, before → after.
 
-- [ ] Benchmark: a folder with 100,000 files opens without stutter
+- [x] A folder with 100,000 files opens without stutter: reading and sorting happen in the background,
+      the UI thread only puts the list on screen (opening: 275 → 80 ms, ~35 ms of it Rift's own work)
+- [x] Type-to-filter in that folder: 770 → 70 ms for the first letter. A change of thousands of rows builds
+      a new list instead of thousands of single edits; sorted listings are kept, so a keystroke doesn't sort again
+- [x] Ctrl+A and then a click or an arrow key: 6.5 s and 1 s → under 60 ms (Avalonia collapses a selection row by row;
+      Rift hands it a fresh list instead). Memory with that folder open: 626 → 277 MB
+- [x] Icons and thumbnails load on worker threads for the rows on screen; sizes come with the listing
+- [x] Network shares and slow drives don't freeze the window: drives are read in parallel with a time limit
+      (a sleeping network drive shows by its letter until it answers), folder watchers are set up in the background,
+      typed paths are checked off the UI thread, and a folder that takes longer than 150 ms to read shows the busy bar
+      instead of the last folder's files
+- [x] Drives in the sidebar and This PC follow USB sticks and cards being plugged in and pulled out
 - [x] Cold start under 300 ms, Native AOT: the window shows in ~295 ms instead of ~1.25 s, 106 MB instead of 190 MB
-- [ ] Lazy icons and sizes, never blocking the UI
-- [ ] Network shares and slow drives don't freeze the window
 - [x] Faster copies with `CopyFile2` and its progress callback (2 GB: 0.8 s → 0.45 s with a warm cache)
+
+Not reproduced here: a share that's slow to answer (this machine's SMB client fails at once), so the network
+part is checked by the code paths and a unit test, not by hand.
 
 ## Distribution
 

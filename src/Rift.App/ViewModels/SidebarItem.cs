@@ -24,26 +24,25 @@ public sealed record SidebarItem(string Label, string Path, string Icon, double?
         ];
     }
 
-    public static IReadOnlyList<SidebarItem> Drives()
+    /// <summary>Ready drives with a usage bar; a drive still thinking (a sleeping share) by its letter alone, for now.</summary>
+    public static IReadOnlyList<SidebarItem> Drives(IEnumerable<DriveFacts> drives)
     {
         var list = new List<SidebarItem>();
-        foreach (var d in DriveInfo.GetDrives())
+        foreach (var d in drives)
         {
-            try
+            var icon = d.Type == DriveType.Network ? "Icon.Server" : "Icon.Drive";
+            if (d.IsSlow)
             {
-                if (!d.IsReady)
-                    continue;
-                var letter = d.Name.TrimEnd('\\');
-                var label = string.IsNullOrWhiteSpace(d.VolumeLabel) ? Strings.DriveLocal : d.VolumeLabel;
-                var used = d.TotalSize > 0 ? 1 - (double)d.AvailableFreeSpace / d.TotalSize : 0;
-                var icon = d.DriveType == DriveType.Network ? "Icon.Server" : "Icon.Drive";
-                list.Add(new($"{label} ({letter})", d.Name, icon, used,
-                    Strings.DriveFree(SizeFormatter.Format(d.AvailableFreeSpace), SizeFormatter.Format(d.TotalSize))));
+                list.Add(new($"({d.Letter})", d.Name, icon));
+                continue;
             }
-            catch (IOException)
-            {
-                // Disk went away while we were reading it (card reader, unplugged USB).
-            }
+            // Empty card readers and DVD drives stay out of the sidebar; This PC still lists them.
+            if (!d.IsReady)
+                continue;
+            var label = string.IsNullOrWhiteSpace(d.Label) ? Strings.DriveLocal : d.Label;
+            var used = d.TotalSize > 0 ? 1 - (double)d.FreeSpace / d.TotalSize : 0;
+            list.Add(new($"{label} ({d.Letter})", d.Name, icon, used,
+                Strings.DriveFree(SizeFormatter.Format(d.FreeSpace), SizeFormatter.Format(d.TotalSize))));
         }
         return list;
     }

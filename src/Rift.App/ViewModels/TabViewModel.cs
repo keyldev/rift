@@ -39,6 +39,25 @@ public partial class TabViewModel : ViewModelBase, IDisposable
     private string? _loadedPath;
     /// <summary>Everything the last read returned; sorting and filtering are views over it, no disk access.</summary>
     private IReadOnlyList<FileEntry> _entries = [];
+    /// <summary>
+    /// <see cref="_entries"/> in the current sort order. Kept so a filter keystroke or a reload doesn't sort
+    /// 100,000 names on the UI thread again; loads and header clicks sort in the background and leave it here.
+    /// </summary>
+    private SortedView? _sorted;
+    /// <summary>More rows than this sort off the UI thread when a column header is clicked.</summary>
+    private const int SortInBackground = 2000;
+    /// <summary>A reload or a filter that adds or removes more rows than this builds a new list instead of editing it.</summary>
+    private const int MaxListEdits = 2000;
+    /// <summary>A folder that takes longer than this to read shows the busy bar and an empty list meanwhile.</summary>
+    private static readonly TimeSpan SlowLoad = TimeSpan.FromMilliseconds(150);
+    /// <summary>Bumped whenever the watched folders change, so watchers still being set up for an old folder are dropped.</summary>
+    private int _watchGeneration;
+
+    private sealed record SortedView(IReadOnlyList<FileEntry> From, SortColumn Column, bool Descending, List<FileEntry> Entries)
+    {
+        public static SortedView Of(IReadOnlyList<FileEntry> entries, SortColumn column, bool descending) =>
+            new(entries, column, descending, FileSorter.Sort(entries, column, descending));
+    }
     /// <summary>A change on disk arrived while the user was renaming; reload once they're done.</summary>
     private bool _reloadAfterRename;
 
@@ -209,7 +228,29 @@ public partial class TabViewModel : ViewModelBase, IDisposable
             SortDescending = column is SortColumn.Modified or SortColumn.Created or SortColumn.Size;
         }
         RememberView();
-        ShowEntries(inPlace: false, Selected.Select(i => i.FullPath).ToList());
+        _ = ShowSortedAsync(Selected.Select(i => i.FullPath).ToList());
+    }
+
+    private async Task ShowSortedAsync(IReadOnlyCollection<string> select)
+    {
+        var (entries, column, descending) = (_entries, SortColumn, SortDescending);
+        if (entries.Count > SortInBackground)
+        {
+            var sorted = await Task.Run(() => SortedView.Of(entries, column, descending));
+            // A reload or another click got there first and shows its own order.
+            if (!ReferenceEquals(entries, _entries) || column != SortColumn || descending != SortDescending)
+                return;
+            _sorted = sorted;
+        }
+        ShowEntries(inPlace: false, select);
+    }
+
+    /// <summary><see cref="_entries"/> sorted by the current column; sorted here only if nobody did it already.</summary>
+    private List<FileEntry> SortedEntries()
+    {
+        if (_sorted is not { } sorted || !ReferenceEquals(sorted.From, _entries) || sorted.Column != SortColumn || sorted.Descending != SortDescending)
+            _sorted = sorted = SortedView.Of(_entries, SortColumn, SortDescending);
+        return sorted.Entries;
     }
 
     /// <summary>Type-to-filter: only names containing this (or matching a * ? pattern) stay visible.</summary>
@@ -243,7 +284,8 @@ public partial class TabViewModel : ViewModelBase, IDisposable
     /// <returns>False if nothing is there (the box stays open so the text can be fixed).</returns>
     public async Task<bool> CommitAddressAsync(string text)
     {
-        var (kind, target) = AddressResolver.Resolve(text, Path);
+        var current = Path;
+        var (kind, target) = await Task.Run(() => AddressResolver.Resolve(text, current));
         switch (kind)
         {
             case AddressKind.Folder:
@@ -341,7 +383,9 @@ public partial class TabViewModel : ViewModelBase, IDisposable
 
         try
         {
-            Process.Start(new ProcessStartInfo(item.Entry.FullPath) { UseShellExecute = true });
+            // ShellExecute may wait on a slow share or on the app's own startup; not on the UI thread.
+            var path = item.Entry.FullPath;
+            await Task.Run(() => Process.Start(new ProcessStartInfo(path) { UseShellExecute = true }));
         }
         catch (Exception ex)
         {
@@ -380,19 +424,44 @@ public partial class TabViewModel : ViewModelBase, IDisposable
 
         try
         {
-            var entries = kind switch
+            var watch = Perf.Start();
+            var (column, descending) = (SortColumn, SortDescending);
+            var showHidden = ViewOptions.Current.ShowHidden;
+            var reading = Task.Run(async () =>
             {
-                LocationKind.ThisPc => await Task.Run(Locations.ReadDrives, cts.Token),
-                LocationKind.RecycleBin => await Task.Run(ReadRecycleBin, cts.Token),
-                LocationKind.Network or LocationKind.Server or LocationKind.Libraries or LocationKind.Library or LocationKind.Tag
-                    => await Places.ReadAsync(path, ViewOptions.Current.ShowHidden, cts.Token),
-                _ => await DirectoryReader.ReadAsync(path, ViewOptions.Current.ShowHidden, cts.Token),
-            };
+                var entries = kind switch
+                {
+                    LocationKind.ThisPc => Locations.ReadDrives(),
+                    LocationKind.RecycleBin => ReadRecycleBin(),
+                    LocationKind.Network or LocationKind.Server or LocationKind.Libraries or LocationKind.Library or LocationKind.Tag
+                        => await Places.ReadAsync(path, showHidden, cts.Token),
+                    _ => DirectoryReader.Read(path, showHidden, cts.Token),
+                };
+                return (entries, SortedView.Of(entries, column, descending));
+            }, cts.Token);
+
+            // A slow drive or a share across the network: say so, and don't leave the last folder's files
+            // on screen under the new path, where they could be mistaken for these and acted on.
+            if (await Task.WhenAny(reading, Task.Delay(SlowLoad, cts.Token)) != reading && !cts.IsCancellationRequested)
+            {
+                IsBusy = true;
+                if (!sameFolder)
+                {
+                    _entries = [];
+                    Items = [];
+                }
+                UpdateStatus();
+            }
+            var (entries, sorted) = await reading;
             if (cts.IsCancellationRequested)
                 return;
 
+            var read = watch?.ElapsedMilliseconds;
             _entries = entries;
+            _sorted = sorted;
             ShowEntries(sameFolder, select);
+            if (watch is not null)
+                Perf.Log($"load {path}: {entries.Count} entries, read {read} ms, shown {watch.ElapsedMilliseconds - read} ms on the UI thread");
             if (!sameFolder && kind == LocationKind.Folder)
                 RecentPlaces.Visit(path);
             _loadedPath = path;
@@ -402,14 +471,17 @@ public partial class TabViewModel : ViewModelBase, IDisposable
         {
             return;
         }
-        catch (DirectoryNotFoundException) when (sameFolder && NearestExisting(path) is { } parent)
-        {
-            // The folder was deleted or renamed under us: step out, like Explorer.
-            await NavigateTo(parent);
-            return;
-        }
         catch (Exception ex)
         {
+            // The folder was deleted or renamed under us: step out, like Explorer.
+            if (ex is DirectoryNotFoundException && sameFolder && await Task.Run(() => NearestExisting(path)) is { } parent)
+            {
+                if (cts == _loading)
+                    await NavigateTo(parent);
+                return;
+            }
+            if (cts.IsCancellationRequested)
+                return;
             _loadedPath = null;
             _entries = [];
             Items = [];
@@ -419,6 +491,11 @@ public partial class TabViewModel : ViewModelBase, IDisposable
                 DirectoryNotFoundException => Strings.ErrorFolderNotFound,
                 _ => ex.Message,
             };
+        }
+        finally
+        {
+            if (cts == _loading)
+                IsBusy = false;
         }
 
         UpdateStatus();
@@ -511,20 +588,23 @@ public partial class TabViewModel : ViewModelBase, IDisposable
     /// <summary>Puts the sorted, filtered entries on screen: edited in place, or as a new list.</summary>
     private void ShowEntries(bool inPlace, IReadOnlyCollection<string>? select)
     {
+        var watch = Perf.Start();
         var filter = new NameFilter(Filter);
-        var view = FileSorter.Sort(filter.IsEmpty ? _entries : _entries.Where(e => filter.Matches(e.Name)), SortColumn, SortDescending);
+        var sortedEntries = SortedEntries();
+        IReadOnlyList<FileEntry> view = filter.IsEmpty ? sortedEntries : sortedEntries.Where(e => filter.Matches(e.Name)).ToList();
+        var sorted = watch?.ElapsedMilliseconds;
 
-        if (inPlace)
-        {
-            SortedSync.Apply(Items, view, i => i.FullPath, e => e.FullPath, e => new FileItem(e),
-                (item, entry) => item.Update(entry), (item, entry) => item.IsDirectory == entry.IsDirectory);
-            if (RenamingItem is { } renaming && !Items.Contains(renaming))
-                RenamingItem = null;
-        }
-        else
+        // Editing in place keeps scroll and focus, but each edit is a notification the list handles on its own:
+        // past a couple of thousand (the first letter of a filter in a huge folder) a new list is much faster.
+        if (!inPlace || !SortedSync.Apply(Items, view, i => i.FullPath, e => e.FullPath, e => new FileItem(e),
+                (item, entry) => item.Update(entry), (item, entry) => item.IsDirectory == entry.IsDirectory, MaxListEdits))
         {
             Items = new ObservableCollection<FileItem>(view.Select(e => new FileItem(e)));
         }
+        if (RenamingItem is { } renaming && !Items.Contains(renaming))
+            RenamingItem = null;
+        if (watch is not null)
+            Perf.Log($"show {view.Count} of {_entries.Count} ({(inPlace ? "in place" : "new list")}): sorted in {sorted} ms, on screen in {watch.ElapsedMilliseconds - sorted} ms");
 
         if (select is { Count: > 0 })
         {
@@ -560,26 +640,44 @@ public partial class TabViewModel : ViewModelBase, IDisposable
         return entries;
     }
 
+    /// <summary>Sets up the watchers in the background: on a share across the network that alone can take seconds.</summary>
     private void Watch(string path)
     {
         StopWatching();
-        IEnumerable<string> folders = Locations.KindOf(path) switch
+        var generation = _watchGeneration;
+        var kind = Locations.KindOf(path);
+        if (kind is not (LocationKind.Folder or LocationKind.RecycleBin or LocationKind.Library))
+            return;
+        _ = Task.Run(() =>
         {
-            LocationKind.Folder => Directory.Exists(path) ? [path] : [],
-            LocationKind.RecycleBin when OperatingSystem.IsWindows() => RecycleBin.Folders(),
-            LocationKind.Library => Places.LibraryFolders(path),
-            _ => [],
-        };
-        foreach (var folder in folders)
+            IEnumerable<string> folders = kind switch
+            {
+                LocationKind.Folder => Directory.Exists(path) ? [path] : [],
+                LocationKind.RecycleBin when OperatingSystem.IsWindows() => RecycleBin.Folders(),
+                LocationKind.Library => Places.LibraryFolders(path),
+                _ => [],
+            };
+            return folders.Select(folder => new FolderWatcher(folder)).ToList();
+        }).ContinueWith(t => Dispatcher.UIThread.Post(() =>
         {
-            var watcher = new FolderWatcher(folder);
-            watcher.Changed += () => Dispatcher.UIThread.Post(() => OnDiskChanged(watcher));
-            _watchers.Add(watcher);
-        }
+            if (!t.IsCompletedSuccessfully)
+                return;
+            foreach (var watcher in t.Result)
+            {
+                if (generation != _watchGeneration)
+                {
+                    watcher.Dispose();
+                    continue;
+                }
+                watcher.Changed += () => Dispatcher.UIThread.Post(() => OnDiskChanged(watcher));
+                _watchers.Add(watcher);
+            }
+        }), TaskScheduler.Default);
     }
 
     private void StopWatching()
     {
+        _watchGeneration++;
         foreach (var watcher in _watchers)
             watcher.Dispose();
         _watchers.Clear();

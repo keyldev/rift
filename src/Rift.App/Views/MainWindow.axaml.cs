@@ -43,6 +43,8 @@ public partial class MainWindow : Window
                 };
                 vm.FocusSearchRequested += () => ActiveView()?.FocusSearch();
                 vm.LayoutChanged += BuildLayout;
+                Win32Properties.AddWndProcHookCallback(this, OnWndProc);
+                Activated += (_, _) => vm.RefreshDrives();
                 ApplyHotkeys();
                 ApplyBackdrop();
                 AppSettings.Changed += ApplyHotkeys;
@@ -62,6 +64,17 @@ public partial class MainWindow : Window
     }
 
     private MainWindowViewModel? Vm => DataContext as MainWindowViewModel;
+
+    private const uint WmDeviceChange = 0x0219;
+    private const nint DbtDeviceArrival = 0x8000, DbtDeviceRemoveComplete = 0x8004;
+
+    /// <summary>A USB stick or a card plugged in or pulled out: the drives in the sidebar and This PC follow.</summary>
+    private nint OnWndProc(nint hwnd, uint msg, nint wParam, nint lParam, ref bool handled)
+    {
+        if (msg == WmDeviceChange && wParam is DbtDeviceArrival or DbtDeviceRemoveComplete)
+            Vm?.RefreshDrives(devicesChanged: true);
+        return 0;
+    }
 
     private void OnMinimize(object? sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
 

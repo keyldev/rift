@@ -39,6 +39,7 @@ public partial class App : Application
             desktop.MainWindow = window;
 
             desktop.Exit += (_, _) => AppSettings.SaveNow();
+            Perf.WatchUiThread();
             RecentPlaces.Initialize();
             Program.Instance?.Listen(forwarded =>
                 Dispatcher.UIThread.Post(() => vm.OpenFromAnotherInstance(StartupArgs.Parse(forwarded))));

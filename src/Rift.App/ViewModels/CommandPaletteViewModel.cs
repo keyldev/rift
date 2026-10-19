@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Rift.Core;
 
@@ -32,13 +33,17 @@ public sealed record PaletteItem(string Title, string? Detail, string Icon, Pale
 public sealed partial class CommandPaletteViewModel : ObservableObject
 {
     private const int MaxResults = 50;
+    /// <summary>How long a keystroke waits for the typed path to be checked before the list shows without it.</summary>
+    private static readonly TimeSpan QuickLookup = TimeSpan.FromMilliseconds(30);
 
     private readonly Func<IReadOnlyList<PaletteItem>> _source;
     private readonly Func<string, PaletteItem?> _goTo;
     private IReadOnlyList<PaletteItem> _items = [];
+    /// <summary>The check of the typed path that's still on its way (a share that's slow to answer).</summary>
+    private Task<PaletteItem?>? _pendingGoTo;
 
     /// <param name="source">Everything the palette can offer right now (rebuilt on every open).</param>
-    /// <param name="goTo">An extra first item when the query is a path that exists.</param>
+    /// <param name="goTo">An extra first item when the query is a path that exists. Runs off the UI thread: it touches the disk.</param>
     public CommandPaletteViewModel(Func<IReadOnlyList<PaletteItem>> source, Func<string, PaletteItem?> goTo)
     {
         _source = source;
@@ -74,6 +79,9 @@ public sealed partial class CommandPaletteViewModel : ObservableObject
         if (SelectedIndex < 0 || SelectedIndex >= Results.Count)
             return;
         var item = Results[SelectedIndex];
+        // Enter on a typed path before the check came back: wait for it rather than run whatever is first.
+        if (SelectedIndex == 0 && _pendingGoTo is { } pending && await pending is { } go)
+            item = go;
         Close();
         await item.Run();
     }
@@ -81,8 +89,6 @@ public sealed partial class CommandPaletteViewModel : ObservableObject
     private void Update()
     {
         Results.Clear();
-        if (Query.Length > 0 && _goTo(Query) is { } go)
-            Results.Add(go);
 
         IEnumerable<PaletteItem> ranked;
         if (Query.Trim().Length == 0)
@@ -102,6 +108,52 @@ public sealed partial class CommandPaletteViewModel : ObservableObject
         foreach (var item in ranked.Take(MaxResults))
             Results.Add(item);
         SelectedIndex = Results.Count > 0 ? 0 : -1;
+        LookUpPath();
+    }
+
+    /// <summary>
+    /// Checks the typed text as a path. Directory.Exists on a share that's down waits for the network,
+    /// so it runs in the background; a local path answers within a few ms and shows with the list.
+    /// </summary>
+    private void LookUpPath()
+    {
+        _pendingGoTo = null;
+        if (Query.Length == 0)
+            return;
+        var query = Query;
+        var lookup = Task.Run(() =>
+        {
+            try
+            {
+                return _goTo(query);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+            {
+                return null;
+            }
+        });
+        if (lookup.Wait(QuickLookup))
+        {
+            ShowGoTo(lookup.Result);
+            return;
+        }
+        _pendingGoTo = lookup;
+        lookup.ContinueWith(t => Dispatcher.UIThread.Post(() =>
+        {
+            if (_pendingGoTo != lookup)
+                return; // typed on since
+            _pendingGoTo = null;
+            ShowGoTo(t.Result);
+        }), TaskScheduler.Default);
+    }
+
+    private void ShowGoTo(PaletteItem? go)
+    {
+        if (go is null)
+            return;
+        Results.Insert(0, go);
+        // Keep the row the user moved to; otherwise the path becomes the first choice.
+        SelectedIndex = SelectedIndex <= 0 ? 0 : SelectedIndex + 1;
     }
 
     private static int? Best(int? a, int? b) => a is null ? b : b is null ? a : Math.Max(a.Value, b.Value);

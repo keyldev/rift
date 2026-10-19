@@ -11,11 +11,13 @@ public static class DirectoryReader
     };
 
     /// <summary>Reads a folder: folders first, then files, both by name. Hidden and system items only on request.</summary>
-    public static IReadOnlyList<FileEntry> Read(string path, bool includeHidden = false)
+    /// <param name="ct">Checked between entries: leaving a slow share stops the walk instead of finishing it for nothing.</param>
+    public static IReadOnlyList<FileEntry> Read(string path, bool includeHidden = false, CancellationToken ct = default)
     {
         var entries = new List<FileEntry>();
         foreach (var info in new DirectoryInfo(path).EnumerateFileSystemInfos("*", Options))
         {
+            ct.ThrowIfCancellationRequested();
             var entry = FileEntry.From(info);
             if (entry.IsHidden && !includeHidden)
                 continue;
@@ -25,9 +27,6 @@ public static class DirectoryReader
         entries.Sort(CompareEntries);
         return entries;
     }
-
-    public static Task<IReadOnlyList<FileEntry>> ReadAsync(string path, bool includeHidden = false, CancellationToken ct = default)
-        => Task.Run(() => Read(path, includeHidden), ct);
 
     private static int CompareEntries(FileEntry a, FileEntry b)
     {
