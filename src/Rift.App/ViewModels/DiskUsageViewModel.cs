@@ -1,4 +1,5 @@
 using Avalonia.Media;
+using Avalonia.Media.Immutable;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -144,6 +145,7 @@ public sealed partial class DiskUsageViewModel : ObservableObject
     private void Close()
     {
         CancelScan();
+        IsScanning = false;
         IsOpen = false;
     }
 
@@ -249,6 +251,8 @@ public sealed partial class DiskUsageViewModel : ObservableObject
         var cts = new CancellationTokenSource();
         _scanCts = cts;
         var token = cts.Token;
+        DiskUsageSnapshot? pending = null;
+        var postScheduled = 0;
 
         _ = Task.Run(() =>
         {
@@ -260,15 +264,22 @@ public sealed partial class DiskUsageViewModel : ObservableObject
                 {
                     if (token.IsCancellationRequested)
                         return;
-                    Dispatcher.UIThread.Post(() =>
+                    Volatile.Write(ref pending, snap);
+                    if (Interlocked.Exchange(ref postScheduled, 1) == 0)
                     {
-                        if (!IsOpen || _scanCts != cts)
-                            return;
-                        _snapshot = snap;
-                        if (snap.IsComplete)
-                            IsScanning = false;
-                        RebuildDisplay();
-                    });
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            Interlocked.Exchange(ref postScheduled, 0);
+                            if (!IsOpen || _scanCts != cts)
+                                return;
+                            if (Volatile.Read(ref pending) is not { } latest)
+                                return;
+                            _snapshot = latest;
+                            if (latest.IsComplete)
+                                IsScanning = false;
+                            RebuildDisplay();
+                        });
+                    }
                 }, token);
             }
             catch (OperationCanceledException)
@@ -287,7 +298,11 @@ public sealed partial class DiskUsageViewModel : ObservableObject
                     }
                 });
             }
-        }, token);
+            finally
+            {
+                cts.Dispose();
+            }
+        });
     }
 
     private static DriveFacts RefreshDrive(DriveFacts fallback)
@@ -316,7 +331,6 @@ public sealed partial class DiskUsageViewModel : ObservableObject
         catch (ObjectDisposedException)
         {
         }
-        cts.Dispose();
     }
 
     private void RebuildDisplay()
@@ -414,17 +428,34 @@ public sealed partial class DiskUsageViewModel : ObservableObject
             ? Strings.DiskCatScanning
             : DiskUsageClassifier.Label(category);
 
-    private static IBrush BrushFor(DiskUsageCategory category, bool dark) => new SolidColorBrush(Color.Parse(category switch
+    private static readonly IBrush[] DarkBrushes =
+    [
+        new ImmutableSolidColorBrush(Color.Parse("#3DD68C")), // Free
+        new ImmutableSolidColorBrush(Color.Parse("#F4C430")), // Apps
+        new ImmutableSolidColorBrush(Color.Parse("#A78BFA")), // Media
+        new ImmutableSolidColorBrush(Color.Parse("#FB923C")), // Archives
+        new ImmutableSolidColorBrush(Color.Parse("#38BDF8")), // Documents
+        new ImmutableSolidColorBrush(Color.Parse("#94A3B8")), // Other
+        new ImmutableSolidColorBrush(Color.Parse("#3F3F46")), // System
+    ];
+
+    private static readonly IBrush[] LightBrushes =
+    [
+        new ImmutableSolidColorBrush(Color.Parse("#16A34A")), // Free
+        new ImmutableSolidColorBrush(Color.Parse("#D97706")), // Apps
+        new ImmutableSolidColorBrush(Color.Parse("#7C3AED")), // Media
+        new ImmutableSolidColorBrush(Color.Parse("#EA580C")), // Archives
+        new ImmutableSolidColorBrush(Color.Parse("#0284C7")), // Documents
+        new ImmutableSolidColorBrush(Color.Parse("#64748B")), // Other
+        new ImmutableSolidColorBrush(Color.Parse("#CBD5E1")), // System
+    ];
+
+    private static IBrush BrushFor(DiskUsageCategory category, bool dark)
     {
-        DiskUsageCategory.Free => dark ? "#3DD68C" : "#16A34A",
-        DiskUsageCategory.Apps => dark ? "#F4C430" : "#D97706",
-        DiskUsageCategory.Media => dark ? "#A78BFA" : "#7C3AED",
-        DiskUsageCategory.Archives => dark ? "#FB923C" : "#EA580C",
-        DiskUsageCategory.Documents => dark ? "#38BDF8" : "#0284C7",
-        DiskUsageCategory.Other => dark ? "#94A3B8" : "#64748B",
-        DiskUsageCategory.System => dark ? "#3F3F46" : "#CBD5E1",
-        _ => dark ? "#94A3B8" : "#64748B",
-    }));
+        var palette = dark ? DarkBrushes : LightBrushes;
+        var idx = (int)category;
+        return (uint)idx < (uint)palette.Length ? palette[idx] : palette[(int)DiskUsageCategory.Other];
+    }
 
     private static string? ResolveRoot(string? path)
     {

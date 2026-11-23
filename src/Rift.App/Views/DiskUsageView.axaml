@@ -129,7 +129,7 @@
         <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource Rift.Line}" BorderThickness="0,1,0,0"
                 Padding="24,10">
           <DockPanel>
-            <ProgressBar DockPanel.Dock="Right" Classes="usage" Width="120" IsIndeterminate="True"
+            <ProgressBar DockPanel.Dock="Right" Classes="usage" Width="120" IsIndeterminate="{Binding IsScanning}"
                          VerticalAlignment="Center" IsVisible="{Binding IsScanning}" />
             <TextBlock Classes="dim" FontSize="12" Text="{Binding StatusText}" TextTrimming="CharacterEllipsis"
                        VerticalAlignment="Center" />
