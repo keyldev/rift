@@ -1,0 +1,195 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Rift.App.ViewModels"
+             xmlns:c="using:Rift.App.Controls"
+             xmlns:l="using:Rift.Core.Localization"
+             x:Class="Rift.App.Views.DiskUsageView"
+             x:DataType="vm:DiskUsageViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="ListBox.segments">
+      <Setter Property="Background" Value="{DynamicResource Rift.Bg}" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="3" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="ListBox.segments ListBoxItem">
+      <Setter Property="Padding" Value="10,4" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="Foreground" Value="{DynamicResource Rift.Muted}" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="ListBox.segments ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Rift.Hover}" />
+      <Setter Property="Foreground" Value="{DynamicResource Rift.Text}" />
+    </Style>
+    <Style Selector="ListBox.segments ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Rift.AccentBg}" />
+      <Setter Property="Foreground" Value="{DynamicResource Rift.Text}" />
+    </Style>
+
+    <Style Selector="Border.catrow">
+      <Setter Property="Padding" Value="10,7" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <Style Selector="Border.catrow.hot">
+      <Setter Property="Background" Value="{DynamicResource Rift.Hover}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Rift.Line}" />
+    </Style>
+  </UserControl.Styles>
+
+  <!-- Scrim; clicking outside the card closes the overlay -->
+  <Border x:Name="Scrim" Background="{DynamicResource Rift.Scrim}">
+    <Border Classes="card" Width="780" MaxHeight="620" Margin="24,48"
+            HorizontalAlignment="Center" VerticalAlignment="Center"
+            Background="{DynamicResource Rift.Panel}" CornerRadius="12">
+      <DockPanel>
+
+        <!-- Header -->
+        <DockPanel DockPanel.Dock="Top" Margin="24,18,14,12">
+          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <Button Classes="dialog" Padding="10,5" Command="{Binding StopCommand}" IsVisible="{Binding IsScanning}"
+                    Content="{x:Static l:Strings.DiskStop}" />
+            <Button Classes="dialog" Padding="10,5" Command="{Binding RescanCommand}"
+                    IsVisible="{Binding !IsScanning}" IsEnabled="{Binding HasDrives}"
+                    Content="{x:Static l:Strings.DiskRescan}" />
+            <Button x:Name="CloseButton" Classes="flat" Command="{Binding CloseCommand}"
+                    ToolTip.Tip="{x:Static l:Strings.TipClose}">
+              <c:Icon Data="{StaticResource Icon.Close}" />
+            </Button>
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+            <c:Icon Width="20" Height="20" Foreground="{DynamicResource Rift.Accent}" Data="{StaticResource Icon.PieChart}" />
+            <TextBlock Text="{x:Static l:Strings.DiskUsageTitle}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" />
+          </StackPanel>
+        </DockPanel>
+
+        <!-- Drive selector + Mode & Sort controls -->
+        <StackPanel DockPanel.Dock="Top" Margin="24,0,24,14" Spacing="10">
+          <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
+                        IsVisible="{Binding HasDrives}">
+            <ListBox Classes="segments" ItemsSource="{Binding Drives}" SelectedItem="{Binding SelectedDrive}"
+                     HorizontalAlignment="Left">
+              <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Orientation="Horizontal" Spacing="2" />
+                </ItemsPanelTemplate>
+              </ListBox.ItemsPanel>
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:DriveOption">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <c:Icon Width="14" Height="14" Data="{StaticResource Icon.Drive}" />
+                    <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
+                  </StackPanel>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </ScrollViewer>
+
+          <DockPanel IsVisible="{Binding HasDrives}">
+            <ListBox DockPanel.Dock="Left" Classes="segments" ItemsSource="{Binding Modes}" SelectedItem="{Binding Mode}">
+              <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Orientation="Horizontal" Spacing="2" />
+                </ItemsPanelTemplate>
+              </ListBox.ItemsPanel>
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:Choice">
+                  <TextBlock Text="{Binding Label}" />
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <TextBlock Classes="dim" FontSize="12" Text="{x:Static l:Strings.DiskSortLabel}" VerticalAlignment="Center" />
+              <ListBox Classes="segments" ItemsSource="{Binding SortModes}" SelectedItem="{Binding Sort}">
+                <ListBox.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" Spacing="2" />
+                  </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:Choice">
+                    <TextBlock Text="{Binding Label}" />
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </StackPanel>
+
+            <Panel />
+          </DockPanel>
+        </StackPanel>
+
+        <!-- Footer status -->
+        <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource Rift.Line}" BorderThickness="0,1,0,0"
+                Padding="24,10">
+          <DockPanel>
+            <ProgressBar DockPanel.Dock="Right" Classes="usage" Width="120" IsIndeterminate="True"
+                         VerticalAlignment="Center" IsVisible="{Binding IsScanning}" />
+            <TextBlock Classes="dim" FontSize="12" Text="{Binding StatusText}" TextTrimming="CharacterEllipsis"
+                       VerticalAlignment="Center" />
+          </DockPanel>
+        </Border>
+
+        <!-- Body: Donut chart on the left, sorted category breakdown on the right -->
+        <Grid ColumnDefinitions="280,*" Margin="24,4,24,18" IsVisible="{Binding HasDrives}">
+          <Panel Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center" Width="256" Height="256">
+            <c:DiskUsageChart Slices="{Binding Slices}"
+                              HighlightedCategory="{Binding HighlightedCategory, Mode=TwoWay}"
+                              TrackBrush="{DynamicResource Rift.Line}" />
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="156"
+                        Spacing="2" IsHitTestVisible="False">
+              <TextBlock Text="{Binding CenterPrimary}" FontSize="22" FontWeight="SemiBold"
+                         TextAlignment="Center" TextTrimming="CharacterEllipsis" />
+              <TextBlock Text="{Binding CenterTitle}" Classes="muted" FontSize="11.5"
+                         TextAlignment="Center" TextWrapping="Wrap" MaxLines="2" />
+              <TextBlock Text="{Binding CenterDetail}" Classes="dim" FontSize="11"
+                         TextAlignment="Center" TextWrapping="Wrap" MaxLines="2" Margin="0,2,0,0" />
+            </StackPanel>
+          </Panel>
+
+          <ScrollViewer Grid.Column="1" Margin="18,0,0,0" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Rows}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Spacing="4" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:DiskUsageRow">
+                  <Border Classes="catrow" Classes.hot="{Binding IsHighlighted}"
+                          PointerEntered="OnRowPointerEntered"
+                          PointerExited="OnRowPointerExited">
+                    <StackPanel Spacing="5">
+                      <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                          <TextBlock Classes="dim" FontSize="12" Text="{Binding PercentText}" MinWidth="42" TextAlignment="Right" />
+                          <TextBlock FontWeight="Medium" FontSize="13" Text="{Binding SizeText}" MinWidth="72" TextAlignment="Right" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="9" VerticalAlignment="Center">
+                          <Ellipse Width="10" Height="10" Fill="{Binding Brush}" VerticalAlignment="Center" />
+                          <StackPanel Spacing="1">
+                            <TextBlock Text="{Binding Label}" FontWeight="Medium" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Classes="dim" FontSize="11" Text="{Binding CountText}" IsVisible="{Binding HasCount}" />
+                          </StackPanel>
+                        </StackPanel>
+                      </DockPanel>
+                      <ProgressBar Classes="usage" Minimum="0" Maximum="100" Value="{Binding PercentValue}"
+                                   Foreground="{Binding Brush}" Height="3" MinHeight="3" />
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </Grid>
+
+      </DockPanel>
+    </Border>
+  </Border>
+</UserControl>

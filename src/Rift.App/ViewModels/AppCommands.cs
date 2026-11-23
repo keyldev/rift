@@ -95,6 +95,7 @@ public static class AppCommands
         new("pane.zoom", () => Strings.CmdZoom, "Icon.Single", "Ctrl+Shift+Enter", vm => vm.ToggleZoomCommand),
         new("pane.close", () => Strings.CmdClosePane, "Icon.Close", "Ctrl+Shift+W", vm => vm.CloseActivePaneCommand),
         new("workspace.save", () => Strings.CmdSaveWorkspace, "Icon.Plus", "", vm => vm.SaveWorkspaceCommand),
+        new("tools.diskUsage", () => Strings.CmdDiskUsage, "Icon.PieChart", "", vm => vm.OpenDiskUsageCommand),
         new("bin.empty", () => Strings.MenuEmptyBin, "Icon.Trash", "", vm => vm.EmptyBinCommand),
     ];
 

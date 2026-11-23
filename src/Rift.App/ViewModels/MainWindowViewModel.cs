@@ -382,16 +382,32 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     private SettingsViewModel? _settings;
+    private DiskUsageViewModel? _diskUsage;
 
     /// <summary>The Settings screen (Ctrl+,), drawn over the window.</summary>
     public SettingsViewModel Settings => _settings ??= new SettingsViewModel(this);
+
+    /// <summary>Graphical drive usage scanner, drawn over the window.</summary>
+    public DiskUsageViewModel DiskUsage => _diskUsage ??= new DiskUsageViewModel(this);
 
     [RelayCommand]
     private void OpenSettings()
     {
         Palette.Close();
+        _diskUsage?.CloseCommand.Execute(null);
         Settings.OpenCommand.Execute(null);
     }
+
+    [RelayCommand]
+    private void OpenDiskUsage(string? path = null)
+    {
+        Palette.Close();
+        if (_settings is { IsOpen: true })
+            _settings.CloseCommand.Execute(null);
+        DiskUsage.Open(path);
+    }
+
+    public void StopBackgroundWork() => _diskUsage?.CloseCommand.Execute(null);
 
     // ---------- other windows and the sidebar ----------
 

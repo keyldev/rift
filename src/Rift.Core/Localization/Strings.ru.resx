@@ -280,4 +280,32 @@
   <data name="CrashReport" xml:space="preserve"><value>Сообщить на GitHub</value></data>
   <data name="OpenLogs" xml:space="preserve"><value>Открыть логи</value></data>
   <data name="LogsHint" xml:space="preserve"><value>Логи и отчёты о сбоях, хранятся неделю.</value></data>
+  <data name="CmdDiskUsage" xml:space="preserve"><value>Анализ места на диске</value></data>
+  <data name="MenuAnalyzeDrive" xml:space="preserve"><value>Анализ места на диске</value></data>
+  <data name="DiskUsageTitle" xml:space="preserve"><value>Использование диска</value></data>
+  <data name="DiskCatFree" xml:space="preserve"><value>Свободно</value></data>
+  <data name="DiskCatApps" xml:space="preserve"><value>Программы и библиотеки</value></data>
+  <data name="DiskCatMedia" xml:space="preserve"><value>Медиа</value></data>
+  <data name="DiskCatArchives" xml:space="preserve"><value>Архивы и образы</value></data>
+  <data name="DiskCatDocuments" xml:space="preserve"><value>Документы и код</value></data>
+  <data name="DiskCatOther" xml:space="preserve"><value>Прочие файлы</value></data>
+  <data name="DiskCatSystem" xml:space="preserve"><value>Система и недоступное</value></data>
+  <data name="DiskCatScanning" xml:space="preserve"><value>Ещё не просканировано</value></data>
+  <data name="DiskModeWhole" xml:space="preserve"><value>Весь диск</value></data>
+  <data name="DiskModeUsed" xml:space="preserve"><value>Занятое место</value></data>
+  <data name="DiskSortSize" xml:space="preserve"><value>Размер</value></data>
+  <data name="DiskSortCount" xml:space="preserve"><value>Файлы</value></data>
+  <data name="DiskSortName" xml:space="preserve"><value>Имя</value></data>
+  <data name="DiskSortLabel" xml:space="preserve"><value>Сортировка</value></data>
+  <data name="DiskRescan" xml:space="preserve"><value>Пересканировать</value></data>
+  <data name="DiskStop" xml:space="preserve"><value>Остановить</value></data>
+  <data name="DiskScanning" xml:space="preserve"><value>Сканирование… {0:N0} файлов ({1})</value></data>
+  <data name="DiskScanDone" xml:space="preserve"><value>{0:N0} файлов в {1:N0} папках</value></data>
+  <data name="DiskScanStopped" xml:space="preserve"><value>Остановлено — просканировано {0:N0} файлов</value></data>
+  <data name="DiskSkipped" xml:space="preserve"><value>пропущено недоступных: {0:N0}</value></data>
+  <data name="DiskUsedOf" xml:space="preserve"><value>Занято {0} из {1}</value></data>
+  <data name="DiskFileCount" xml:space="preserve"><value>Файлов: {0:N0}</value></data>
+  <data name="DiskNoDrives" xml:space="preserve"><value>Нет готовых дисков.</value></data>
+  <data name="DiskHoverHint" xml:space="preserve"><value>Наведите на сектор или категорию для подробностей</value></data>
+  <data name="TipDiskUsage" xml:space="preserve"><value>Анализ места на диске</value></data>
 </root>

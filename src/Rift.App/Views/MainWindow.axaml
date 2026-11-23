@@ -167,13 +167,27 @@
               </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <TextBlock Classes="section" Text="{x:Static l:Strings.SectionDrives}" Margin="8,16,0,6" />
+            <DockPanel Margin="0,16,0,6">
+              <Button DockPanel.Dock="Right" Classes="flat" Padding="4" Margin="0,-2,2,0"
+                      Command="{Binding OpenDiskUsageCommand}"
+                      ToolTip.Tip="{x:Static l:Strings.TipDiskUsage}">
+                <c:Icon Width="14" Height="14" Data="{StaticResource Icon.PieChart}" />
+              </Button>
+              <TextBlock Classes="section" Text="{x:Static l:Strings.SectionDrives}" Margin="8,0,0,0" VerticalAlignment="Center" />
+            </DockPanel>
             <ItemsControl ItemsSource="{Binding Drives}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:SidebarItem">
                   <Button Classes="flat nav"
                           Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenSidebarItemCommand}"
                           CommandParameter="{Binding}">
+                    <Button.ContextMenu>
+                      <ContextMenu>
+                        <MenuItem Header="{x:Static l:Strings.MenuAnalyzeDrive}"
+                                  Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenDiskUsageCommand}"
+                                  CommandParameter="{Binding Path}" />
+                      </ContextMenu>
+                    </Button.ContextMenu>
                     <DockPanel>
                       <c:Icon DockPanel.Dock="Left" Margin="0,1,10,0" VerticalAlignment="Top"
                               Data="{Binding Icon, Converter={x:Static app:Converters.ResourceToGeometry}}" />
@@ -323,6 +337,9 @@
 
     <!-- Settings (Ctrl+,) -->
     <v:SettingsView Grid.RowSpan="3" DataContext="{Binding Settings}" IsVisible="{Binding IsOpen}" />
+
+    <!-- Graphical drive usage scanner -->
+    <v:DiskUsageView Grid.RowSpan="3" DataContext="{Binding DiskUsage}" IsVisible="{Binding IsOpen}" />
 
     <!-- Modal dialog: conflicts, delete confirmation, errors -->
     <Border Grid.RowSpan="3" Background="{DynamicResource Rift.Scrim}"

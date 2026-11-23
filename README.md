@@ -47,6 +47,7 @@
 - Command palette (Ctrl+K) for commands, recent folders, tabs and paths
 - Editable address bar with autocomplete, breadcrumbs, back / forward / up
 - Sidebar: pinned folders, quick access, This PC, Libraries, Network, Recycle Bin, drives
+- Graphical disk usage scanner: interactive donut chart showing free space and file categories per drive, sortable by size, count or name
 - Dark and light themes, custom title bar
 - One window: "Open in Rift" and the taskbar jump list (recent folders) open tabs in the running Rift
 - "Open in Rift" in Explorer's context menu

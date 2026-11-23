@@ -280,4 +280,32 @@
   <data name="CrashReport" xml:space="preserve"><value>Report on GitHub</value></data>
   <data name="OpenLogs" xml:space="preserve"><value>Open logs</value></data>
   <data name="LogsHint" xml:space="preserve"><value>Logs and crash reports, kept for a week.</value></data>
+  <data name="CmdDiskUsage" xml:space="preserve"><value>Analyze disk usage</value></data>
+  <data name="MenuAnalyzeDrive" xml:space="preserve"><value>Analyze disk usage</value></data>
+  <data name="DiskUsageTitle" xml:space="preserve"><value>Disk usage</value></data>
+  <data name="DiskCatFree" xml:space="preserve"><value>Free space</value></data>
+  <data name="DiskCatApps" xml:space="preserve"><value>Apps &amp; binaries</value></data>
+  <data name="DiskCatMedia" xml:space="preserve"><value>Media</value></data>
+  <data name="DiskCatArchives" xml:space="preserve"><value>Archives &amp; images</value></data>
+  <data name="DiskCatDocuments" xml:space="preserve"><value>Documents &amp; code</value></data>
+  <data name="DiskCatOther" xml:space="preserve"><value>Other files</value></data>
+  <data name="DiskCatSystem" xml:space="preserve"><value>System &amp; inaccessible</value></data>
+  <data name="DiskCatScanning" xml:space="preserve"><value>Not yet scanned</value></data>
+  <data name="DiskModeWhole" xml:space="preserve"><value>Whole drive</value></data>
+  <data name="DiskModeUsed" xml:space="preserve"><value>Used space</value></data>
+  <data name="DiskSortSize" xml:space="preserve"><value>Size</value></data>
+  <data name="DiskSortCount" xml:space="preserve"><value>Files</value></data>
+  <data name="DiskSortName" xml:space="preserve"><value>Name</value></data>
+  <data name="DiskSortLabel" xml:space="preserve"><value>Sort</value></data>
+  <data name="DiskRescan" xml:space="preserve"><value>Rescan</value></data>
+  <data name="DiskStop" xml:space="preserve"><value>Stop</value></data>
+  <data name="DiskScanning" xml:space="preserve"><value>Scanning… {0:N0} files ({1})</value></data>
+  <data name="DiskScanDone" xml:space="preserve"><value>{0:N0} files in {1:N0} folders</value></data>
+  <data name="DiskScanStopped" xml:space="preserve"><value>Stopped — {0:N0} files scanned</value></data>
+  <data name="DiskSkipped" xml:space="preserve"><value>{0:N0} inaccessible skipped</value></data>
+  <data name="DiskUsedOf" xml:space="preserve"><value>{0} of {1} used</value></data>
+  <data name="DiskFileCount" xml:space="preserve"><value>{0:N0} files</value></data>
+  <data name="DiskNoDrives" xml:space="preserve"><value>No ready drives found.</value></data>
+  <data name="DiskHoverHint" xml:space="preserve"><value>Hover a slice or category for details</value></data>
+  <data name="TipDiskUsage" xml:space="preserve"><value>Analyze disk usage</value></data>
 </root>

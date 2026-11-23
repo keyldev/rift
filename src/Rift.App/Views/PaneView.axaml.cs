@@ -579,6 +579,8 @@ public partial class PaneView : UserControl
         // Drives, computers, shares, libraries: they can be opened and inspected, not cut, renamed or deleted.
         if (tab.IsPlaceList)
         {
+            if (tab.Location == LocationKind.ThisPc && tab.Selected.Count == 1)
+                items.Add(Item(Strings.MenuAnalyzeDrive, "Icon.PieChart", null, main.OpenDiskUsageCommand, parameter: tab.Selected[0].FullPath));
             items.Add(new Separator());
             items.Add(Item(Strings.MenuCopyPath, "Icon.Link", "Ctrl+Shift+C", main.CopyPathCommand));
             AddShellItems(items, main, forSelection: true, screen);

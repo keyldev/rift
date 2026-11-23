@@ -59,6 +59,11 @@ public partial class MainWindow : Window
                     if (e.PropertyName == nameof(SettingsViewModel.IsOpen) && !vm.Settings.IsOpen)
                         FocusActivePane();
                 };
+                vm.DiskUsage.PropertyChanged += (_, e) =>
+                {
+                    if (e.PropertyName == nameof(DiskUsageViewModel.IsOpen) && !vm.DiskUsage.IsOpen)
+                        FocusActivePane();
+                };
             }
             BuildLayout();
             FocusActivePane();
@@ -129,6 +134,7 @@ public partial class MainWindow : Window
     /// </summary>
     private void OnClosing(object? sender, WindowClosingEventArgs e)
     {
+        Vm?.StopBackgroundWork();
         Vm?.SaveSession();
         AppSettings.SaveNow();
         if (ActualTransparencyLevel != WindowTransparencyLevel.Mica)
@@ -237,6 +243,21 @@ public partial class MainWindow : Window
             }
             else if ((e.Source as Visual)?.FindAncestorOfType<SettingsView>(includeSelf: true) is null)
                 e.Handled = true;
+            return;
+        }
+
+        // Disk usage overlay owns the keyboard while open: Esc closes it, nothing leaks to hotkeys.
+        if (Vm?.DiskUsage is { IsOpen: true } diskUsage)
+        {
+            if (e.Key == Key.Escape)
+            {
+                diskUsage.CloseCommand.Execute(null);
+                e.Handled = true;
+            }
+            else if ((e.Source as Visual)?.FindAncestorOfType<DiskUsageView>(includeSelf: true) is null)
+            {
+                e.Handled = true;
+            }
             return;
         }
 
