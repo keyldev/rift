@@ -93,8 +93,13 @@ sealed class Program
             // Not WinUIComposition (deadlocks disposing the window on close while icons/thumbnails render)
             // and not DirectComposition (Avalonia 12's DwmRenderTimerLoop calls WaitForCommitCompletion
             // without locking SyncRoot, racing with popup/tooltip HWNDs and causing dcomp.dll 0xE0464645).
-            // RedirectionSurface keeps ANGLE D3D11 GPU rendering without dcomp.dll.
-            .With(new Win32PlatformOptions { CompositionMode = [Win32CompositionMode.RedirectionSurface] })
+            // RedirectionSurface keeps ANGLE D3D11 GPU rendering without dcomp.dll; OverlayPopups keeps
+            // Avalonia tooltips and menus inside the window scene so rounded popup shadows stay transparent.
+            .With(new Win32PlatformOptions
+            {
+                CompositionMode = [Win32CompositionMode.RedirectionSurface],
+                OverlayPopups = true,
+            })
 #if DEBUG
             .WithDeveloperTools()
 #endif

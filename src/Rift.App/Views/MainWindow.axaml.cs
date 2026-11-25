@@ -1,13 +1,16 @@
+using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
+using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Rift.App.Services;
 using Rift.App.ViewModels;
 using Rift.Core;
+using Rift.Shell;
 
 namespace Rift.App.Views;
 
@@ -16,6 +19,17 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+
+        if (OperatingSystem.IsWindows())
+        {
+            Win32Properties.AddWndProcHookCallback(this, OnWndProc);
+            ActualThemeVariantChanged += (_, _) => ApplyWindowFrame();
+            PropertyChanged += (_, e) =>
+            {
+                if (e.Property == WindowStateProperty)
+                    ApplyWindowFrame();
+            };
+        }
 
         // Catch Tab before regular focus navigation swallows it.
         AddHandler(KeyDownEvent, OnPreviewKeyDown, RoutingStrategies.Tunnel);
@@ -26,6 +40,7 @@ public partial class MainWindow : Window
         Closing += OnClosing;
         Opened += (_, _) =>
         {
+            ApplyWindowFrame();
             if (Vm is { } vm)
             {
                 vm.WindowHandle = () => TryGetPlatformHandle()?.Handle ?? 0;
@@ -43,7 +58,6 @@ public partial class MainWindow : Window
                 };
                 vm.FocusSearchRequested += () => ActiveView()?.FocusSearch();
                 vm.LayoutChanged += BuildLayout;
-                Win32Properties.AddWndProcHookCallback(this, OnWndProc);
                 Activated += (_, _) => vm.RefreshDrives();
                 ApplyHotkeys();
                 ApplyBackdrop();
@@ -72,15 +86,37 @@ public partial class MainWindow : Window
 
     private MainWindowViewModel? Vm => DataContext as MainWindowViewModel;
 
+    private const uint WmWindowPosChanged = 0x0047;
     private const uint WmDeviceChange = 0x0219;
+    private const uint SwpFrameChanged = 0x0020;
     private const nint DbtDeviceArrival = 0x8000, DbtDeviceRemoveComplete = 0x8004;
 
-    /// <summary>A USB stick or a card plugged in or pulled out: the drives in the sidebar and This PC follow.</summary>
+    /// <summary>
+    /// Handles USB drive arrival/removal and restores DWM non-client frame rendering whenever Avalonia's
+    /// <c>ExtendClientArea</c> resets <c>DWMWA_NCRENDERING_POLICY</c> during <c>SetWindowPos(SWP_FRAMECHANGED)</c>.
+    /// </summary>
     private nint OnWndProc(nint hwnd, uint msg, nint wParam, nint lParam, ref bool handled)
     {
-        if (msg == WmDeviceChange && wParam is DbtDeviceArrival or DbtDeviceRemoveComplete)
+        if (msg == WmWindowPosChanged && lParam != 0)
+        {
+            var flags = (uint)Marshal.ReadInt32(lParam, nint.Size * 2 + sizeof(int) * 4);
+            if ((flags & SwpFrameChanged) != 0 && WindowState != WindowState.FullScreen)
+                ApplyWindowFrame(hwnd);
+        }
+        else if (msg == WmDeviceChange && wParam is DbtDeviceArrival or DbtDeviceRemoveComplete)
+        {
             Vm?.RefreshDrives(devicesChanged: true);
+        }
         return 0;
+    }
+
+    private void ApplyWindowFrame(nint hwnd = 0)
+    {
+        if (!OperatingSystem.IsWindows() || WindowState == WindowState.FullScreen)
+            return;
+        var handle = hwnd != 0 ? hwnd : TryGetPlatformHandle()?.Handle ?? 0;
+        if (handle != 0)
+            WindowFrame.Apply(handle, ActualThemeVariant == ThemeVariant.Dark);
     }
 
     private void OnMinimize(object? sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
